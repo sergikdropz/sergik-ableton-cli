@@ -1,0 +1,187 @@
+================================================================================
+SERGIK ML <-> Max for Live Protocol Specification
+================================================================================
+PROPRIETARY - SERGIK AI Systems Architecture
+================================================================================
+
+1. HTTP ENDPOINTS (M4L -> ML Service)
+-------------------------------------
+All requests from Max for Live to the ML service use HTTP POST.
+
+Base URL: http://127.0.0.1:8000
+
+Endpoints:
+
+  POST /action
+  -------------
+  Primary command interface for all operations.
+
+  Request JSON:
+    {
+      "cmd": "pack.create",
+      "args": {"source": "Selected Group", "length_bars": 4, "auto_zip": true},
+      "meta": {"user": "sergik", "session": "abc123"}
+    }
+
+  Response JSON:
+    {
+      "status": "ok",
+      "cmd": "pack.create",
+      "result": {"pack_id": "...", "export_dir": "..."},
+      "error": null
+    }
+
+  POST /voice
+  -----------
+  Voice pipeline for push-to-talk commands.
+
+  Request: multipart/form-data with WAV file
+  Response JSON:
+    {
+      "status": "ok",
+      "text": "transcribed text",
+      "intent": {"cmd": "pack.create", "args": {...}, "tts": "Creating pack..."},
+      "action": {...},
+      "tts_path": "tts_output/..."
+    }
+
+  GET /health
+  -----------
+  Health check endpoint.
+  Response: {"ok": true}
+
+  GET /tracks
+  -----------
+  List tracks from music_intelligence database.
+  Response: [{"track_id": "...", "bpm": 125, "key": "Cmin", ...}, ...]
+
+  GET /similar/{track_id}
+  ------------------------
+  Find similar tracks using vector similarity.
+  Response: [{"track_id": "...", "score": 0.95, ...}, ...]
+
+
+2. OSC MESSAGES (ML Service -> M4L)
+-----------------------------------
+All OSC messages are sent to Ableton Live on the configured OSC port.
+
+Default: udp://127.0.0.1:8001
+
+Messages:
+
+  /scp/status
+  -----------
+  Status updates for UI display.
+  Payload: {"text": "Sample pack created", "pack_id": "...", ...}
+
+  /scp/similar_results
+  --------------------
+  Similar track search results.
+  Payload: {"track_id": "query_id", "similar": [{"track_id": "...", "score": 0.9}, ...]}
+
+  /scp/tts_ready
+  --------------
+  TTS audio file ready for playback.
+  Payload: {"path": "tts_output/tts_abc123.wav"}
+
+  /scp/set_tempo
+  --------------
+  Set Ableton tempo.
+  Args: tempo (float)
+
+  /scp/add_device
+  ---------------
+  Add device to track.
+  Args: track_idx (int), device_name (string)
+
+  /scp/add_effect
+  ---------------
+  Add effect to track.
+  Args: track_idx (int), effect_name (string)
+
+  /scp/set_param
+  --------------
+  Set device parameter.
+  Args: track_idx (int), device_idx (int), param_idx (int), value (float)
+
+  /scp/list_tracks
+  ----------------
+  Request track list from Ableton.
+  Response comes back via HTTP callback.
+
+  /scp/export_audio
+  -----------------
+  Export audio from Ableton.
+  Args: start_bar (int), end_bar (int), output_path (string)
+
+
+3. ALLOWED COMMANDS (Action Policy)
+-----------------------------------
+Only these commands are allowed by the action policy:
+
+Pack Operations:
+  - pack.create      Create sample pack from stems
+  - pack.rate        Rate a track (1-5 stars)
+  - pack.similar     Find similar tracks
+
+Generation (SERGIK Proprietary):
+  - gen.generate_loop    Generate loop using SERGIK algorithms
+  - voice.tts           Text-to-speech synthesis
+
+Live Control:
+  - live.set_tempo      Set session tempo
+  - live.add_device     Add device to track
+  - live.add_effect     Add effect to track
+  - live.set_param      Set device parameter
+  - live.list_tracks    List session tracks
+  - live.export_audio   Export audio
+
+
+4. M4L IMPLEMENTATION NOTES
+---------------------------
+
+Auto-fill track_id:
+  Use LiveAPI to get detail_clip -> file_path
+  Extract basename stem OR use clip name
+  Send with pack.similar or pack.rate commands
+
+Example Max Patch Objects:
+  [udpreceive 8001]          # Receive OSC from ML service
+  [route /scp/status]        # Route by address
+  [fromsymbol]               # Convert to symbol
+  [dict.deserialize]         # Parse JSON payload
+
+HTTP from Max:
+  Use [maxurl] or [jweb] object for HTTP requests
+  POST to http://127.0.0.1:8000/action with JSON body
+
+
+5. SERGIK DNA INTEGRATION
+-------------------------
+
+The ML service uses SERGIK DNA for style classification:
+
+BPM Sweet Spot: 122-127 BPM
+Primary Keys: C, G, D, Am, Em
+Style Weights:
+  - tech-house: 45%
+  - house: 25%
+  - disco: 15%
+  - techno: 10%
+  - other: 5%
+
+Production Traits:
+  - Spectral separation (clean frequency bands)
+  - Gate-tight transients
+  - Sub-bass focus
+  - Stereo width: 30-70%
+
+Similarity scoring uses:
+  1. Feature vector cosine similarity
+  2. SERGIK DNA distance weighting
+  3. Preference model reranking (when ratings available)
+
+
+================================================================================
+SERGIK AI - 100% PROPRIETARY MACHINE LEARNING ARCHITECTURE
+================================================================================

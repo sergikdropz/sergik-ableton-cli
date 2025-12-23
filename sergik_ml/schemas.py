@@ -116,3 +116,73 @@ class SimilarRequest(BaseModel):
     track_id: str
     k: int = Field(default=10, ge=1, le=100)
     style_filter: Optional[str] = None
+
+
+# ============================================================================
+# SERGIK DNA - Proprietary Style Classification
+# ============================================================================
+
+class SergikDNAMatch(BaseModel):
+    """SERGIK DNA style classification result."""
+    sergik_score: float = Field(..., ge=0, le=1, description="How well track matches SERGIK DNA (0-1)")
+    is_sergik_style: bool = Field(..., description="True if sergik_score >= 0.5")
+    match_reasons: List[str] = Field(default_factory=list, description="Reasons for score")
+    style_category: str = Field(default="tech-house", description="Classified style category")
+
+
+class TrackAnalysis(BaseModel):
+    """Comprehensive track analysis with SERGIK DNA matching."""
+    track_id: str
+    bpm: Optional[float] = None
+    key: Optional[str] = None
+    energy: Optional[float] = None
+    brightness: Optional[float] = None
+    lufs: Optional[float] = None
+    harmonic_ratio: Optional[float] = None
+    percussive_ratio: Optional[float] = None
+    stereo_width: Optional[float] = None
+    duration: Optional[float] = None
+    sergik_dna: Optional[SergikDNAMatch] = None
+
+
+class PackCreateRequest(BaseModel):
+    """Request to create a sample pack using SERGIK pipeline."""
+    source: str = Field(default="All Tracks", description="Source selection")
+    length_bars: int = Field(default=4, ge=1, le=64, description="Loop length in bars")
+    tempo: float = Field(default=125, ge=60, le=200, description="Target BPM")
+    auto_zip: bool = Field(default=True, description="Create ZIP archive")
+    cloud_push: bool = Field(default=False, description="Upload to cloud storage")
+    fade_ms: int = Field(default=10, ge=0, le=100, description="Fade in/out duration")
+    normalize_lufs: Optional[float] = Field(default=None, ge=-24, le=-6, description="Target LUFS")
+    stems_dir: Optional[str] = Field(default=None, description="Custom stems directory")
+    custom_path: Optional[str] = Field(default=None, description="Custom export path")
+
+
+class RateTrackRequest(BaseModel):
+    """Request to rate a track for preference learning."""
+    track_id: str
+    rating: float = Field(..., ge=1, le=5, description="User rating 1-5 stars")
+    context: Optional[str] = Field(default=None, description="Rating context (e.g., 'dj_set', 'production')")
+
+
+# ============================================================================
+# SERGIK ML Training Data
+# ============================================================================
+
+class PreferenceDataPoint(BaseModel):
+    """Single data point for preference model training."""
+    track_id: str
+    features: List[float] = Field(..., description="Feature vector")
+    rating: float = Field(..., ge=1, le=5)
+    timestamp: _dt.datetime
+
+
+class TrainingStats(BaseModel):
+    """Training statistics for preference model."""
+    total_tracks: int
+    rated_tracks: int
+    avg_rating: float
+    rating_distribution: Dict[str, int] = Field(default_factory=dict)
+    mse: Optional[float] = None
+    mae: Optional[float] = None
+    feature_importance: Dict[str, float] = Field(default_factory=dict)
