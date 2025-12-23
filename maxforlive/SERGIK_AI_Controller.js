@@ -947,14 +947,14 @@ function setClipNotes(trackIndex, slotIndex) {
         }
         clip.set("loop_end", Math.ceil(maxTime / 4) * 4);  // Round to nearest bar
         
-        // Insert notes
+        // Insert notes (batch API: add_new_notes() once, notes(total) once, note() per note, done() once)
+        clip.call("add_new_notes");
+        clip.call("notes", noteBuffer.length);
         for (var i = 0; i < noteBuffer.length; i++) {
             var note = noteBuffer[i];
-            clip.call("add_new_notes");
-            clip.call("notes", 1);
             clip.call("note", note.pitch, note.start_time, note.duration, note.velocity, note.mute || 0);
-            clip.call("done");
         }
+        clip.call("done");
         
         status("✅ Set " + noteBuffer.length + " notes in clip");
         outputJSON({status: "ok", action: "set_clip_notes", track: trackIndex, slot: slotIndex, count: noteBuffer.length});
@@ -1589,24 +1589,30 @@ function insertToClip() {
         var loopEnd = currentBars * 4;
         liveApi.set("loop_end", loopEnd);
         
+        // Build the note list that fits within loopEnd
+        var notesToInsert = [];
         for (var i = 0; i < noteBuffer.length; i++) {
             var note = noteBuffer[i];
-            
             if (note.start_time >= loopEnd) continue;
-            
-            liveApi.call("add_new_notes");
-            liveApi.call("notes", 1);
-            liveApi.call("note", 
-                note.pitch, 
-                note.start_time, 
-                Math.min(note.duration, loopEnd - note.start_time),
-                note.velocity,
-                note.mute || 0
-            );
-            liveApi.call("done");
+            notesToInsert.push({
+                pitch: note.pitch,
+                start_time: note.start_time,
+                duration: Math.min(note.duration, loopEnd - note.start_time),
+                velocity: note.velocity,
+                mute: note.mute || 0
+            });
         }
         
-        status("✅ Inserted " + noteBuffer.length + " notes");
+        // Insert notes (batch API)
+        liveApi.call("add_new_notes");
+        liveApi.call("notes", notesToInsert.length);
+        for (var j = 0; j < notesToInsert.length; j++) {
+            var n = notesToInsert[j];
+            liveApi.call("note", n.pitch, n.start_time, n.duration, n.velocity, n.mute);
+        }
+        liveApi.call("done");
+        
+        status("✅ Inserted " + notesToInsert.length + " notes");
         
     } catch (e) {
         status("❌ Insert failed: " + e);
