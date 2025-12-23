@@ -1,0 +1,27 @@
+{
+  "name": "SERGIK Tech House Kit",
+  "type": "drum_rack",
+  "version": "1.0",
+  "pads": [
+    {
+      "name": "kick",
+      "midi_note": 36,
+      "sample_path": "/Users/machd/Music/Ableton/User Library/Samples/kick_sample.wav"
+    },
+    {
+      "name": "snare",
+      "midi_note": 38,
+      "sample_path": "/Users/machd/Music/Ableton/User Library/Samples/snare_sample.wav"
+    },
+    {
+      "name": "closed_hat",
+      "midi_note": 42,
+      "sample_path": "/Users/machd/Music/Ableton/User Library/Samples/hat_sample.wav"
+    },
+    {
+      "name": "clap",
+      "midi_note": 39,
+      "sample_path": "/Users/machd/Music/Ableton/User Library/Samples/clap_sample.wav"
+    }
+  ]
+}

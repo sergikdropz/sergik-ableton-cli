@@ -1,0 +1,136 @@
+{
+  "name": "SERGIK AI",
+  "description": "Official AI assistant for SERGIK - music production, catalog management, and creative collaboration",
+  "instructions_file": "system_instructions.md",
+  "prompt_file": "system_prompt.txt",
+
+  "profile": {
+    "artist": "Jordan Caboga",
+    "alias": "SERGIK",
+    "genres": ["House", "Hip-Hop", "Funk", "Soul"],
+    "years_active": "2015-2025"
+  },
+
+  "catalog": {
+    "ableton_projects": 20503,
+    "exports": 721,
+    "itunes_sergik": 1167,
+    "itunes_influences": 728,
+    "total_storage_gb": 350.74
+  },
+
+  "style_signature": {
+    "bpm": {
+      "average": 107.6,
+      "range": [76, 152],
+      "zones": {
+        "downtempo": {"range": [80, 90], "percentage": 41},
+        "house": {"range": [120, 129], "percentage": 32}
+      }
+    },
+    "keys": {
+      "primary": ["10B", "11B"],
+      "secondary": ["7A", "8A"],
+      "distribution": {
+        "10B": 31,
+        "11B": 21,
+        "7A": 13,
+        "8A": 12
+      }
+    },
+    "energy": {
+      "average": 6,
+      "sweet_spot": [5, 7],
+      "description": "Mid-energy groove focus"
+    },
+    "genres": {
+      "hiphop": 42,
+      "funk": 17,
+      "house": 8,
+      "soul": 7
+    }
+  },
+
+  "collaborators": {
+    "top_10": [
+      {"name": "Silent Jay", "projects": 408},
+      {"name": "Slick Floyd", "projects": 285},
+      {"name": "Breauxx", "projects": 213},
+      {"name": "OG Coconut", "projects": 187},
+      {"name": "NOOD", "projects": 185},
+      {"name": "ANDINO", "projects": 154},
+      {"name": "Sean Watson", "projects": 151},
+      {"name": "Sean Hart", "projects": 122},
+      {"name": "CHKLZ", "projects": 108},
+      {"name": "LODIN", "projects": 108}
+    ]
+  },
+
+  "production_presets": {
+    "house": {
+      "bpm": [122, 126],
+      "key": ["10B", "11B"],
+      "energy": [6, 7]
+    },
+    "hiphop": {
+      "bpm": [80, 88],
+      "key": ["7A", "8A"],
+      "energy": [5, 6]
+    },
+    "funk": {
+      "bpm": [95, 110],
+      "key": ["major"],
+      "energy": [6]
+    }
+  },
+
+  "quality_standards": {
+    "tier_1": {
+      "name": "Release Ready",
+      "sample_rate": "44100+",
+      "bit_depth": 24,
+      "format": "WAV"
+    },
+    "tier_2": {
+      "name": "High Quality",
+      "sample_rate": "44100",
+      "bit_depth": 16,
+      "format": ["WAV", "AIF"]
+    },
+    "mixing": {
+      "headroom_db": [-6, -3],
+      "stereo_width": "Controlled, mono-compatible low end"
+    }
+  },
+
+  "actions": {
+    "ableton_bridge": {
+      "enabled": true,
+      "endpoints": [
+        "/health",
+        "/transport/play",
+        "/transport/stop",
+        "/tempo",
+        "/volume"
+      ],
+      "openapi_schema": "gpt_actions/ableton_openapi.json"
+    }
+  },
+
+  "data_sources": {
+    "catalog": {
+      "projects": "data/catalog/ableton_projects/all_projects.csv",
+      "exports": "data/catalog/exports/all_exports.csv",
+      "sergik_tracks": "data/catalog/itunes_library/sergik_productions.csv",
+      "influences": "data/catalog/itunes_library/influences.csv"
+    },
+    "analysis": {
+      "bpm_key": "data/analysis/bpm_key/analyzed_tracks.csv",
+      "collaborators": "data/analysis/collaborators/rankings.csv",
+      "timeline": "data/analysis/timeline/by_year.csv"
+    },
+    "profiles": {
+      "master": "data/profiles/master_profile.json"
+    }
+  }
+}
