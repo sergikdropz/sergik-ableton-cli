@@ -1,8 +1,6 @@
 # SERGIK AI - Ableton Live Integration
 
-AI-powered music generation CLI for Ableton Live. Generate drums, bass, chords, and melodies in the SERGIK production style.
-
-Works alongside **Spawn VST** by Sauceware Audio for complementary AI generation.
+AI-powered music generation CLI for Ableton Live. Generate drums, bass, chords, and melodies using SERGIK's proprietary production style and algorithms.
 
 ## Features
 
@@ -144,15 +142,6 @@ The CLI sends OSC messages to port 9000 by default:
 | `/live/track/set/volume` | track volume | Set track volume |
 | `/live/clip/fire` | track clip | Fire clip |
 
-## Integration with Spawn VST
-
-SERGIK CLI is designed to work alongside [Spawn by Sauceware Audio](https://saucewareaudio.com/products/spawn):
-
-1. Use Spawn for instant AI-generated melodies with built-in sounds
-2. Use SERGIK CLI for custom drum patterns and basslines
-3. Route both to separate Ableton tracks
-4. Combine for full arrangements
-
 ## Architecture
 
 ```
@@ -166,9 +155,7 @@ SERGIK CLI is designed to work alongside [Spawn by Sauceware Audio](https://sauc
 │  - melody       │                   │  ├─ Bass Track  │
 └─────────────────┘                   │  ├─ Chords Track│
                                       │  └─ Melody Track│
-┌─────────────────┐                   │                 │
-│  Spawn VST      │ ──── MIDI ────►   │  Spawn Track    │
-└─────────────────┘                   └─────────────────┘
+                                      └─────────────────┘
 ```
 
 ## SERGIK Style Profile
@@ -221,6 +208,4 @@ MIT License - Use freely for music production.
 
 ## Credits
 
-- **SERGIK** - Production style and training data
-- **Sauceware Audio** - Spawn VST integration
-- **Lemonaide Music** - AI MIDI technology
+- **SERGIK** - Production style, training data, and proprietary AI algorithms

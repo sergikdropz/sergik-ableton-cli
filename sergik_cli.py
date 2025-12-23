@@ -2,7 +2,7 @@
 """
 SERGIK CLI - Command Line Interface for Ableton Live Integration
 
-Works alongside Spawn VST for AI-powered music generation.
+Proprietary AI-powered music generation using SERGIK algorithms.
 
 Commands:
   sergik generate drums --style tech-house --bars 8
@@ -623,10 +623,8 @@ def notes_to_midi_file(notes, output_path, bpm=125):
 def cli():
     """SERGIK CLI - AI Music Generation for Ableton Live
 
-    Generate drums, bass, chords, and melodies in the SERGIK style,
-    then send them directly to Ableton via OSC/MIDI.
-
-    Works alongside Spawn VST for complementary AI generation.
+    Generate drums, bass, chords, and melodies using SERGIK's proprietary
+    algorithms, then send them directly to Ableton via OSC/MIDI.
     """
     pass
 
