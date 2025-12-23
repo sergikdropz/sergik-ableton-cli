@@ -28,8 +28,8 @@
 		"toolbars_unpinned_last_save" : 0,
 		"tallnewobj" : 0,
 		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
+		"enablehscroll" : 0,
+		"enablevscroll" : 0,
 		"devicewidth" : 0.0,
 		"description" : "SERGIK AI Controller for Ableton Live",
 		"digest" : "Natural language MIDI generation",
@@ -64,6 +64,19 @@
 			},
 			{
 				"box" : 				{
+					"id" : "editor_bpatcher",
+					"maxclass" : "bpatcher",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 470.0, 350.0, 20.0, 20.0 ],
+					"presentation" : 0,
+					"presentation_rect" : [ 0.0, 0.0, 10.0, 10.0 ],
+					"args" : [ "SERGIK_AI_Editor.maxpat" ]
+				}
+			},
+			{
+				"box" : 				{
 					"id" : "btn_chords",
 					"maxclass" : "live.text",
 					"numinlets" : 1,
@@ -72,15 +85,15 @@
 					"parameter_enable" : 1,
 					"patching_rect" : [ 20.0, 50.0, 70.0, 25.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 10.0, 35.0, 70.0, 25.0 ],
-					"text" : "CHORDS",
-					"texton" : "CHORDS",
+					"presentation_rect" : [ 10.0, 30.0, 80.0, 25.0 ],
+					"text" : "GENERATE",
+					"texton" : "GENERATE",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_enum" : [ "off", "on" ],
-							"parameter_longname" : "btn_chords",
+							"parameter_longname" : "btn_generate",
 							"parameter_mmax" : 1,
-							"parameter_shortname" : "CHORDS",
+							"parameter_shortname" : "GENERATE",
 							"parameter_type" : 2
 						}
 					}
@@ -94,7 +107,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 20.0, 80.0, 95.0, 22.0 ],
-					"text" : "generate_chords"
+					"text" : "generate"
 				}
 			},
 			{
@@ -107,15 +120,15 @@
 					"parameter_enable" : 1,
 					"patching_rect" : [ 100.0, 50.0, 70.0, 25.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 85.0, 35.0, 70.0, 25.0 ],
-					"text" : "BASS",
-					"texton" : "BASS",
+					"presentation_rect" : [ 95.0, 30.0, 70.0, 25.0 ],
+					"text" : "COMMIT",
+					"texton" : "COMMIT",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_enum" : [ "off", "on" ],
-							"parameter_longname" : "btn_bass",
+							"parameter_longname" : "btn_commit",
 							"parameter_mmax" : 1,
-							"parameter_shortname" : "BASS",
+							"parameter_shortname" : "COMMIT",
 							"parameter_type" : 2
 						}
 					}
@@ -129,7 +142,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 100.0, 80.0, 85.0, 22.0 ],
-					"text" : "generate_bass"
+					"text" : "commit"
 				}
 			},
 			{
@@ -142,15 +155,15 @@
 					"parameter_enable" : 1,
 					"patching_rect" : [ 180.0, 50.0, 70.0, 25.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 160.0, 35.0, 70.0, 25.0 ],
-					"text" : "ARPS",
-					"texton" : "ARPS",
+					"presentation_rect" : [ 170.0, 30.0, 80.0, 25.0 ],
+					"text" : "EDITOR",
+					"texton" : "EDITOR",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_enum" : [ "off", "on" ],
-							"parameter_longname" : "btn_arps",
+							"parameter_longname" : "btn_editor",
 							"parameter_mmax" : 1,
-							"parameter_shortname" : "ARPS",
+							"parameter_shortname" : "EDITOR",
 							"parameter_type" : 2
 						}
 					}
@@ -164,7 +177,18 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 180.0, 80.0, 82.0, 22.0 ],
-					"text" : "generate_arps"
+					"text" : "open_editor"
+				}
+			},
+			{
+				"box" : 				{
+					"id" : "msg_open_editor",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 470.0, 380.0, 40.0, 22.0 ],
+					"text" : "open"
 				}
 			},
 			{
@@ -175,8 +199,8 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 20.0, 115.0, 30.0, 20.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 10.0, 70.0, 30.0, 20.0 ],
-					"text" : "Key:"
+					"presentation_rect" : [ 10.0, 62.0, 42.0, 20.0 ],
+					"text" : "Track:"
 				}
 			},
 			{
@@ -189,8 +213,8 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 50.0, 115.0, 60.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 40.0, 70.0, 60.0, 22.0 ],
-					"items" : [ "10B", ",", "11B", ",", "7A", ",", "8A", ",", "8B", ",", "5A", ",", "6A", ",", "9B" ]
+					"presentation_rect" : [ 55.0, 62.0, 95.0, 22.0 ],
+					"items" : [ "New", ",", "0", ",", "1", ",", "2", ",", "3", ",", "4", ",", "5", ",", "6", ",", "7", ",", "Master" ]
 				}
 			},
 			{
@@ -200,7 +224,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 120.0, 115.0, 35.0, 20.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 110.0, 70.0, 35.0, 20.0 ],
 					"text" : "Bars:"
 				}
@@ -214,7 +238,7 @@
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 155.0, 115.0, 40.0, 22.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 145.0, 70.0, 40.0, 22.0 ],
 					"minimum" : 1,
 					"maximum" : 32
@@ -228,8 +252,8 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 20.0, 145.0, 35.0, 20.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 10.0, 100.0, 35.0, 20.0 ],
-					"text" : "Style:"
+					"presentation_rect" : [ 160.0, 62.0, 35.0, 20.0 ],
+					"text" : "Slot:"
 				}
 			},
 			{
@@ -242,8 +266,8 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 55.0, 145.0, 70.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 45.0, 100.0, 70.0, 22.0 ],
-					"items" : [ "house", ",", "techno", ",", "jazz", ",", "ambient" ]
+					"presentation_rect" : [ 200.0, 62.0, 95.0, 22.0 ],
+					"items" : [ "mouse", ",", "0", ",", "1", ",", "2", ",", "3", ",", "4", ",", "5", ",", "6", ",", "7", ",", "next", ",", "append" ]
 				}
 			},
 			{
@@ -253,7 +277,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 135.0, 145.0, 48.0, 20.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 125.0, 100.0, 48.0, 20.0 ],
 					"text" : "Voicing:"
 				}
@@ -267,7 +291,7 @@
 					"outlettype" : [ "int", "", "" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 183.0, 145.0, 60.0, 22.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 173.0, 100.0, 60.0, 22.0 ],
 					"items" : [ "stabs", ",", "pads" ]
 				}
@@ -279,7 +303,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 280.0, 50.0, 100.0, 20.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 10.0, 130.0, 100.0, 20.0 ],
 					"text" : "Natural Language:"
 				}
@@ -293,7 +317,7 @@
 					"outlettype" : [ "", "int", "", "" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 280.0, 70.0, 250.0, 40.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 10.0, 150.0, 220.0, 35.0 ],
 					"text" : "generate tech house chords in 10B"
 				}
@@ -318,7 +342,7 @@
 					"outlettype" : [ "", "" ],
 					"parameter_enable" : 1,
 					"patching_rect" : [ 20.0, 200.0, 50.0, 25.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 10.0, 195.0, 50.0, 25.0 ],
 					"text" : "▶ PLAY",
 					"texton" : "▶ PLAY",
@@ -353,7 +377,7 @@
 					"outlettype" : [ "", "" ],
 					"parameter_enable" : 1,
 					"patching_rect" : [ 80.0, 200.0, 55.0, 25.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 65.0, 195.0, 55.0, 25.0 ],
 					"text" : "INSERT",
 					"texton" : "INSERT",
@@ -388,7 +412,7 @@
 					"outlettype" : [ "", "" ],
 					"parameter_enable" : 1,
 					"patching_rect" : [ 145.0, 200.0, 50.0, 25.0 ],
-					"presentation" : 1,
+					"presentation" : 0,
 					"presentation_rect" : [ 125.0, 195.0, 50.0, 25.0 ],
 					"text" : "CLEAR",
 					"texton" : "CLEAR",
@@ -422,8 +446,56 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 20.0, 420.0, 350.0, 20.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 10.0, 230.0, 220.0, 20.0 ],
-					"text" : "Status: Ready - Start API server first"
+					"presentation_rect" : [ 10.0, 88.0, 280.0, 18.0 ],
+					"text" : "● READY"
+				}
+			},
+			{
+				"box" : 				{
+					"id" : "dial_humanize",
+					"maxclass" : "live.dial",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 320.0, 90.0, 45.0, 45.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 10.0, 110.0, 55.0, 55.0 ],
+					"annotation" : "Humanize",
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_longname" : "humanize",
+							"parameter_shortname" : "Humanize",
+							"parameter_type" : 0,
+							"parameter_mmin" : 0.0,
+							"parameter_mmax" : 100.0,
+							"parameter_initial" : 15.0
+						}
+					}
+				}
+			},
+			{
+				"box" : 				{
+					"id" : "dial_density",
+					"maxclass" : "live.dial",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 380.0, 90.0, 45.0, 45.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 75.0, 110.0, 55.0, 55.0 ],
+					"annotation" : "Density",
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_longname" : "density",
+							"parameter_shortname" : "Density",
+							"parameter_type" : 0,
+							"parameter_mmin" : 0.0,
+							"parameter_mmax" : 100.0,
+							"parameter_initial" : 60.0
+						}
+					}
 				}
 			},
 			{
@@ -503,6 +575,18 @@
 				"patchline" : 				{
 					"source" : [ "msg_arps", 0 ],
 					"destination" : [ "js", 0 ]
+				}
+			},
+			{
+				"patchline" : 				{
+					"source" : [ "msg_arps", 0 ],
+					"destination" : [ "msg_open_editor", 0 ]
+				}
+			},
+			{
+				"patchline" : 				{
+					"source" : [ "msg_open_editor", 0 ],
+					"destination" : [ "editor_bpatcher", 0 ]
 				}
 			},
 			{
@@ -615,12 +699,14 @@
 			}
 		],
 		"parameters" : 		{
-			"obj-btn_chords" : [ "btn_chords", "CHORDS", 0 ],
-			"obj-btn_bass" : [ "btn_bass", "BASS", 0 ],
-			"obj-btn_arps" : [ "btn_arps", "ARPS", 0 ],
+			"obj-btn_generate" : [ "btn_chords", "GENERATE", 0 ],
+			"obj-btn_commit" : [ "btn_bass", "COMMIT", 0 ],
+			"obj-btn_editor" : [ "btn_arps", "EDITOR", 0 ],
 			"obj-btn_play" : [ "btn_play", "PLAY", 0 ],
 			"obj-btn_insert" : [ "btn_insert", "INSERT", 0 ],
 			"obj-btn_clear" : [ "btn_clear", "CLEAR", 0 ],
+			"obj-humanize" : [ "dial_humanize", "Humanize", 0 ],
+			"obj-density" : [ "dial_density", "Density", 0 ],
 			"parameterbanks" : 			{
 
 			},
