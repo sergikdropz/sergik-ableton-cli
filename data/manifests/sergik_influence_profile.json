@@ -1,0 +1,103 @@
+{
+  "total_tracks": 1895,
+  "sergik_tracks": 1167,
+  "influence_tracks": 728,
+  "genres": {
+    "hiphop": 74,
+    "funk": 29,
+    "house": 14,
+    "soul": 13,
+    "reggae": 12,
+    "techno": 10,
+    "disco": 8,
+    "ambient": 7,
+    "jazz": 6,
+    "dnb": 3
+  },
+  "bpm_analysis": {
+    "avg_bpm": 107.6,
+    "range": [76.0, 152.0],
+    "distribution": {
+      "< 90": 764,
+      "90-99": 169,
+      "100-109": 12,
+      "110-119": 160,
+      "120-129": 601,
+      "130-139": 40,
+      "140+": 137
+    },
+    "peak_zones": ["< 90 BPM (40.6%)", "120-129 BPM (31.9%)"]
+  },
+  "key_analysis": {
+    "primary_keys": {
+      "10B (D major)": 581,
+      "11B (A major)": 401,
+      "7A (D minor)": 238,
+      "8A (A minor)": 224
+    },
+    "camelot_distribution": {
+      "10B": 581,
+      "11B": 401,
+      "7A": 238,
+      "8A": 224,
+      "11A": 78,
+      "9A": 59,
+      "8B": 44,
+      "7B": 41,
+      "10A": 40,
+      "9B": 32,
+      "12B": 29,
+      "3A": 20
+    },
+    "harmonic_zones": ["10B-11B major (52%)", "7A-8A minor (24%)"]
+  },
+  "energy_analysis": {
+    "avg_energy": 6,
+    "distribution": {
+      "1": 6,
+      "2": 4,
+      "3": 10,
+      "4": 26,
+      "5": 396,
+      "6": 962,
+      "7": 358,
+      "8": 83,
+      "9": 37,
+      "10": 1
+    },
+    "peak_range": "5-7 (91% of tracks)"
+  },
+  "collaborators": {
+    "Silent Jay": 15,
+    "Janis & The Planets": 13,
+    "Breauxx": 13,
+    "Slick Floyd": 12,
+    "NOOD": 10,
+    "ANDINO": 9,
+    "Sean Hart": 9,
+    "BeJanis": 7,
+    "Sean Watson": 6,
+    "Mateo Haze": 6,
+    "OG Coconut": 6,
+    "Optikz": 5,
+    "L9V": 5,
+    "WWW": 5,
+    "Aloe Flipz": 4,
+    "CHKLZ": 4,
+    "Sean H": 4,
+    "Stan The Guitarman": 3,
+    "JIMII": 3,
+    "SERGIK(Vips)": 3,
+    "Javi": 3,
+    "Zak Martin": 3,
+    "Zonii": 3,
+    "Auxlee": 3,
+    "Sean Hart Ft. Chris Powell": 3
+  },
+  "style_signature": {
+    "tempo_range": "Dual-zone: Downtempo (<90) + House (120-129)",
+    "harmonic_palette": "D/A major & minor centered",
+    "energy_profile": "Mid-energy groove focus (Level 5-7)",
+    "dj_mixing_keys": ["10B", "11B", "7A", "8A"]
+  }
+}

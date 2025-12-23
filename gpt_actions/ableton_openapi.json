@@ -1,0 +1,230 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SERGIK Ableton Bridge",
+    "description": "Control Ableton Live from Sergik AI via OSC",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://lunisolar-nonsolicitously-ofelia.ngrok-free.dev"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "summary": "Check bridge server status",
+        "responses": {
+          "200": {
+            "description": "Server is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transport/play": {
+      "post": {
+        "operationId": "transportPlay",
+        "summary": "Start Ableton playback",
+        "responses": {
+          "200": {
+            "description": "Playback started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transport/stop": {
+      "post": {
+        "operationId": "transportStop",
+        "summary": "Stop Ableton playback",
+        "responses": {
+          "200": {
+            "description": "Playback stopped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tempo": {
+      "post": {
+        "operationId": "setTempo",
+        "summary": "Set Ableton tempo in BPM",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["bpm"],
+                "properties": {
+                  "bpm": {
+                    "type": "number",
+                    "description": "Tempo in BPM",
+                    "example": 125
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tempo updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "bpm": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/track/volume": {
+      "post": {
+        "operationId": "setTrackVolume",
+        "summary": "Set track volume",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["track", "value"],
+                "properties": {
+                  "track": {
+                    "type": "integer",
+                    "description": "Track index (0-based)",
+                    "example": 0
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Volume 0.0 to 1.0",
+                    "example": 0.85
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Volume set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/param": {
+      "post": {
+        "operationId": "setDeviceParam",
+        "summary": "Set device parameter",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["track", "device", "param", "value"],
+                "properties": {
+                  "track": {
+                    "type": "integer",
+                    "description": "Track index",
+                    "example": 0
+                  },
+                  "device": {
+                    "type": "integer",
+                    "description": "Device index",
+                    "example": 0
+                  },
+                  "param": {
+                    "type": "integer",
+                    "description": "Parameter index",
+                    "example": 0
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Value 0.0 to 1.0",
+                    "example": 0.5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parameter set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,157 @@
+openapi: 3.1.0
+info:
+  title: SERGIK Ableton Bridge
+  description: Control Ableton Live from Sergik AI via OSC
+  version: 1.0.0
+servers:
+  - url: https://lunisolar-nonsolicitously-ofelia.ngrok-free.dev
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Check bridge server status
+      responses:
+        '200':
+          description: Server is running
+
+  /transport/play:
+    post:
+      operationId: transportPlay
+      summary: Start Ableton playback
+      responses:
+        '200':
+          description: Playback started
+
+  /transport/stop:
+    post:
+      operationId: transportStop
+      summary: Stop Ableton playback
+      responses:
+        '200':
+          description: Playback stopped
+
+  /transport/record:
+    post:
+      operationId: transportRecord
+      summary: Toggle record mode
+      responses:
+        '200':
+          description: Record toggled
+
+  /tempo:
+    post:
+      operationId: setTempo
+      summary: Set Ableton tempo in BPM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bpm]
+              properties:
+                bpm:
+                  type: number
+                  minimum: 20
+                  maximum: 999
+                  example: 125
+      responses:
+        '200':
+          description: Tempo updated
+
+  /track/{index}/volume:
+    post:
+      operationId: setTrackVolume
+      summary: Set track volume (0.0 to 1.0)
+      parameters:
+        - in: path
+          name: index
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: Zero-based track index
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                  example: 0.85
+      responses:
+        '200':
+          description: Volume set
+
+  /track/{index}/pan:
+    post:
+      operationId: setTrackPan
+      summary: Set track pan (-1.0 left to 1.0 right)
+      parameters:
+        - in: path
+          name: index
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  type: number
+                  minimum: -1
+                  maximum: 1
+                  example: 0.0
+      responses:
+        '200':
+          description: Pan set
+
+  /device/{track}/{device}/{param}:
+    post:
+      operationId: setDeviceParam
+      summary: Set device parameter (normalized 0-1)
+      parameters:
+        - in: path
+          name: track
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - in: path
+          name: device
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - in: path
+          name: param
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                  example: 0.5
+      responses:
+        '200':
+          description: Parameter set

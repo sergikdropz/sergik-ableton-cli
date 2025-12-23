@@ -1,0 +1,28 @@
+# SERGIK CLI Requirements
+# Install with: pip install -r requirements.txt
+
+# Core CLI
+click>=8.0.0
+
+# OSC Communication (Ableton Live)
+python-osc>=1.8.0
+
+# MIDI File Generation
+mido>=1.2.10
+
+# Audio Analysis (optional but recommended)
+numpy>=1.21.0
+librosa>=0.9.0
+
+# Stem Separation (optional)
+# demucs>=4.0.0
+
+# Web Server (for bridge)
+flask>=2.0.0
+
+# Firebase Integration (for cloud features)
+# firebase-admin>=5.0.0
+
+# AI/ML (future vocal generation)
+# openai>=1.0.0
+# replicate>=0.15.0

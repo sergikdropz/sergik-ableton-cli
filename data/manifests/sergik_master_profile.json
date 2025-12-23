@@ -1,0 +1,161 @@
+{
+  "summary": {
+    "total_ableton_projects": 20503,
+    "total_audio_files": 269973,
+    "total_storage_gb": 350.74,
+    "sergik_productions": 1167,
+    "unique_collaborators": 36
+  },
+  "sources": {
+    "iTunes_Library": {
+      "tracks": 1895,
+      "analyzed": 1883
+    },
+    "External_Drive_1": {
+      "als_files": 11903,
+      "size_gb": 11.52
+    },
+    "External_Drive_2TB2": {
+      "als_files": 8600,
+      "audio_files": 268078,
+      "als_size_gb": 16.13,
+      "audio_size_gb": 323.09
+    }
+  },
+  "production_timeline": {
+    "2025": 4251,
+    "2024": 6364,
+    "2023": 2514,
+    "2022": 4631,
+    "2021": 1638,
+    "2020": 250,
+    "2019": 147,
+    "2018": 242,
+    "2017": 378,
+    "2016": 86,
+    "2015": 2
+  },
+  "genres": {
+    "hiphop": 74,
+    "funk": 29,
+    "house": 14,
+    "soul": 13,
+    "reggae": 12,
+    "techno": 10,
+    "disco": 8,
+    "ambient": 7,
+    "jazz": 6,
+    "dnb": 3
+  },
+  "bpm_analysis": {
+    "avg_bpm": 107.6,
+    "range": [
+      76.0,
+      152.0
+    ],
+    "distribution": {
+      "< 90": 764,
+      "90-99": 169,
+      "100-109": 12,
+      "110-119": 160,
+      "120-129": 601,
+      "130-139": 40,
+      "140+": 137
+    },
+    "peak_zones": [
+      "< 90 BPM (40.6%)",
+      "120-129 BPM (31.9%)"
+    ]
+  },
+  "key_analysis": {
+    "primary_keys": {
+      "10B (D major)": 581,
+      "11B (A major)": 401,
+      "7A (D minor)": 238,
+      "8A (A minor)": 224
+    },
+    "camelot_distribution": {
+      "10B": 581,
+      "11B": 401,
+      "7A": 238,
+      "8A": 224,
+      "11A": 78,
+      "9A": 59,
+      "8B": 44,
+      "7B": 41,
+      "10A": 40,
+      "9B": 32,
+      "12B": 29,
+      "3A": 20
+    },
+    "harmonic_zones": [
+      "10B-11B major (52%)",
+      "7A-8A minor (24%)"
+    ]
+  },
+  "energy_analysis": {
+    "avg_energy": 6,
+    "distribution": {
+      "1": 6,
+      "2": 4,
+      "3": 10,
+      "4": 26,
+      "5": 396,
+      "6": 962,
+      "7": 358,
+      "8": 83,
+      "9": 37,
+      "10": 1
+    },
+    "peak_range": "5-7 (91% of tracks)"
+  },
+  "collaborators": {
+    "Silent Jay": 408,
+    "Slick Floyd": 285,
+    "Breauxx": 213,
+    "OG Coconut": 187,
+    "NOOD": 185,
+    "ANDINO": 154,
+    "Sean Watson": 151,
+    "Sean Hart": 122,
+    "CHKLZ": 108,
+    "LODIN": 108,
+    "Jetski": 107,
+    "JIMII": 100,
+    "Aloe Flipz": 87,
+    "Stan The Guitarman": 87,
+    "BeJanis": 83,
+    "Frank Terry": 81,
+    "Batt Lo": 74,
+    "Lugh Haurie": 73,
+    "Zak Martin": 65,
+    "Cy Heck": 62,
+    "Janis": 58,
+    "Mateo Haze": 56,
+    "WWW": 55,
+    "ESHER": 44,
+    "L9V": 39,
+    "OLEA": 38,
+    "Optikz": 37,
+    "Bob Secret": 36,
+    "SERG": 35,
+    "Javi": 33,
+    "Janis & The Planets": 13,
+    "Sean H": 4,
+    "SERGIK(Vips)": 3,
+    "Zonii": 3,
+    "Auxlee": 3,
+    "Sean Hart Ft. Chris Powell": 3
+  },
+  "style_signature": {
+    "tempo_range": "Dual-zone: Downtempo (<90) + House (120-129)",
+    "harmonic_palette": "D/A major & minor centered",
+    "energy_profile": "Mid-energy groove focus (Level 5-7)",
+    "dj_mixing_keys": [
+      "10B",
+      "11B",
+      "7A",
+      "8A"
+    ]
+  }
+}

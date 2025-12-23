@@ -1,0 +1,45 @@
+{
+  "total_files": 695,
+  "total_size_gb": 23.62,
+  "categories": {
+    "SERGIK WAVs": 498,
+    "SERGIK MP3s": 195,
+    "Release masters": 2
+  },
+  "formats": {
+    "WAV": 382,
+    "MP3": 313
+  },
+  "by_year": {
+    "2023": 100,
+    "2019": 6,
+    "2022": 207,
+    "2018": 2,
+    "2021": 103,
+    "2020": 6,
+    "2024": 216,
+    "2025": 55
+  },
+  "collaborators": {
+    "Silent Jay": 25,
+    "Breauxx": 16,
+    "Slick Floyd": 12,
+    "ANDINO": 8,
+    "L9V": 8,
+    "JIMII": 7,
+    "Javi": 6,
+    "OG Coconut": 6,
+    "Bob Secret": 6,
+    "Stan The Guitarman": 6,
+    "Aloe Flipz": 6,
+    "CHKLZ": 5,
+    "LODIN": 5,
+    "DINO": 4,
+    "DJ Epidemik": 4,
+    "Bone": 4,
+    "Francisco Josue": 4,
+    "Hausofdevotion": 4,
+    "Skeezy": 4,
+    "Steve": 4
+  }
+}

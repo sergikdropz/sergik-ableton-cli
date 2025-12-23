@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: SERGIK Music Generator
+  description: Generate music using MusicGen via Replicate API
+  version: 1.0.0
+servers:
+  - url: https://api.replicate.com/v1
+paths:
+  /predictions:
+    post:
+      operationId: generateMusic
+      summary: Generate SERGIK-style music
+      description: Creates music using MusicGen with SERGIK style prompts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+                - input
+              properties:
+                version:
+                  type: string
+                  default: "671ac645ce5e552cc63a54a2bbff63fcf798043055f2c415cf0a6b91ad98d456"
+                  description: MusicGen model version
+                input:
+                  type: object
+                  properties:
+                    prompt:
+                      type: string
+                      description: "Music description (e.g., 'SERGIK style tech house 125 BPM C major groovy bassline')"
+                    duration:
+                      type: integer
+                      default: 30
+                      description: Duration in seconds (max 30)
+                    temperature:
+                      type: number
+                      default: 1.0
+                    top_p:
+                      type: number
+                      default: 0.95
+      responses:
+        '201':
+          description: Prediction created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  urls:
+                    type: object
+                    properties:
+                      get:
+                        type: string
+  /predictions/{id}:
+    get:
+      operationId: getPrediction
+      summary: Get prediction status and output
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prediction details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  output:
+                    type: string
+                    description: URL to generated audio file

@@ -1,0 +1,60 @@
+{
+  "als_files": 8600,
+  "als_size_gb": 16.13,
+  "audio_files": 268078,
+  "audio_size_gb": 323.09,
+  "als_by_folder": {
+    "ABLETON PROJECTS": 138,
+    "Sergic": 8172,
+    "Music Production": 281,
+    "Video Edits": 9
+  },
+  "als_by_year": {
+    "2017": 194,
+    "2016": 44,
+    "2018": 135,
+    "2019": 63,
+    "2020": 158,
+    "2021": 1068,
+    "2022": 1768,
+    "2024": 2693,
+    "2023": 1232,
+    "2025": 1245
+  },
+  "audio_by_folder": {
+    "ABLETON PROJECTS": 1032,
+    "Exports SERGIK": 695,
+    "Sergic": 16645,
+    "Music Production": 249667,
+    "SERGIK x ESHER - Nitrous Stems": 4,
+    "Video Edits": 26,
+    "SERGIK PAK 2": 9
+  },
+  "collaborators": {
+    "Silent Jay": 194,
+    "Slick Floyd": 141,
+    "Andino": 96,
+    "OG Coconut": 91,
+    "NOOD": 55,
+    "LODIN": 54,
+    "Breauxxx": 54,
+    "JIMII": 49,
+    "ANDINO": 49,
+    "Jetski": 48,
+    "Sean Watson": 47,
+    "Stan The Guitarman": 42,
+    "CHKLZ": 40,
+    "Frank Terry": 39,
+    "OLEA": 38,
+    "Breauxx": 38,
+    "Aloe Flipz": 37,
+    "Bob Secret": 36,
+    "BeJanis": 35,
+    "SERG": 35,
+    "L9V": 34,
+    "Optikz": 32,
+    "Batt Lo": 32,
+    "Lugh Haurie": 31,
+    "Javi": 30
+  }
+}
