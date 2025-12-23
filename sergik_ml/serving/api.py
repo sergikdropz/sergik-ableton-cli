@@ -26,6 +26,8 @@ from ..connectors.ableton_osc import osc_status, osc_send, osc_similar_results, 
 from ..pipelines.pack_pipeline import create_pack, rate_track
 from ..pipelines.voice_pipeline import voice_to_action, tts_and_notify_live
 from ..config import CFG
+from .dashboard import router as dashboard_router
+from .rate_limiter import RateLimitMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
+
+# Include dashboard router
+app.include_router(dashboard_router)
 
 # Initialize database on startup
 @app.on_event("startup")
