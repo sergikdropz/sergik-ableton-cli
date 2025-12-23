@@ -581,7 +581,7 @@ function getTracks() {
         var tracks = [];
         
         for (var i = 0; i < trackIds.length; i += 2) {
-            var trackIndex = i / 2;
+            var trackIndex = Math.floor(i / 2);
             var track = new LiveAPI("live_set tracks " + trackIndex);
             
             if (track.id) {
@@ -631,7 +631,7 @@ function getTrackInfo(index) {
             pan: parseFloat(panning.get("value")),
             has_midi_input: parseInt(track.get("has_midi_input")),
             has_audio_input: parseInt(track.get("has_audio_input")),
-            device_count: devices.length / 2
+            device_count: Math.floor(devices.length / 2)
         };
         
         status("✅ Track " + index + ": " + info.name);
@@ -711,9 +711,9 @@ function setDeviceParam(trackIndex, deviceIndex, paramIndexOrName, value) {
         if (typeof paramIndexOrName === "string") {
             // Find parameter by name
             for (var i = 0; i < params.length; i += 2) {
-                var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + (i/2));
+                var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + Math.floor(i / 2));
                 if (param.get("name").toString().toLowerCase() === paramIndexOrName.toLowerCase()) {
-                    paramIndex = i / 2;
+                    paramIndex = Math.floor(i / 2);
                     break;
                 }
             }
@@ -736,9 +736,9 @@ function getDeviceParams(trackIndex, deviceIndex) {
         var params = [];
         
         for (var i = 0; i < paramIds.length; i += 2) {
-            var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + (i/2));
+            var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + Math.floor(i / 2));
             params.push({
-                index: i / 2,
+                index: Math.floor(i / 2),
                 name: param.get("name").toString(),
                 value: parseFloat(param.get("value")),
                 min: parseFloat(param.get("min")),
@@ -804,9 +804,9 @@ function getDevices(trackIndex) {
         var devices = [];
         
         for (var i = 0; i < deviceIds.length; i += 2) {
-            var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + (i/2));
+            var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + Math.floor(i / 2));
             devices.push({
-                index: i / 2,
+                index: Math.floor(i / 2),
                 name: device.get("name").toString(),
                 class_name: device.get("class_name").toString(),
                 enabled: parseInt(device.get("is_active"))
@@ -901,9 +901,9 @@ function duplicateClip(trackIndex, slotIndex, targetTrack, targetSlot) {
             var track = new LiveAPI("live_set tracks " + destTrack);
             var clipSlots = track.get("clip_slots");
             for (var i = 0; i < clipSlots.length; i += 2) {
-                var slot = new LiveAPI("live_set tracks " + destTrack + " clip_slots " + (i/2));
+                var slot = new LiveAPI("live_set tracks " + destTrack + " clip_slots " + Math.floor(i / 2));
                 if (!slot.get("has_clip")) {
-                    destSlot = i / 2;
+                    destSlot = Math.floor(i / 2);
                     break;
                 }
             }
@@ -1106,7 +1106,7 @@ function stopScene() {
 function createScene(name) {
     try {
         var liveSet = new LiveAPI("live_set");
-        var sceneCount = liveSet.get("scenes").length / 2;
+        var sceneCount = Math.floor(liveSet.get("scenes").length / 2);
         liveSet.call("create_scene", sceneCount);
         
         if (name) {
@@ -1213,9 +1213,9 @@ function getSessionState() {
             current_song_time: parseFloat(liveSet.get("current_song_time")),
             loop_start: parseFloat(liveSet.get("loop_start")),
             loop_length: parseFloat(liveSet.get("loop_length")),
-            track_count: liveSet.get("tracks").length / 2,
-            scene_count: liveSet.get("scenes").length / 2,
-            return_track_count: liveSet.get("return_tracks").length / 2
+            track_count: Math.floor(liveSet.get("tracks").length / 2),
+            scene_count: Math.floor(liveSet.get("scenes").length / 2),
+            return_track_count: Math.floor(liveSet.get("return_tracks").length / 2)
         };
         
         status("✅ Session: " + state.tempo + " BPM, " + state.track_count + " tracks, " + state.scene_count + " scenes");

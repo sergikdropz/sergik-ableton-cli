@@ -698,3 +698,145 @@ class LiveCommandResponse(BaseModel):
     command: str
     result: Dict[str, Any] = Field(default_factory=dict)
     error: Optional[str] = None
+
+
+# ============================================================================
+# Audio Analysis Dashboard
+# ============================================================================
+
+class AudioMetadata(BaseModel):
+    """Core audio metadata from analysis."""
+    bpm: float = Field(..., ge=20, le=300, description="Detected BPM")
+    key: str = Field(..., description="Camelot key notation (e.g., '10B')")
+    key_notation: str = Field(..., description="Musical key notation (e.g., 'D major')")
+    energy: int = Field(..., ge=1, le=10, description="Energy level 1-10")
+    duration: float = Field(..., ge=0, description="Duration in seconds")
+    sample_rate: int = Field(..., ge=8000, le=192000, description="Sample rate in Hz")
+    spectral_centroid: Optional[float] = Field(None, description="Spectral centroid")
+    spectral_rolloff: Optional[float] = Field(None, description="Spectral rolloff")
+    rhythm_complexity: Optional[float] = Field(None, description="Rhythm complexity score")
+    loudness_db: Optional[float] = Field(None, description="Average loudness in dB")
+
+
+class MusicBrainzData(BaseModel):
+    """MusicBrainz lookup result."""
+    status: Literal["ok", "not_found", "error"]
+    source: Optional[str] = Field(None, description="Data source (acoustid/musicbrainz)")
+    recording_id: Optional[str] = Field(None, description="MusicBrainz recording ID")
+    artist: str = Field(default="Unknown", description="Artist name")
+    title: str = Field(default="Unknown", description="Track title")
+    releases: List[str] = Field(default_factory=list, description="Album/release names")
+    genres: List[str] = Field(default_factory=list, description="Detected genres")
+    tags: List[str] = Field(default_factory=list, description="MusicBrainz tags")
+
+
+class SergikDNAResult(BaseModel):
+    """SERGIK DNA matching result with detailed scores."""
+    overall_match: int = Field(..., ge=0, le=100, description="Overall DNA match percentage")
+    scores: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Individual scores for bpm, key, energy"
+    )
+    genre_fit: str = Field(..., description="Best matching SERGIK genre")
+    suggestions: List[str] = Field(default_factory=list, description="Production suggestions")
+    compatible_collaborators: List[str] = Field(
+        default_factory=list,
+        description="Suggested collaborators based on style"
+    )
+
+
+class GenreInfluenceDNA(BaseModel):
+    """Genre influence breakdown and SERGIK alignment."""
+    detected_genres: List[str] = Field(default_factory=list, description="Genres from MusicBrainz")
+    inferred_genres: List[str] = Field(default_factory=list, description="Genres inferred from audio")
+    sergik_alignment: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Alignment percentage with each SERGIK genre"
+    )
+    influence_score: float = Field(..., ge=0, le=100, description="Overall influence match score")
+    primary_influence: str = Field(..., description="Dominant genre influence")
+
+
+class AudioAnalysisRequest(BaseModel):
+    """Request for audio analysis."""
+    file_path: Optional[str] = Field(None, description="Local file path to analyze")
+    url: Optional[str] = Field(None, description="URL to download and analyze")
+
+
+class URLAnalysisRequest(BaseModel):
+    """Request for URL audio extraction and analysis."""
+    url: str = Field(..., description="YouTube, SoundCloud, or direct audio URL")
+
+
+class PathAnalysisRequest(BaseModel):
+    """Request for local file path analysis."""
+    file_path: str = Field(..., description="Path to local audio file")
+
+
+class AudioAnalysisResponse(BaseModel):
+    """Complete audio analysis response."""
+    status: Literal["ok", "error"]
+    file: Optional[str] = Field(None, description="Analyzed filename")
+    metadata: Optional[AudioMetadata] = Field(None, description="Audio metadata")
+    musicbrainz: Optional[MusicBrainzData] = Field(None, description="MusicBrainz data")
+    sergik_dna: Optional[SergikDNAResult] = Field(None, description="SERGIK DNA match result")
+    genre_influence: Optional[GenreInfluenceDNA] = Field(None, description="Genre influence DNA")
+    error: Optional[str] = Field(None, description="Error message if status is error")
+
+
+class AnalysisPresets(BaseModel):
+    """Available presets for analysis parameter dropdowns."""
+    tempo_presets: List[Dict[str, Any]] = Field(
+        default_factory=lambda: [
+            {"value": 80, "label": "80 BPM (Hip-Hop)", "range": [75, 90]},
+            {"value": 95, "label": "95 BPM (Funk)", "range": [90, 110]},
+            {"value": 124, "label": "124 BPM (House)", "range": [120, 130]},
+            {"value": 140, "label": "140 BPM (Tech/Trap)", "range": [135, 150]},
+        ]
+    )
+    key_presets: List[Dict[str, str]] = Field(
+        default_factory=lambda: [
+            {"value": "7A", "label": "7A (D minor)", "notation": "Dm"},
+            {"value": "8A", "label": "8A (A minor)", "notation": "Am"},
+            {"value": "10B", "label": "10B (D major)", "notation": "D"},
+            {"value": "11B", "label": "11B (A major)", "notation": "A"},
+            {"value": "1A", "label": "1A (Ab minor)", "notation": "Abm"},
+            {"value": "2A", "label": "2A (Eb minor)", "notation": "Ebm"},
+            {"value": "3A", "label": "3A (Bb minor)", "notation": "Bbm"},
+            {"value": "4A", "label": "4A (F minor)", "notation": "Fm"},
+            {"value": "5A", "label": "5A (C minor)", "notation": "Cm"},
+            {"value": "6A", "label": "6A (G minor)", "notation": "Gm"},
+            {"value": "9A", "label": "9A (E minor)", "notation": "Em"},
+            {"value": "10A", "label": "10A (B minor)", "notation": "Bm"},
+            {"value": "11A", "label": "11A (F# minor)", "notation": "F#m"},
+            {"value": "12A", "label": "12A (Db minor)", "notation": "Dbm"},
+            {"value": "1B", "label": "1B (B major)", "notation": "B"},
+            {"value": "2B", "label": "2B (F# major)", "notation": "F#"},
+            {"value": "3B", "label": "3B (Db major)", "notation": "Db"},
+            {"value": "4B", "label": "4B (Ab major)", "notation": "Ab"},
+            {"value": "5B", "label": "5B (Eb major)", "notation": "Eb"},
+            {"value": "6B", "label": "6B (Bb major)", "notation": "Bb"},
+            {"value": "7B", "label": "7B (F major)", "notation": "F"},
+            {"value": "8B", "label": "8B (C major)", "notation": "C"},
+            {"value": "9B", "label": "9B (G major)", "notation": "G"},
+            {"value": "12B", "label": "12B (E major)", "notation": "E"},
+        ]
+    )
+    energy_presets: List[Dict[str, Any]] = Field(
+        default_factory=lambda: [
+            {"value": i, "label": f"Energy {i}"} for i in range(1, 11)
+        ]
+    )
+    genre_presets: List[Dict[str, str]] = Field(
+        default_factory=lambda: [
+            {"value": "house", "label": "House"},
+            {"value": "tech_house", "label": "Tech House"},
+            {"value": "hiphop", "label": "Hip-Hop"},
+            {"value": "funk", "label": "Funk"},
+            {"value": "soul", "label": "Soul"},
+            {"value": "trap", "label": "Trap"},
+            {"value": "lofi", "label": "Lo-Fi"},
+            {"value": "techno", "label": "Techno"},
+            {"value": "disco", "label": "Disco"},
+        ]
+    )

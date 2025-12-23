@@ -17,6 +17,7 @@ from pathlib import Path
 import uuid
 import time
 import logging
+import re
 
 from ..schemas import (
     ActionIn, ActionOut, VoiceOut, VoiceIntent,
@@ -453,8 +454,6 @@ def api_humanize_midi(request: HumanizeRequest):
 # ============================================================================
 # GPT Actions - Natural Language Control
 # ============================================================================
-
-import re
 
 def extract_style(prompt: str) -> str:
     """Extract music style from natural language."""
@@ -2021,7 +2020,6 @@ def live_natural_language_command(request: GPTGenerateRequest):
         if "create" in prompt and "track" in prompt:
             track_type = "midi" if "midi" in prompt else ("audio" if "audio" in prompt else "midi")
             # Extract name if quoted
-            import re
             name_match = re.search(r"['\"]([^'\"]+)['\"]", request.prompt)
             name = name_match.group(1) if name_match else None
             
@@ -2082,6 +2080,95 @@ def live_natural_language_command(request: GPTGenerateRequest):
     except Exception as e:
         logger.error(f"Natural language command failed: {e}")
         return LiveCommandResponse(status="error", command="natural_language", error=str(e))
+
+
+# ============================================================================
+# Audio Analysis Endpoints
+# ============================================================================
+
+@app.post("/analyze/upload", response_model=dict)
+async def analyze_upload(file: UploadFile = File(...)):
+    """
+    Upload and analyze an audio file.
+    
+    Accepts WAV, MP3, FLAC, AIF files.
+    Returns BPM, key, energy, MusicBrainz data, and SERGIK DNA match.
+    """
+    import tempfile
+    import os
+    
+    try:
+        # Save uploaded file to temp location
+        suffix = Path(file.filename).suffix if file.filename else '.wav'
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            tmp_path = tmp.name
+        
+        # Run full analysis
+        from ..pipelines.audio_analysis import full_analysis
+        result = full_analysis(file_path=tmp_path)
+        
+        # Cleanup temp file
+        os.unlink(tmp_path)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Audio analysis upload failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze/url", response_model=dict)
+async def analyze_url(url: str = Query(..., description="URL to YouTube, SoundCloud, or direct audio file")):
+    """
+    Download audio from URL and analyze it.
+    
+    Supports YouTube, SoundCloud, and direct audio URLs.
+    Uses yt-dlp for extraction.
+    """
+    try:
+        from ..pipelines.audio_analysis import full_analysis
+        result = full_analysis(url=url)
+        return result
+        
+    except Exception as e:
+        logger.error(f"Audio analysis URL failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze/path", response_model=dict)
+async def analyze_path(file_path: str = Query(..., description="Path to local audio file")):
+    """
+    Analyze a local audio file by path.
+    
+    Use this endpoint when the file already exists on the server.
+    """
+    try:
+        if not Path(file_path).exists():
+            raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+        
+        from ..pipelines.audio_analysis import full_analysis
+        result = full_analysis(file_path=file_path)
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Audio analysis path failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analyze/presets", response_model=dict)
+async def get_analysis_presets():
+    """
+    Get available presets for analysis parameter dropdowns.
+    
+    Returns tempo, key, energy, and genre preset options.
+    """
+    from ..schemas import AnalysisPresets
+    presets = AnalysisPresets()
+    return presets.model_dump()
 
 
 # ============================================================================

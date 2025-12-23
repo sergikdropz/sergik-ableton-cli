@@ -48,6 +48,19 @@ requests>=2.28.0
 click>=8.0.0
 
 # ============================================================================
+# Audio Analysis & Fingerprinting
+# ============================================================================
+
+# AcoustID fingerprinting (requires fpcalc binary)
+pyacoustid>=1.2.0
+
+# MusicBrainz metadata lookup
+musicbrainzngs>=0.7.1
+
+# URL audio extraction
+yt-dlp>=2024.1.1
+
+# ============================================================================
 # Optional: ML/AI Enhancements
 # ============================================================================
 
