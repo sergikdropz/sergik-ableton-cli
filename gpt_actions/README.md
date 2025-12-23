@@ -144,8 +144,130 @@ curl https://api-inference.huggingface.co/models/facebook/musicgen-small \
 
 ---
 
+## Option 6: SERGIK ML API (Full Ableton Integration)
+
+The SERGIK ML API provides comprehensive natural language control for music production with **complete Ableton Live integration**.
+
+### Features
+
+- **Full Track Management**: Create/delete/mute/solo/arm tracks, set volume/pan
+- **Device Control**: Load instruments, effects, VSTs, control parameters, load presets
+- **Clip Management**: Create/fire/stop/duplicate clips, set/get MIDI notes
+- **Browser Access**: Search library, load samples, hot-swap sounds
+- **Session Control**: Fire scenes, set tempo, quantization, undo/redo
+- **Transport Control**: Play, stop, record, stop all clips
+- **Mixer Control**: Set send levels, pan, volume
+- **Natural Language MIDI Generation**: "generate a tech house chord progression in D minor"
+- **Drum Pattern Generation**: MIDI or audio drums with 12+ genre presets
+- **SERGIK DNA Analysis**: Compare tracks against your production DNA
+- **Voice Control**: Push-to-talk with STT/TTS
+
+### Setup
+
+1. Start the SERGIK ML server:
+```bash
+cd sergik_custom_gpt
+python -m sergik_ml.serving.api
+```
+
+2. Load the SERGIK AI Controller M4L device in Ableton
+
+3. (Optional) Expose via ngrok for remote access:
+```bash
+ngrok http 8000
+```
+
+4. Import `sergik_gpt_openapi.yaml` into your Custom GPT Actions
+
+### Key Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| **Ableton Live Control** | |
+| `POST /live/tracks/create` | Create MIDI/Audio/Return track |
+| `PATCH /live/tracks/{index}` | Update track properties |
+| `DELETE /live/tracks/{index}` | Delete track |
+| `GET /live/tracks` | List all tracks |
+| `POST /live/devices/load` | Load Ableton device |
+| `POST /live/devices/load_vst` | Load VST/AU plugin |
+| `PATCH /live/devices/param` | Set device parameter |
+| `GET /live/devices/{track}` | List devices on track |
+| `POST /live/clips/create` | Create empty clip |
+| `POST /live/clips/fire` | Fire/launch clip |
+| `POST /live/clips/notes` | Set MIDI notes in clip |
+| `GET /live/clips/{track}/{slot}` | Get clip notes |
+| `GET /live/browser/search` | Search Ableton library |
+| `POST /live/browser/load` | Load item from browser |
+| `POST /live/scenes/fire` | Fire scene |
+| `POST /live/session/tempo` | Set tempo |
+| `GET /live/session/state` | Get full session state |
+| `POST /live/transport/{action}` | Transport control |
+| `POST /live/command` | Natural language command |
+| **Natural Language** | |
+| `POST /gpt/generate` | Natural language MIDI generation |
+| `POST /gpt/drums` | Natural language drum generation |
+| `POST /gpt/analyze` | SERGIK DNA analysis |
+| `GET /gpt/catalog/search` | Search project catalog |
+| **Drum Generation** | |
+| `POST /drums/generate` | Generate drum pattern (MIDI) |
+| `POST /drums/generate/audio` | Generate drum audio (WAV) |
+| `GET /drums/genres` | List available drum genres |
+| **MIDI Generation** | |
+| `POST /generate/chord_progression` | Direct chord generation |
+| `POST /generate/walking_bass` | Bass line generation |
+| `POST /generate/arpeggios` | Arpeggio generation |
+| `POST /transform/humanize` | Humanize MIDI |
+
+### Supported Drum Genres
+
+| Genre | BPM Range | Description |
+|-------|-----------|-------------|
+| `house` | 120-130 | Classic 4-on-the-floor |
+| `tech_house` | 124-128 | Syncopated hats + percs |
+| `techno` | 125-140 | Minimal, hypnotic |
+| `hiphop` / `boom_bap` | 85-100 | Classic boom bap |
+| `trap` | 130-150 | 808s + hi-hat rolls |
+| `dnb` / `jungle` | 170-180 | Fast breakbeats |
+| `reggaeton` / `dembow` | 90-100 | Dembow rhythm |
+| `ambient` / `downtempo` | 70-90 | Sparse, atmospheric |
+| `lo_fi` | 75-90 | Lo-fi hip-hop |
+
+### Example GPT Prompts
+
+**Ableton Control:**
+```
+"Create a new MIDI track called 'Lead Synth'"
+"Add Wavetable to track 2"
+"Load Serum VST on the bass track"
+"Set the filter cutoff to 50% on track 1 device 0"
+"Mute tracks 3 and 4"
+"Solo the vocals"
+"Fire scene 4"
+"Set tempo to 128 BPM"
+"Duplicate the clip in slot 3"
+```
+
+**MIDI Generation:**
+```
+"Generate a tech house chord progression in 10B with stab voicing"
+"Create a walking bass line in D minor, house style, 8 bars"
+"Make a trap drum pattern at 140 BPM with hi-hat rolls"
+"Generate 8 bars of minimal techno drums with 15% swing"
+"Humanize the drums by 25%"
+```
+
+**Analysis & Library:**
+```
+"Analyze my current track and suggest improvements"
+"Search my library for '808 kick' samples"
+"Scan my samples folder at ~/Music/Samples/Drums"
+```
+
+---
+
 ## OpenAPI Schema Files
 
-- `replicate_openapi.yaml` - Replicate API schema
-- `ableton_openapi.yaml` - Ableton bridge schema (generate after running server)
+- `sergik_gpt_openapi.yaml` - **SERGIK ML API** (Full Ableton integration, MIDI generation, analysis)
+- `replicate_openapi.yaml` - Replicate API schema (audio generation)
+- `ableton_openapi.yaml` - Ableton bridge schema (transport control)
 - `mubert_openapi.yaml` - Mubert API schema (requires API key)

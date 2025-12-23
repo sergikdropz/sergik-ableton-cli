@@ -1,0 +1,1911 @@
+openapi: 3.1.0
+info:
+  title: SERGIK AI Music Production API
+  description: |
+    GPT Actions API for SERGIK AI - Advanced music production assistant for Ableton Live.
+    
+    Features:
+    - Natural language MIDI generation (chords, bass, arpeggios)
+    - SERGIK DNA analysis and suggestions
+    - Catalog search across 20k+ projects
+    - Real-time Ableton Live control via OSC
+    - AI-powered transformations and humanization
+    
+    This API is designed to be used with ChatGPT GPT Actions or similar LLM integrations.
+  version: 2.0.0
+  contact:
+    name: SERGIK Production System
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://sergik-api.ngrok.io
+    description: Production (ngrok tunnel)
+
+tags:
+  - name: GPT Actions
+    description: Natural language endpoints for ChatGPT integration
+  - name: Ableton Live
+    description: Full Ableton Live control (tracks, devices, clips, browser, session)
+  - name: Generation
+    description: MIDI and audio generation endpoints
+  - name: Drums
+    description: Drum pattern generation and sample library management
+  - name: Analysis
+    description: Track analysis and SERGIK DNA
+  - name: Catalog
+    description: Search and browse project catalog
+  - name: Transport
+    description: Ableton Live transport control
+  - name: Tracks
+    description: Track and mixer control
+
+paths:
+  # ============================================================================
+  # GPT Actions - Natural Language Interface
+  # ============================================================================
+  
+  /gpt/health:
+    get:
+      operationId: gptHealthCheck
+      summary: Check GPT Actions API status
+      tags: [GPT Actions]
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  service:
+                    type: string
+                    example: "sergik-ml-gpt"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  timestamp:
+                    type: number
+                    example: 1703347200.123
+
+  /gpt/generate:
+    post:
+      operationId: gptGenerate
+      summary: Generate MIDI from natural language
+      description: |
+        Parse natural language prompts and generate appropriate MIDI content.
+        
+        Examples:
+        - "generate a tech house chord progression in D minor"
+        - "create a walking bass line in 10B"
+        - "make some arpeggios going upward"
+        - "give me 8 bars of stab chords at 126 BPM"
+      tags: [GPT Actions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  description: Natural language generation request
+                  example: "generate a tech house chord progression in D minor"
+                track_id:
+                  type: string
+                  description: Optional track context for style matching
+      responses:
+        '200':
+          description: Generated MIDI content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPTGenerateResponse'
+
+  /gpt/analyze:
+    post:
+      operationId: gptAnalyze
+      summary: Analyze track with SERGIK DNA
+      description: |
+        Analyze a track against SERGIK's production DNA and provide suggestions.
+        Returns BPM, key, energy analysis with catalog comparison.
+      tags: [GPT Actions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                track_id:
+                  type: string
+                  description: Track ID to analyze
+                  example: "track_abc123"
+      responses:
+        '200':
+          description: Track analysis with suggestions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPTAnalyzeResponse'
+
+  /gpt/transform:
+    post:
+      operationId: gptTransform
+      summary: Transform MIDI with natural language
+      description: |
+        Apply MIDI transformations using natural language.
+        
+        Examples:
+        - "humanize the drums by 30%"
+        - "add swing to the hi-hats"
+        - "quantize to 1/16th notes"
+      tags: [GPT Actions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  description: Transformation request
+                  example: "humanize drums by 30%"
+                track_id:
+                  type: string
+                  description: Optional track context
+      responses:
+        '200':
+          description: Transformation parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPTTransformResponse'
+
+  /gpt/catalog/search:
+    get:
+      operationId: gptCatalogSearch
+      summary: Search catalog with natural language
+      description: |
+        Search SERGIK's catalog of 20k+ projects using natural language.
+        
+        Examples:
+        - "find tech house tracks at 126 BPM"
+        - "show me tracks in D minor with high energy"
+        - "find similar tracks to my current project"
+      tags: [GPT Actions]
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Natural language search query
+          example: "find tech house tracks at 126 BPM"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Maximum results to return
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogSearchResponse'
+
+  /gpt/drums:
+    post:
+      operationId: gptGenerateDrums
+      summary: Generate drums with natural language
+      description: |
+        Generate drum patterns using natural language prompts.
+        
+        Examples:
+        - "make a tech house beat at 126 bpm"
+        - "create a trap pattern with heavy 808s"
+        - "generate 8 bars of minimal techno drums"
+        - "make a house beat with 20% swing"
+      tags: [GPT Actions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  description: Natural language drum generation request
+                  example: "make a tech house beat at 126 BPM"
+      responses:
+        '200':
+          description: Generated drum pattern
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrumPatternResponse'
+
+  # ============================================================================
+  # Ableton Live Integration
+  # ============================================================================
+
+  /live/tracks/create:
+    post:
+      operationId: liveCreateTrack
+      summary: Create a new track
+      description: Create a MIDI, Audio, or Return track in Ableton Live
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                track_type:
+                  type: string
+                  enum: [midi, audio, return]
+                  default: midi
+                name:
+                  type: string
+                  description: Track name
+                color:
+                  type: integer
+                  minimum: 0
+                  maximum: 69
+                  description: Color index (0-69)
+      responses:
+        '200':
+          description: Track created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/tracks:
+    get:
+      operationId: liveGetTracks
+      summary: List all tracks
+      description: Get list of all tracks with properties
+      tags: [Ableton Live]
+      responses:
+        '200':
+          description: Track list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackListResponse'
+
+  /live/tracks/{track_index}:
+    patch:
+      operationId: liveUpdateTrack
+      summary: Update track properties
+      description: Set track name, color, arm, mute, solo, volume, or pan
+      tags: [Ableton Live]
+      parameters:
+        - name: track_index
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                color:
+                  type: integer
+                arm:
+                  type: boolean
+                mute:
+                  type: boolean
+                solo:
+                  type: boolean
+                volume:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                pan:
+                  type: number
+                  minimum: -1
+                  maximum: 1
+      responses:
+        '200':
+          description: Track updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+    delete:
+      operationId: liveDeleteTrack
+      summary: Delete track
+      tags: [Ableton Live]
+      parameters:
+        - name: track_index
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Track deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/devices/load:
+    post:
+      operationId: liveLoadDevice
+      summary: Load device to track
+      description: Load an Ableton native device (e.g., Wavetable, Reverb)
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [track_index, device_name]
+              properties:
+                track_index:
+                  type: integer
+                device_name:
+                  type: string
+                  description: Device name (e.g., "Wavetable", "Reverb")
+                device_type:
+                  type: string
+                  enum: [instrument, audio_effect, midi_effect]
+                  default: instrument
+      responses:
+        '200':
+          description: Device loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/devices/load_vst:
+    post:
+      operationId: liveLoadVST
+      summary: Load VST/AU plugin
+      description: Load a VST3 or AU plugin to a track
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [track_index, plugin_name]
+              properties:
+                track_index:
+                  type: integer
+                plugin_name:
+                  type: string
+                  description: Plugin name (e.g., "Serum", "Massive")
+                plugin_format:
+                  type: string
+                  enum: [vst, vst3, au]
+                  default: vst3
+      responses:
+        '200':
+          description: VST loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/devices/{track_index}:
+    get:
+      operationId: liveGetDevices
+      summary: List devices on track
+      tags: [Ableton Live]
+      parameters:
+        - name: track_index
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Device list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceListResponse'
+
+  /live/devices/param:
+    patch:
+      operationId: liveSetDeviceParam
+      summary: Set device parameter
+      description: Set a device parameter value (0-1 normalized)
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [track_index, device_index, value]
+              properties:
+                track_index:
+                  type: integer
+                device_index:
+                  type: integer
+                param_index:
+                  type: integer
+                param_name:
+                  type: string
+                  description: Parameter name (alternative to index)
+                value:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+      responses:
+        '200':
+          description: Parameter set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/clips/create:
+    post:
+      operationId: liveCreateClip
+      summary: Create empty MIDI clip
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [track_index, slot_index]
+              properties:
+                track_index:
+                  type: integer
+                slot_index:
+                  type: integer
+                length_beats:
+                  type: number
+                  default: 16
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Clip created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/clips/fire:
+    post:
+      operationId: liveFireClip
+      summary: Fire/launch clip
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [track_index, slot_index]
+              properties:
+                track_index:
+                  type: integer
+                slot_index:
+                  type: integer
+      responses:
+        '200':
+          description: Clip fired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/clips/notes:
+    post:
+      operationId: liveSetClipNotes
+      summary: Set MIDI notes in clip
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [track_index, slot_index, notes]
+              properties:
+                track_index:
+                  type: integer
+                slot_index:
+                  type: integer
+                notes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/MIDINote'
+                replace:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: Notes set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/browser/search:
+    get:
+      operationId: liveBrowserSearch
+      summary: Search Ableton library
+      tags: [Ableton Live]
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [sounds, drums, instruments, audio_effects, midi_effects, plugins, samples, packs]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrowserSearchResponse'
+
+  /live/scenes/fire:
+    post:
+      operationId: liveFireScene
+      summary: Fire/launch scene
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scene_index]
+              properties:
+                scene_index:
+                  type: integer
+      responses:
+        '200':
+          description: Scene fired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/session/tempo:
+    post:
+      operationId: liveSetTempo
+      summary: Set session tempo
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tempo]
+              properties:
+                tempo:
+                  type: number
+                  minimum: 20
+                  maximum: 999
+      responses:
+        '200':
+          description: Tempo set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/session/state:
+    get:
+      operationId: liveGetSessionState
+      summary: Get full session state
+      description: Returns tempo, transport state, track/scene counts
+      tags: [Ableton Live]
+      responses:
+        '200':
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionStateResponse'
+
+  /live/transport/{action}:
+    post:
+      operationId: liveTransport
+      summary: Transport control
+      description: "Actions: play, stop, record, continue, stop_all_clips"
+      tags: [Ableton Live]
+      parameters:
+        - name: action
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [play, stop, record, continue, stop_all_clips]
+      responses:
+        '200':
+          description: Transport action executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  /live/command:
+    post:
+      operationId: liveNaturalLanguageCommand
+      summary: Natural language Ableton command
+      description: |
+        Execute Ableton commands via natural language.
+        
+        Examples:
+        - "Create a new MIDI track called 'Lead Synth'"
+        - "Set tempo to 128"
+        - "Mute track 2"
+        - "Fire scene 4"
+      tags: [Ableton Live]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  description: Natural language command
+      responses:
+        '200':
+          description: Command executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCommandResponse'
+
+  # ============================================================================
+  # Drum Generation Endpoints
+  # ============================================================================
+  
+  /drums/genres:
+    get:
+      operationId: getDrumGenres
+      summary: List available drum genres
+      description: Get list of supported drum genres with descriptions
+      tags: [Drums]
+      responses:
+        '200':
+          description: Genre list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  genres:
+                    type: array
+                    items:
+                      type: string
+                  count:
+                    type: integer
+                  descriptions:
+                    type: object
+
+  /drums/map:
+    get:
+      operationId: getDrumMap
+      summary: Get GM drum mapping
+      description: Get General MIDI drum mapping (instrument name -> MIDI note)
+      tags: [Drums]
+      responses:
+        '200':
+          description: Drum map
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  drum_map:
+                    type: object
+
+  /drums/generate:
+    post:
+      operationId: generateDrumPattern
+      summary: Generate drum pattern (MIDI)
+      description: |
+        Generate a drum pattern as MIDI notes.
+        
+        Supported genres: house, tech_house, techno, hiphop, boom_bap, trap, 
+        dnb, jungle, reggaeton, dembow, ambient, downtempo, lo_fi
+      tags: [Drums]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrumPatternRequest'
+      responses:
+        '200':
+          description: Generated drum pattern
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrumPatternResponse'
+
+  /drums/generate/audio:
+    post:
+      operationId: generateDrumAudio
+      summary: Generate drum audio (WAV)
+      description: |
+        Generate drum pattern and render as WAV audio file using samples.
+        Requires a sample library to be scanned first.
+      tags: [Drums]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrumAudioRequest'
+      responses:
+        '200':
+          description: Generated audio file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  genre:
+                    type: string
+                  bars:
+                    type: integer
+                  tempo:
+                    type: number
+                  output_path:
+                    type: string
+                  filename:
+                    type: string
+                  sample_library:
+                    type: string
+
+  /drums/rack/preset:
+    post:
+      operationId: createDrumRackPreset
+      summary: Create drum rack preset
+      description: Create a drum rack preset file with sample mappings
+      tags: [Drums]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrumRackPresetRequest'
+      responses:
+        '200':
+          description: Preset created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  name:
+                    type: string
+                  output_path:
+                    type: string
+                  pads:
+                    type: integer
+
+  /samples/scan:
+    post:
+      operationId: scanSampleLibrary
+      summary: Scan directory for samples
+      description: |
+        Scan a directory and index all audio samples with auto-categorization.
+        Samples are categorized by instrument type (kick, snare, hat, etc.)
+      tags: [Drums]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SampleLibraryScanRequest'
+      responses:
+        '200':
+          description: Library scanned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleLibraryResponse'
+
+  /samples/scan/ableton:
+    post:
+      operationId: scanAbletonLibrary
+      summary: Scan Ableton sample library
+      description: |
+        Automatically scan default Ableton Live sample library locations:
+        - ~/Music/Ableton/User Library/Samples
+        - /Applications/Ableton Live 12 Suite.app/.../Core Library/Samples
+      tags: [Drums]
+      responses:
+        '200':
+          description: Ableton library scanned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleLibraryResponse'
+
+  /samples/libraries:
+    get:
+      operationId: listSampleLibraries
+      summary: List scanned sample libraries
+      description: Get all scanned sample libraries with statistics
+      tags: [Drums]
+      responses:
+        '200':
+          description: Library list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  libraries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        path:
+                          type: string
+                        total_samples:
+                          type: integer
+                        categories:
+                          type: array
+                          items:
+                            type: string
+                  count:
+                    type: integer
+
+  /samples/search:
+    get:
+      operationId: searchSamples
+      summary: Search samples in libraries
+      description: Search indexed samples by category and library
+      tags: [Drums]
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: "Sample category: kick, snare, hat, clap, perc, etc."
+        - name: library
+          in: query
+          schema:
+            type: string
+          description: Library name to search
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Sample'
+                  count:
+                    type: integer
+                  category:
+                    type: string
+                  library:
+                    type: string
+
+  # ============================================================================
+  # Direct Generation Endpoints
+  # ============================================================================
+  
+  /generate/chord_progression:
+    post:
+      operationId: generateChordProgression
+      summary: Generate chord progression
+      description: |
+        Generate harmonically-aware chord progressions with various voicings.
+        Supports Camelot keys and common progression patterns.
+      tags: [Generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChordProgressionRequest'
+      responses:
+        '200':
+          description: Generated chord notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MIDINotesResponse'
+
+  /generate/walking_bass:
+    post:
+      operationId: generateWalkingBass
+      summary: Generate walking bass line
+      description: |
+        Generate bass lines that follow chord progressions.
+        Supports jazz, house, and techno styles.
+      tags: [Generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalkingBassRequest'
+      responses:
+        '200':
+          description: Generated bass notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MIDINotesResponse'
+
+  /generate/arpeggios:
+    post:
+      operationId: generateArpeggios
+      summary: Generate arpeggios
+      description: |
+        Generate arpeggios from chord progressions with various patterns.
+        Supports up, down, updown, pingpong, and random patterns.
+      tags: [Generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArpeggioRequest'
+      responses:
+        '200':
+          description: Generated arpeggio notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MIDINotesResponse'
+
+  /generate/drum_variations:
+    post:
+      operationId: generateDrumVariations
+      summary: Generate drum variations
+      description: |
+        Create variations from a seed drum pattern.
+        Includes sparse, ghost notes, shuffle, dynamics, and half-time variations.
+      tags: [Generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrumVariationRequest'
+      responses:
+        '200':
+          description: Generated drum variations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  variations:
+                    type: array
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/MIDINote'
+                  count:
+                    type: integer
+
+  /transform/humanize:
+    post:
+      operationId: humanizeMIDI
+      summary: Humanize MIDI notes
+      description: Add human feel with timing and velocity variance
+      tags: [Generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HumanizeRequest'
+      responses:
+        '200':
+          description: Humanized MIDI notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MIDINotesResponse'
+
+  # ============================================================================
+  # Analysis Endpoints
+  # ============================================================================
+  
+  /tracks:
+    get:
+      operationId: listTracks
+      summary: List tracks in database
+      tags: [Analysis]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+            default: 100
+        - name: rated_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Track list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tracks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Track'
+                  count:
+                    type: integer
+
+  /tracks/{track_id}:
+    get:
+      operationId: getTrack
+      summary: Get track details
+      tags: [Analysis]
+      parameters:
+        - name: track_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Track'
+        '404':
+          description: Track not found
+
+  /similar/{track_id}:
+    get:
+      operationId: getSimilar
+      summary: Find similar tracks
+      tags: [Analysis]
+      parameters:
+        - name: track_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: k
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: style
+          in: query
+          schema:
+            type: string
+          description: Filter by style/genre
+      responses:
+        '200':
+          description: Similar tracks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  track_id:
+                    type: string
+                  similar:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+
+  # ============================================================================
+  # Transport Control
+  # ============================================================================
+  
+  /health:
+    get:
+      operationId: healthCheck
+      summary: API health check
+      tags: [Transport]
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  service:
+                    type: string
+                    example: "sergik-ml"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  /action:
+    post:
+      operationId: executeAction
+      summary: Execute action command
+      description: |
+        Execute various actions including:
+        - live.* - Ableton Live control via OSC
+        - pack.create - Create sample pack
+        - pack.rate - Rate a track
+        - pack.similar - Find similar tracks
+        - gen.generate_loop - Generate audio loop
+      tags: [Transport]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionRequest'
+      responses:
+        '200':
+          description: Action executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResponse'
+
+  /voice:
+    post:
+      operationId: processVoice
+      summary: Process voice recording
+      description: Upload WAV file for STT, intent parsing, and action execution
+      tags: [Transport]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: WAV audio file
+      responses:
+        '200':
+          description: Voice processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceResponse'
+
+components:
+  schemas:
+    # ========================================================================
+    # GPT Action Schemas
+    # ========================================================================
+    
+    GPTGenerateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        prompt:
+          type: string
+        result:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [chord_progression, bass, arpeggios, drums]
+            notes:
+              type: array
+              items:
+                $ref: '#/components/schemas/MIDINote'
+            description:
+              type: string
+        error:
+          type: string
+
+    GPTAnalyzeResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        analysis:
+          type: object
+          properties:
+            track_id:
+              type: string
+            bpm:
+              type: number
+            key:
+              type: string
+            energy:
+              type: number
+            sergik_dna_match:
+              type: boolean
+            suggestions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Suggestion'
+            catalog_comparison:
+              type: object
+              properties:
+                bpm_zone:
+                  type: string
+                key_match:
+                  type: string
+                energy_level:
+                  type: string
+
+    GPTTransformResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        prompt:
+          type: string
+        action:
+          type: string
+        parameters:
+          type: object
+        description:
+          type: string
+
+    CatalogSearchResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        query:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Track'
+        count:
+          type: integer
+        description:
+          type: string
+
+    Suggestion:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [tempo, energy, harmony, arrangement]
+        description:
+          type: string
+        rationale:
+          type: string
+        action:
+          type: object
+          nullable: true
+
+    # ========================================================================
+    # Drum Generation Schemas
+    # ========================================================================
+    
+    DrumPatternRequest:
+      type: object
+      properties:
+        genre:
+          type: string
+          default: "house"
+          description: "Genre: house, tech_house, techno, hiphop, trap, dnb, reggaeton, ambient"
+          enum: [house, tech_house, techno, hiphop, boom_bap, trap, dnb, jungle, reggaeton, dembow, ambient, downtempo, lo_fi]
+        bars:
+          type: integer
+          minimum: 1
+          maximum: 32
+          default: 4
+        tempo:
+          type: number
+          minimum: 60
+          maximum: 200
+          default: 125
+        swing:
+          type: number
+          minimum: 0
+          maximum: 100
+          default: 0
+          description: "Swing amount 0-100%"
+        humanize:
+          type: number
+          minimum: 0
+          maximum: 100
+          default: 0
+          description: "Humanization 0-100%"
+        density:
+          type: number
+          minimum: 0.1
+          maximum: 2.0
+          default: 1.0
+          description: "Pattern density multiplier"
+
+    DrumAudioRequest:
+      type: object
+      properties:
+        genre:
+          type: string
+          default: "house"
+        bars:
+          type: integer
+          default: 4
+        tempo:
+          type: number
+          default: 125
+        swing:
+          type: number
+          default: 0
+        humanize:
+          type: number
+          default: 0
+        sample_library:
+          type: string
+          description: "Sample library name to use (must be scanned first)"
+        output_filename:
+          type: string
+          description: "Output filename (without path)"
+
+    DrumPatternResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        pattern_name:
+          type: string
+        genre:
+          type: string
+        bars:
+          type: integer
+        tempo:
+          type: number
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MIDINote'
+        count:
+          type: integer
+        description:
+          type: string
+        prompt:
+          type: string
+
+    DrumRackPresetRequest:
+      type: object
+      required: [name, samples]
+      properties:
+        name:
+          type: string
+          description: "Preset name"
+        samples:
+          type: object
+          description: "Mapping of pad name to sample path"
+          additionalProperties:
+            type: string
+
+    SampleLibraryScanRequest:
+      type: object
+      required: [path]
+      properties:
+        path:
+          type: string
+          description: "Directory path to scan"
+        library_name:
+          type: string
+          description: "Name for this library"
+        recursive:
+          type: boolean
+          default: true
+          description: "Scan subdirectories"
+
+    SampleLibraryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        name:
+          type: string
+        path:
+          type: string
+        total_samples:
+          type: integer
+        categories:
+          type: object
+          additionalProperties:
+            type: integer
+
+    Sample:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        category:
+          type: string
+        duration:
+          type: number
+        tags:
+          type: array
+          items:
+            type: string
+        library:
+          type: string
+
+    # ========================================================================
+    # Generation Request Schemas
+    # ========================================================================
+    
+    ChordProgressionRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          default: "10B"
+          description: Camelot key (e.g., 10B, 7A)
+        progression_type:
+          type: string
+          default: "i-VI-III-VII"
+          description: Progression pattern
+        bars:
+          type: integer
+          minimum: 1
+          maximum: 64
+          default: 8
+        voicing:
+          type: string
+          enum: [stabs, pads]
+          default: stabs
+        seventh_chords:
+          type: boolean
+          default: true
+        tempo:
+          type: number
+          minimum: 60
+          maximum: 200
+          default: 125
+
+    WalkingBassRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          default: "10B"
+        chord_progression_type:
+          type: string
+          default: "i-VI-III-VII"
+        style:
+          type: string
+          enum: [jazz, house, techno]
+          default: house
+        bars:
+          type: integer
+          minimum: 1
+          maximum: 64
+          default: 8
+        tempo:
+          type: number
+          default: 125
+
+    ArpeggioRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          default: "10B"
+        chord_progression_type:
+          type: string
+          default: "i-VI-III-VII"
+        pattern:
+          type: string
+          enum: [up, down, updown, random, pingpong]
+          default: up
+        speed:
+          type: number
+          default: 0.25
+          description: Note speed in beats (0.25 = 16th notes)
+        octaves:
+          type: integer
+          minimum: 1
+          maximum: 4
+          default: 2
+        bars:
+          type: integer
+          default: 4
+        tempo:
+          type: number
+          default: 125
+
+    DrumVariationRequest:
+      type: object
+      required: [seed_pattern]
+      properties:
+        seed_pattern:
+          type: array
+          items:
+            $ref: '#/components/schemas/MIDINote'
+        num_variations:
+          type: integer
+          minimum: 1
+          maximum: 16
+          default: 8
+
+    HumanizeRequest:
+      type: object
+      required: [notes]
+      properties:
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MIDINote'
+        timing_variance_ms:
+          type: number
+          minimum: 0
+          maximum: 100
+          default: 20
+        velocity_variance:
+          type: integer
+          minimum: 0
+          maximum: 40
+          default: 10
+        tempo:
+          type: number
+          default: 125
+
+    # ========================================================================
+    # Core Schemas
+    # ========================================================================
+    
+    MIDINote:
+      type: object
+      properties:
+        pitch:
+          type: integer
+          minimum: 0
+          maximum: 127
+        start_time:
+          type: number
+          description: Start time in beats
+        duration:
+          type: number
+          description: Duration in beats
+        velocity:
+          type: integer
+          minimum: 0
+          maximum: 127
+        mute:
+          type: integer
+          enum: [0, 1]
+          default: 0
+
+    MIDINotesResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MIDINote'
+        count:
+          type: integer
+
+    Track:
+      type: object
+      properties:
+        track_id:
+          type: string
+        title:
+          type: string
+        bpm:
+          type: number
+        key:
+          type: string
+        energy:
+          type: number
+        style:
+          type: string
+        rating:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    ActionRequest:
+      type: object
+      required: [cmd]
+      properties:
+        cmd:
+          type: string
+          description: Command to execute
+        args:
+          type: object
+          default: {}
+        meta:
+          type: object
+          default: {}
+
+    ActionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        cmd:
+          type: string
+        result:
+          type: object
+        error:
+          type: string
+
+    VoiceResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        text:
+          type: string
+          description: Transcribed text
+        intent:
+          type: object
+          properties:
+            text:
+              type: string
+            cmd:
+              type: string
+            args:
+              type: object
+            tts:
+              type: string
+            confidence:
+              type: number
+        action:
+          $ref: '#/components/schemas/ActionResponse'
+        tts_path:
+          type: string
+        error:
+          type: string
+
+    # ========================================================================
+    # Ableton Live Integration Schemas
+    # ========================================================================
+
+    LiveCommandResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        command:
+          type: string
+        result:
+          type: object
+        error:
+          type: string
+
+    TrackListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveTrackInfo'
+        count:
+          type: integer
+        error:
+          type: string
+
+    LiveTrackInfo:
+      type: object
+      properties:
+        index:
+          type: integer
+        name:
+          type: string
+        track_type:
+          type: string
+        color:
+          type: integer
+        arm:
+          type: boolean
+        mute:
+          type: boolean
+        solo:
+          type: boolean
+        volume:
+          type: number
+        pan:
+          type: number
+        has_midi_input:
+          type: boolean
+        has_audio_input:
+          type: boolean
+        device_count:
+          type: integer
+
+    DeviceListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        track_index:
+          type: integer
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDeviceInfo'
+        count:
+          type: integer
+        error:
+          type: string
+
+    LiveDeviceInfo:
+      type: object
+      properties:
+        index:
+          type: integer
+        name:
+          type: string
+        class_name:
+          type: string
+        enabled:
+          type: boolean
+        param_count:
+          type: integer
+
+    BrowserSearchResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        query:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrowserItem'
+        count:
+          type: integer
+        error:
+          type: string
+
+    BrowserItem:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        item_type:
+          type: string
+        is_folder:
+          type: boolean
+        is_loadable:
+          type: boolean
+
+    SessionStateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        tempo:
+          type: number
+        is_playing:
+          type: boolean
+        is_recording:
+          type: boolean
+        current_song_time:
+          type: number
+        loop_start:
+          type: number
+        loop_length:
+          type: number
+        track_count:
+          type: integer
+        scene_count:
+          type: integer
+        return_track_count:
+          type: integer
+        quantization:
+          type: string
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveTrackInfo'
+        scenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SceneInfo'
+        error:
+          type: string
+
+    SceneInfo:
+      type: object
+      properties:
+        index:
+          type: integer
+        name:
+          type: string
+        color:
+          type: integer
+        tempo:
+          type: number
+

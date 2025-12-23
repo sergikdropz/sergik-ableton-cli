@@ -1,0 +1,1653 @@
+/*
+================================================================================
+SERGIK AI Controller - Max for Live Device
+================================================================================
+
+Full-featured controller for SERGIK AI integration in Ableton Live.
+Communicates with the SERGIK ML API server via HTTP requests.
+Provides complete Live Object Model (LOM) access for full Ableton control.
+
+Features:
+  - Natural language MIDI generation (chords, bass, arpeggios)
+  - Drum pattern generation (12+ genres: house, techno, trap, dnb, etc.)
+  - Full Track Management (create/delete/properties/routing)
+  - Device Control (load devices, VSTs, parameters, presets)
+  - Clip Management (create/fire/duplicate/notes)
+  - Browser/Library Access (search/load samples)
+  - Session Control (scenes/mixer/undo/quantization)
+  - Real-time parameter control (swing, humanize, density)
+  - Pattern insertion into clips
+  - Transport sync
+
+Commands (Inlet 0):
+  Melodic:
+    generate_chords, generate_bass, generate_arps, prompt <text>
+  
+  Drums:
+    generate_drums, drums <genre>, drum_prompt <text>, drum_genre <name>
+    drum_genres, swing <0-100>, humanize <0-100>, density <0.1-2.0>
+  
+  Tracks:
+    create_track <type> [name], delete_track <index>
+    arm_track <index> [0/1], mute_track <index> [0/1], solo_track <index> [0/1]
+    set_volume <index> <0-1>, set_pan <index> <-1 to 1>
+    rename_track <index> <name>, set_track_color <index> <0-69>
+    get_tracks, get_track_info <index>
+  
+  Devices:
+    load_device <track> <name>, load_vst <track> <name>
+    set_param <track> <device> <param> <value>
+    get_params <track> <device>, toggle_device <track> <device>
+    load_preset <track> <device> <preset_name>
+    get_devices <track>
+  
+  Clips:
+    create_clip <track> <slot> [length], delete_clip <track> <slot>
+    fire_clip <track> <slot>, stop_clip <track> [slot]
+    duplicate_clip <track> <slot> [target_track] [target_slot]
+    set_clip_notes <track> <slot>, get_clip_notes <track> <slot>
+    get_clip_info <track> <slot>
+  
+  Browser:
+    search_library <query>, load_sample <track> <path>
+    hot_swap <track> <device> <sample_path>
+  
+  Session:
+    fire_scene <index>, stop_scene, create_scene [name]
+    delete_scene <index>, duplicate_scene <index>
+    set_tempo <bpm>, set_quantization <value>
+    undo, redo, get_session_state
+  
+  Transport:
+    transport_play, transport_stop, transport_record
+    stop_all_clips
+  
+  Mixer:
+    set_send <track> <send_index> <level>
+  
+  Playback:
+    play, stop, clear, insert
+  
+  System:
+    health, set_api <host> <port>
+
+Inlets:
+  0 - Commands (bang, messages)
+  1 - Key selection (symbol: 10B, 7A, etc.)
+  2 - Bars (int: 1-32)
+  3 - Style (symbol: house, techno, jazz)
+  4 - Voicing (symbol: stabs, pads)
+  5 - Pattern (symbol: up, down, random, pingpong)
+
+Outlets:
+  0 - MIDI notes (pitch velocity)
+  1 - Status messages (for display)
+  2 - Note data (pitch start duration velocity)
+  3 - API/LOM response (JSON string)
+
+Author: SERGIK AI
+Version: 2.0 (Full Ableton Integration)
+================================================================================
+*/
+
+inlets = 6;
+outlets = 4;
+
+// Set inlet/outlet assist
+setinletassist(0, "Commands: tracks, devices, clips, browser, session, etc.");
+setinletassist(1, "Key (10B, 7A, 11B, 8A, etc.)");
+setinletassist(2, "Bars (1-32)");
+setinletassist(3, "Style (house, techno, jazz)");
+setinletassist(4, "Voicing (stabs, pads)");
+setinletassist(5, "Pattern (up, down, random, pingpong)");
+
+setoutletassist(0, "MIDI notes [pitch velocity]");
+setoutletassist(1, "Status messages");
+setoutletassist(2, "Note data [pitch start duration velocity]");
+setoutletassist(3, "API/LOM response JSON");
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
+var API_HOST = "127.0.0.1";
+var API_PORT = 8000;
+var API_BASE_URL = "http://" + API_HOST + ":" + API_PORT;
+
+// Current state
+var currentKey = "10B";
+var currentBars = 8;
+var currentStyle = "house";
+var currentVoicing = "stabs";
+var currentPattern = "up";
+var currentTempo = 125;
+var currentDrumGenre = "house";
+var currentSwing = 0;
+var currentHumanize = 0;
+var currentDensity = 1.0;
+var isConnected = false;
+
+// Generated notes buffer
+var noteBuffer = [];
+var playbackTask = null;
+
+// Track color palette (Ableton's 70 colors indexed 0-69)
+var TRACK_COLORS = 70;
+
+// ============================================================================
+// HTTP Request Handler
+// ============================================================================
+
+function httpRequest(method, endpoint, data, callback) {
+    var url = API_BASE_URL + endpoint;
+    var request = new XMLHttpRequest();
+    
+    request.open(method, url, true);
+    request.setRequestHeader("Content-Type", "application/json");
+    
+    request.onreadystatechange = function() {
+        if (request.readyState === 4) {
+            if (request.status === 200) {
+                try {
+                    var response = JSON.parse(request.responseText);
+                    callback(null, response);
+                } catch (e) {
+                    callback("JSON parse error: " + e, null);
+                }
+            } else {
+                callback("HTTP error: " + request.status, null);
+            }
+        }
+    };
+    
+    if (data) {
+        request.send(JSON.stringify(data));
+    } else {
+        request.send();
+    }
+}
+
+// ============================================================================
+// Status Display
+// ============================================================================
+
+function status(message) {
+    outlet(1, message);
+    post("[SERGIK] " + message + "\n");
+}
+
+function outputJSON(data) {
+    outlet(3, JSON.stringify(data));
+}
+
+// ============================================================================
+// Inlet Handlers
+// ============================================================================
+
+// Inlet 0: Commands
+function anything() {
+    var cmd = messagename;
+    var args = arrayfromargs(arguments);
+    
+    switch(cmd) {
+        // === MIDI Generation ===
+        case "generate_chords":
+            generateChords();
+            break;
+        case "generate_bass":
+            generateBass();
+            break;
+        case "generate_arps":
+            generateArpeggios();
+            break;
+        case "prompt":
+            if (args.length > 0) {
+                naturalLanguageGenerate(args.join(" "));
+            }
+            break;
+            
+        // === Drum Generation ===
+        case "generate_drums":
+            generateDrums();
+            break;
+        case "drums":
+            if (args.length > 0) {
+                generateDrumsFast(args[0]);
+            } else {
+                generateDrums();
+            }
+            break;
+        case "drum_prompt":
+            if (args.length > 0) {
+                naturalLanguageDrums(args.join(" "));
+            }
+            break;
+        case "drum_genre":
+            if (args.length > 0) setDrumGenre(args[0]);
+            break;
+        case "swing":
+            if (args.length > 0) setSwing(parseFloat(args[0]));
+            break;
+        case "humanize":
+            if (args.length > 0) setHumanize(parseFloat(args[0]));
+            break;
+        case "density":
+            if (args.length > 0) setDensity(parseFloat(args[0]));
+            break;
+        case "drum_genres":
+            getDrumGenres();
+            break;
+            
+        // === Track Management ===
+        case "create_track":
+            createTrack(args[0] || "midi", args.slice(1).join(" ") || null);
+            break;
+        case "delete_track":
+            if (args.length > 0) deleteTrack(parseInt(args[0]));
+            break;
+        case "arm_track":
+            if (args.length > 0) armTrack(parseInt(args[0]), args[1] !== undefined ? parseInt(args[1]) : null);
+            break;
+        case "mute_track":
+            if (args.length > 0) muteTrack(parseInt(args[0]), args[1] !== undefined ? parseInt(args[1]) : null);
+            break;
+        case "solo_track":
+            if (args.length > 0) soloTrack(parseInt(args[0]), args[1] !== undefined ? parseInt(args[1]) : null);
+            break;
+        case "set_volume":
+            if (args.length >= 2) setTrackVolume(parseInt(args[0]), parseFloat(args[1]));
+            break;
+        case "set_pan":
+            if (args.length >= 2) setTrackPan(parseInt(args[0]), parseFloat(args[1]));
+            break;
+        case "rename_track":
+            if (args.length >= 2) renameTrack(parseInt(args[0]), args.slice(1).join(" "));
+            break;
+        case "set_track_color":
+            if (args.length >= 2) setTrackColor(parseInt(args[0]), parseInt(args[1]));
+            break;
+        case "get_tracks":
+            getTracks();
+            break;
+        case "get_track_info":
+            if (args.length > 0) getTrackInfo(parseInt(args[0]));
+            break;
+            
+        // === Device Control ===
+        case "load_device":
+            if (args.length >= 2) loadDevice(parseInt(args[0]), args.slice(1).join(" "));
+            break;
+        case "load_vst":
+            if (args.length >= 2) loadVST(parseInt(args[0]), args.slice(1).join(" "));
+            break;
+        case "set_param":
+            if (args.length >= 4) setDeviceParam(parseInt(args[0]), parseInt(args[1]), args[2], parseFloat(args[3]));
+            break;
+        case "get_params":
+            if (args.length >= 2) getDeviceParams(parseInt(args[0]), parseInt(args[1]));
+            break;
+        case "toggle_device":
+            if (args.length >= 2) toggleDevice(parseInt(args[0]), parseInt(args[1]), args[2] !== undefined ? parseInt(args[2]) : null);
+            break;
+        case "load_preset":
+            if (args.length >= 3) loadPreset(parseInt(args[0]), parseInt(args[1]), args.slice(2).join(" "));
+            break;
+        case "get_devices":
+            if (args.length > 0) getDevices(parseInt(args[0]));
+            break;
+            
+        // === Clip Management ===
+        case "create_clip":
+            if (args.length >= 2) createClip(parseInt(args[0]), parseInt(args[1]), args[2] ? parseFloat(args[2]) : 16);
+            break;
+        case "delete_clip":
+            if (args.length >= 2) deleteClip(parseInt(args[0]), parseInt(args[1]));
+            break;
+        case "fire_clip":
+            if (args.length >= 2) fireClip(parseInt(args[0]), parseInt(args[1]));
+            break;
+        case "stop_clip":
+            if (args.length > 0) stopClip(parseInt(args[0]), args[1] !== undefined ? parseInt(args[1]) : null);
+            break;
+        case "duplicate_clip":
+            if (args.length >= 2) duplicateClip(parseInt(args[0]), parseInt(args[1]), args[2] ? parseInt(args[2]) : null, args[3] ? parseInt(args[3]) : null);
+            break;
+        case "set_clip_notes":
+            if (args.length >= 2) setClipNotes(parseInt(args[0]), parseInt(args[1]));
+            break;
+        case "get_clip_notes":
+            if (args.length >= 2) getClipNotes(parseInt(args[0]), parseInt(args[1]));
+            break;
+        case "get_clip_info":
+            if (args.length >= 2) getClipInfo(parseInt(args[0]), parseInt(args[1]));
+            break;
+            
+        // === Browser/Library ===
+        case "search_library":
+            if (args.length > 0) searchLibrary(args.join(" "));
+            break;
+        case "load_sample":
+            if (args.length >= 2) loadSample(parseInt(args[0]), args.slice(1).join(" "));
+            break;
+        case "hot_swap":
+            if (args.length >= 3) hotSwapSample(parseInt(args[0]), parseInt(args[1]), args.slice(2).join(" "));
+            break;
+            
+        // === Session Control ===
+        case "fire_scene":
+            if (args.length > 0) fireScene(parseInt(args[0]));
+            break;
+        case "stop_scene":
+            stopScene();
+            break;
+        case "create_scene":
+            createScene(args.length > 0 ? args.join(" ") : null);
+            break;
+        case "delete_scene":
+            if (args.length > 0) deleteScene(parseInt(args[0]));
+            break;
+        case "duplicate_scene":
+            if (args.length > 0) duplicateScene(parseInt(args[0]));
+            break;
+        case "set_tempo":
+            if (args.length > 0) setTempo(parseFloat(args[0]));
+            break;
+        case "set_quantization":
+            if (args.length > 0) setQuantization(args[0]);
+            break;
+        case "undo":
+            performUndo();
+            break;
+        case "redo":
+            performRedo();
+            break;
+        case "get_session_state":
+            getSessionState();
+            break;
+            
+        // === Transport ===
+        case "transport_play":
+            transportPlay();
+            break;
+        case "transport_stop":
+            transportStop();
+            break;
+        case "transport_record":
+            transportRecord();
+            break;
+        case "stop_all_clips":
+            stopAllClips();
+            break;
+            
+        // === Mixer ===
+        case "set_send":
+            if (args.length >= 3) setTrackSend(parseInt(args[0]), parseInt(args[1]), parseFloat(args[2]));
+            break;
+            
+        // === Playback ===
+        case "play":
+            playNotes();
+            break;
+        case "stop":
+            stopPlayback();
+            break;
+        case "clear":
+            clearBuffer();
+            break;
+        case "insert":
+            insertToClip();
+            break;
+            
+        // === System ===
+        case "health":
+            checkHealth();
+            break;
+        case "set_api":
+            if (args.length >= 2) {
+                API_HOST = args[0];
+                API_PORT = args[1];
+                API_BASE_URL = "http://" + API_HOST + ":" + API_PORT;
+                status("API: " + API_BASE_URL);
+            }
+            break;
+            
+        default:
+            // Try natural language processing for unknown commands
+            naturalLanguageCommand(cmd + " " + args.join(" "));
+    }
+}
+
+function bang() {
+    checkHealth();
+}
+
+// Inlet 1-5: Parameters
+function in1(key) { currentKey = key; status("Key: " + currentKey); }
+function in2(bars) { currentBars = Math.max(1, Math.min(32, bars)); status("Bars: " + currentBars); }
+function in3(style) { currentStyle = style; status("Style: " + currentStyle); }
+function in4(voicing) { currentVoicing = voicing; status("Voicing: " + currentVoicing); }
+function in5(pattern) { currentPattern = pattern; status("Pattern: " + currentPattern); }
+
+// ============================================================================
+// TRACK MANAGEMENT (Live Object Model)
+// ============================================================================
+
+function createTrack(trackType, name) {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        var trackCount = parseInt(liveSet.get("tracks").length / 2);
+        
+        if (trackType === "midi") {
+            liveSet.call("create_midi_track", trackCount);
+            status("✅ Created MIDI track");
+        } else if (trackType === "audio") {
+            liveSet.call("create_audio_track", trackCount);
+            status("✅ Created Audio track");
+        } else if (trackType === "return") {
+            liveSet.call("create_return_track");
+            status("✅ Created Return track");
+        } else {
+            status("❌ Unknown track type: " + trackType);
+            return;
+        }
+        
+        // Rename if name provided
+        if (name) {
+            var newTrack = new LiveAPI("live_set tracks " + trackCount);
+            newTrack.set("name", name);
+            status("✅ Created " + trackType + " track: " + name);
+        }
+        
+        outputJSON({status: "ok", action: "create_track", track_type: trackType, name: name, index: trackCount});
+    } catch (e) {
+        status("❌ Create track failed: " + e);
+        outputJSON({status: "error", error: e.toString()});
+    }
+}
+
+function deleteTrack(index) {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("delete_track", index);
+        status("✅ Deleted track " + index);
+        outputJSON({status: "ok", action: "delete_track", index: index});
+    } catch (e) {
+        status("❌ Delete track failed: " + e);
+        outputJSON({status: "error", error: e.toString()});
+    }
+}
+
+function armTrack(index, state) {
+    try {
+        var track = new LiveAPI("live_set tracks " + index);
+        if (state === null) {
+            // Toggle
+            var current = parseInt(track.get("arm"));
+            track.set("arm", current ? 0 : 1);
+        } else {
+            track.set("arm", state);
+        }
+        var newState = parseInt(track.get("arm"));
+        status("✅ Track " + index + " arm: " + (newState ? "ON" : "OFF"));
+        outputJSON({status: "ok", action: "arm_track", index: index, arm: newState});
+    } catch (e) {
+        status("❌ Arm track failed: " + e);
+    }
+}
+
+function muteTrack(index, state) {
+    try {
+        var track = new LiveAPI("live_set tracks " + index);
+        if (state === null) {
+            var current = parseInt(track.get("mute"));
+            track.set("mute", current ? 0 : 1);
+        } else {
+            track.set("mute", state);
+        }
+        var newState = parseInt(track.get("mute"));
+        status("✅ Track " + index + " mute: " + (newState ? "ON" : "OFF"));
+        outputJSON({status: "ok", action: "mute_track", index: index, mute: newState});
+    } catch (e) {
+        status("❌ Mute track failed: " + e);
+    }
+}
+
+function soloTrack(index, state) {
+    try {
+        var track = new LiveAPI("live_set tracks " + index);
+        if (state === null) {
+            var current = parseInt(track.get("solo"));
+            track.set("solo", current ? 0 : 1);
+        } else {
+            track.set("solo", state);
+        }
+        var newState = parseInt(track.get("solo"));
+        status("✅ Track " + index + " solo: " + (newState ? "ON" : "OFF"));
+        outputJSON({status: "ok", action: "solo_track", index: index, solo: newState});
+    } catch (e) {
+        status("❌ Solo track failed: " + e);
+    }
+}
+
+function setTrackVolume(index, volume) {
+    try {
+        var track = new LiveAPI("live_set tracks " + index);
+        var mixer = new LiveAPI("live_set tracks " + index + " mixer_device volume");
+        mixer.set("value", Math.max(0, Math.min(1, volume)));
+        status("✅ Track " + index + " volume: " + Math.round(volume * 100) + "%");
+        outputJSON({status: "ok", action: "set_volume", index: index, volume: volume});
+    } catch (e) {
+        status("❌ Set volume failed: " + e);
+    }
+}
+
+function setTrackPan(index, pan) {
+    try {
+        var mixer = new LiveAPI("live_set tracks " + index + " mixer_device panning");
+        mixer.set("value", Math.max(-1, Math.min(1, pan)));
+        status("✅ Track " + index + " pan: " + Math.round(pan * 100));
+        outputJSON({status: "ok", action: "set_pan", index: index, pan: pan});
+    } catch (e) {
+        status("❌ Set pan failed: " + e);
+    }
+}
+
+function renameTrack(index, name) {
+    try {
+        var track = new LiveAPI("live_set tracks " + index);
+        track.set("name", name);
+        status("✅ Track " + index + " renamed to: " + name);
+        outputJSON({status: "ok", action: "rename_track", index: index, name: name});
+    } catch (e) {
+        status("❌ Rename track failed: " + e);
+    }
+}
+
+function setTrackColor(index, color) {
+    try {
+        var track = new LiveAPI("live_set tracks " + index);
+        track.set("color_index", Math.max(0, Math.min(69, color)));
+        status("✅ Track " + index + " color: " + color);
+        outputJSON({status: "ok", action: "set_track_color", index: index, color: color});
+    } catch (e) {
+        status("❌ Set track color failed: " + e);
+    }
+}
+
+function getTracks() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        var trackIds = liveSet.get("tracks");
+        var tracks = [];
+        
+        for (var i = 0; i < trackIds.length; i += 2) {
+            var trackIndex = i / 2;
+            var track = new LiveAPI("live_set tracks " + trackIndex);
+            
+            if (track.id) {
+                var mixer = new LiveAPI("live_set tracks " + trackIndex + " mixer_device");
+                var volume = new LiveAPI("live_set tracks " + trackIndex + " mixer_device volume");
+                var panning = new LiveAPI("live_set tracks " + trackIndex + " mixer_device panning");
+                
+                tracks.push({
+                    index: trackIndex,
+                    name: track.get("name").toString(),
+                    color: parseInt(track.get("color_index")),
+                    arm: parseInt(track.get("arm")),
+                    mute: parseInt(track.get("mute")),
+                    solo: parseInt(track.get("solo")),
+                    volume: parseFloat(volume.get("value")),
+                    pan: parseFloat(panning.get("value")),
+                    has_midi_input: parseInt(track.get("has_midi_input")),
+                    has_audio_input: parseInt(track.get("has_audio_input"))
+                });
+            }
+        }
+        
+        status("✅ Found " + tracks.length + " tracks");
+        outputJSON({status: "ok", action: "get_tracks", tracks: tracks, count: tracks.length});
+    } catch (e) {
+        status("❌ Get tracks failed: " + e);
+        outputJSON({status: "error", error: e.toString()});
+    }
+}
+
+function getTrackInfo(index) {
+    try {
+        var track = new LiveAPI("live_set tracks " + index);
+        var mixer = new LiveAPI("live_set tracks " + index + " mixer_device");
+        var volume = new LiveAPI("live_set tracks " + index + " mixer_device volume");
+        var panning = new LiveAPI("live_set tracks " + index + " mixer_device panning");
+        var devices = track.get("devices");
+        
+        var info = {
+            index: index,
+            name: track.get("name").toString(),
+            color: parseInt(track.get("color_index")),
+            arm: parseInt(track.get("arm")),
+            mute: parseInt(track.get("mute")),
+            solo: parseInt(track.get("solo")),
+            volume: parseFloat(volume.get("value")),
+            pan: parseFloat(panning.get("value")),
+            has_midi_input: parseInt(track.get("has_midi_input")),
+            has_audio_input: parseInt(track.get("has_audio_input")),
+            device_count: devices.length / 2
+        };
+        
+        status("✅ Track " + index + ": " + info.name);
+        outputJSON({status: "ok", action: "get_track_info", track: info});
+    } catch (e) {
+        status("❌ Get track info failed: " + e);
+    }
+}
+
+// ============================================================================
+// DEVICE CONTROL (Live Object Model)
+// ============================================================================
+
+function loadDevice(trackIndex, deviceName) {
+    try {
+        var track = new LiveAPI("live_set tracks " + trackIndex);
+        var browser = new LiveAPI("live_app browser");
+        
+        // Use Live's browser to find and load the device
+        // Note: This requires the device to be in the browser's search results
+        status("Loading device: " + deviceName + " on track " + trackIndex);
+        
+        // For native devices, we can use the track's create_device method
+        // This works for built-in Ableton devices
+        try {
+            track.call("create_device", deviceName);
+            status("✅ Loaded device: " + deviceName);
+            outputJSON({status: "ok", action: "load_device", track: trackIndex, device: deviceName});
+        } catch (e) {
+            // If direct creation fails, try via API
+            httpRequest("POST", "/live/devices/load", {
+                track_index: trackIndex,
+                device_name: deviceName
+            }, function(err, response) {
+                if (err) {
+                    status("❌ Load device failed: " + err);
+                } else {
+                    status("✅ " + response.result);
+                    outputJSON(response);
+                }
+            });
+        }
+    } catch (e) {
+        status("❌ Load device failed: " + e);
+    }
+}
+
+function loadVST(trackIndex, pluginName) {
+    try {
+        status("Loading VST: " + pluginName + " on track " + trackIndex);
+        
+        // VST loading requires browser navigation
+        // Send to API for browser-based loading
+        httpRequest("POST", "/live/devices/load_vst", {
+            track_index: trackIndex,
+            plugin_name: pluginName,
+            plugin_format: "vst3"
+        }, function(err, response) {
+            if (err) {
+                status("❌ Load VST failed: " + err);
+            } else {
+                status("✅ Loaded VST: " + pluginName);
+                outputJSON(response);
+            }
+        });
+    } catch (e) {
+        status("❌ Load VST failed: " + e);
+    }
+}
+
+function setDeviceParam(trackIndex, deviceIndex, paramIndexOrName, value) {
+    try {
+        var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex);
+        var params = device.get("parameters");
+        
+        var paramIndex = paramIndexOrName;
+        if (typeof paramIndexOrName === "string") {
+            // Find parameter by name
+            for (var i = 0; i < params.length; i += 2) {
+                var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + (i/2));
+                if (param.get("name").toString().toLowerCase() === paramIndexOrName.toLowerCase()) {
+                    paramIndex = i / 2;
+                    break;
+                }
+            }
+        }
+        
+        var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + paramIndex);
+        param.set("value", Math.max(0, Math.min(1, value)));
+        
+        status("✅ Set param " + paramIndex + " = " + Math.round(value * 100) + "%");
+        outputJSON({status: "ok", action: "set_param", track: trackIndex, device: deviceIndex, param: paramIndex, value: value});
+    } catch (e) {
+        status("❌ Set param failed: " + e);
+    }
+}
+
+function getDeviceParams(trackIndex, deviceIndex) {
+    try {
+        var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex);
+        var paramIds = device.get("parameters");
+        var params = [];
+        
+        for (var i = 0; i < paramIds.length; i += 2) {
+            var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + (i/2));
+            params.push({
+                index: i / 2,
+                name: param.get("name").toString(),
+                value: parseFloat(param.get("value")),
+                min: parseFloat(param.get("min")),
+                max: parseFloat(param.get("max")),
+                default: parseFloat(param.get("default_value"))
+            });
+        }
+        
+        var deviceName = device.get("name").toString();
+        status("✅ " + deviceName + ": " + params.length + " parameters");
+        outputJSON({status: "ok", action: "get_params", device_name: deviceName, params: params});
+    } catch (e) {
+        status("❌ Get params failed: " + e);
+    }
+}
+
+function toggleDevice(trackIndex, deviceIndex, state) {
+    try {
+        var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex);
+        var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters 0");
+        
+        if (state === null) {
+            var current = parseInt(param.get("value"));
+            param.set("value", current ? 0 : 1);
+        } else {
+            param.set("value", state);
+        }
+        
+        var newState = parseInt(param.get("value"));
+        var deviceName = device.get("name").toString();
+        status("✅ " + deviceName + ": " + (newState ? "ON" : "OFF"));
+        outputJSON({status: "ok", action: "toggle_device", device: deviceName, enabled: newState});
+    } catch (e) {
+        status("❌ Toggle device failed: " + e);
+    }
+}
+
+function loadPreset(trackIndex, deviceIndex, presetName) {
+    try {
+        status("Loading preset: " + presetName);
+        
+        httpRequest("POST", "/live/devices/load_preset", {
+            track_index: trackIndex,
+            device_index: deviceIndex,
+            preset_name: presetName
+        }, function(err, response) {
+            if (err) {
+                status("❌ Load preset failed: " + err);
+            } else {
+                status("✅ Loaded preset: " + presetName);
+                outputJSON(response);
+            }
+        });
+    } catch (e) {
+        status("❌ Load preset failed: " + e);
+    }
+}
+
+function getDevices(trackIndex) {
+    try {
+        var track = new LiveAPI("live_set tracks " + trackIndex);
+        var deviceIds = track.get("devices");
+        var devices = [];
+        
+        for (var i = 0; i < deviceIds.length; i += 2) {
+            var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + (i/2));
+            devices.push({
+                index: i / 2,
+                name: device.get("name").toString(),
+                class_name: device.get("class_name").toString(),
+                enabled: parseInt(device.get("is_active"))
+            });
+        }
+        
+        var trackName = track.get("name").toString();
+        status("✅ " + trackName + ": " + devices.length + " devices");
+        outputJSON({status: "ok", action: "get_devices", track: trackName, devices: devices});
+    } catch (e) {
+        status("❌ Get devices failed: " + e);
+    }
+}
+
+// ============================================================================
+// CLIP MANAGEMENT (Live Object Model)
+// ============================================================================
+
+function createClip(trackIndex, slotIndex, lengthBeats) {
+    try {
+        var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex);
+        
+        // Check if slot is empty
+        if (clipSlot.get("has_clip")) {
+            status("❌ Slot already has a clip");
+            return;
+        }
+        
+        clipSlot.call("create_clip", lengthBeats || 16);
+        status("✅ Created clip in track " + trackIndex + " slot " + slotIndex);
+        outputJSON({status: "ok", action: "create_clip", track: trackIndex, slot: slotIndex, length: lengthBeats});
+    } catch (e) {
+        status("❌ Create clip failed: " + e);
+    }
+}
+
+function deleteClip(trackIndex, slotIndex) {
+    try {
+        var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex);
+        clipSlot.call("delete_clip");
+        status("✅ Deleted clip from track " + trackIndex + " slot " + slotIndex);
+        outputJSON({status: "ok", action: "delete_clip", track: trackIndex, slot: slotIndex});
+    } catch (e) {
+        status("❌ Delete clip failed: " + e);
+    }
+}
+
+function fireClip(trackIndex, slotIndex) {
+    try {
+        var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex);
+        clipSlot.call("fire");
+        status("✅ Fired clip: track " + trackIndex + " slot " + slotIndex);
+        outputJSON({status: "ok", action: "fire_clip", track: trackIndex, slot: slotIndex});
+    } catch (e) {
+        status("❌ Fire clip failed: " + e);
+    }
+}
+
+function stopClip(trackIndex, slotIndex) {
+    try {
+        if (slotIndex !== null) {
+            var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex);
+            clipSlot.call("stop");
+        } else {
+            var track = new LiveAPI("live_set tracks " + trackIndex);
+            track.call("stop_all_clips");
+        }
+        status("✅ Stopped clip(s) on track " + trackIndex);
+        outputJSON({status: "ok", action: "stop_clip", track: trackIndex, slot: slotIndex});
+    } catch (e) {
+        status("❌ Stop clip failed: " + e);
+    }
+}
+
+function duplicateClip(trackIndex, slotIndex, targetTrack, targetSlot) {
+    try {
+        var sourceClipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex);
+        
+        if (!sourceClipSlot.get("has_clip")) {
+            status("❌ No clip in source slot");
+            return;
+        }
+        
+        var clip = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex + " clip");
+        
+        // Duplicate to same track next slot if no target specified
+        var destTrack = targetTrack !== null ? targetTrack : trackIndex;
+        var destSlot = targetSlot;
+        
+        if (destSlot === null) {
+            // Find next empty slot
+            var track = new LiveAPI("live_set tracks " + destTrack);
+            var clipSlots = track.get("clip_slots");
+            for (var i = 0; i < clipSlots.length; i += 2) {
+                var slot = new LiveAPI("live_set tracks " + destTrack + " clip_slots " + (i/2));
+                if (!slot.get("has_clip")) {
+                    destSlot = i / 2;
+                    break;
+                }
+            }
+        }
+        
+        if (destSlot === null) {
+            status("❌ No empty slot found");
+            return;
+        }
+        
+        clip.call("duplicate_clip_to", destTrack, destSlot);
+        status("✅ Duplicated clip to track " + destTrack + " slot " + destSlot);
+        outputJSON({status: "ok", action: "duplicate_clip", source_track: trackIndex, source_slot: slotIndex, dest_track: destTrack, dest_slot: destSlot});
+    } catch (e) {
+        status("❌ Duplicate clip failed: " + e);
+    }
+}
+
+function setClipNotes(trackIndex, slotIndex) {
+    if (noteBuffer.length === 0) {
+        status("❌ No notes in buffer - generate first!");
+        return;
+    }
+    
+    try {
+        var clip = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex + " clip");
+        
+        if (!clip.id) {
+            status("❌ No clip in slot");
+            return;
+        }
+        
+        // Clear existing notes
+        clip.call("remove_notes", 0, 0, 128, 127);
+        
+        // Set loop length based on notes
+        var maxTime = 0;
+        for (var i = 0; i < noteBuffer.length; i++) {
+            var endTime = noteBuffer[i].start_time + noteBuffer[i].duration;
+            if (endTime > maxTime) maxTime = endTime;
+        }
+        clip.set("loop_end", Math.ceil(maxTime / 4) * 4);  // Round to nearest bar
+        
+        // Insert notes
+        for (var i = 0; i < noteBuffer.length; i++) {
+            var note = noteBuffer[i];
+            clip.call("add_new_notes");
+            clip.call("notes", 1);
+            clip.call("note", note.pitch, note.start_time, note.duration, note.velocity, note.mute || 0);
+            clip.call("done");
+        }
+        
+        status("✅ Set " + noteBuffer.length + " notes in clip");
+        outputJSON({status: "ok", action: "set_clip_notes", track: trackIndex, slot: slotIndex, count: noteBuffer.length});
+    } catch (e) {
+        status("❌ Set clip notes failed: " + e);
+    }
+}
+
+function getClipNotes(trackIndex, slotIndex) {
+    try {
+        var clip = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex + " clip");
+        
+        if (!clip.id) {
+            status("❌ No clip in slot");
+            return;
+        }
+        
+        var loopEnd = parseFloat(clip.get("loop_end"));
+        var notesData = clip.call("get_notes", 0, 0, loopEnd, 128);
+        
+        // Parse notes data
+        var notes = [];
+        // notesData format: "notes" count [pitch start duration velocity mute]...
+        for (var i = 2; i < notesData.length; i += 5) {
+            notes.push({
+                pitch: notesData[i],
+                start_time: notesData[i + 1],
+                duration: notesData[i + 2],
+                velocity: notesData[i + 3],
+                mute: notesData[i + 4]
+            });
+        }
+        
+        noteBuffer = notes;  // Store in buffer for playback/editing
+        status("✅ Got " + notes.length + " notes from clip");
+        outputJSON({status: "ok", action: "get_clip_notes", track: trackIndex, slot: slotIndex, notes: notes, count: notes.length});
+    } catch (e) {
+        status("❌ Get clip notes failed: " + e);
+    }
+}
+
+function getClipInfo(trackIndex, slotIndex) {
+    try {
+        var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex);
+        
+        if (!clipSlot.get("has_clip")) {
+            status("❌ No clip in slot");
+            return;
+        }
+        
+        var clip = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex + " clip");
+        
+        var info = {
+            track: trackIndex,
+            slot: slotIndex,
+            name: clip.get("name").toString(),
+            color: parseInt(clip.get("color_index")),
+            length: parseFloat(clip.get("length")),
+            loop_start: parseFloat(clip.get("loop_start")),
+            loop_end: parseFloat(clip.get("loop_end")),
+            is_playing: parseInt(clip.get("is_playing")),
+            is_recording: parseInt(clip.get("is_recording")),
+            is_midi_clip: parseInt(clip.get("is_midi_clip"))
+        };
+        
+        status("✅ Clip: " + info.name + " (" + info.length + " beats)");
+        outputJSON({status: "ok", action: "get_clip_info", clip: info});
+    } catch (e) {
+        status("❌ Get clip info failed: " + e);
+    }
+}
+
+// ============================================================================
+// BROWSER/LIBRARY ACCESS
+// ============================================================================
+
+function searchLibrary(query) {
+    status("Searching library: " + query);
+    
+    httpRequest("GET", "/live/browser/search?query=" + encodeURIComponent(query), null, function(err, response) {
+        if (err) {
+            status("❌ Search failed: " + err);
+        } else {
+            status("✅ Found " + response.count + " results");
+            outputJSON(response);
+        }
+    });
+}
+
+function loadSample(trackIndex, samplePath) {
+    status("Loading sample: " + samplePath);
+    
+    httpRequest("POST", "/live/browser/load", {
+        item_path: samplePath,
+        track_index: trackIndex
+    }, function(err, response) {
+        if (err) {
+            status("❌ Load sample failed: " + err);
+        } else {
+            status("✅ Loaded sample to track " + trackIndex);
+            outputJSON(response);
+        }
+    });
+}
+
+function hotSwapSample(trackIndex, deviceIndex, samplePath) {
+    status("Hot swapping sample...");
+    
+    httpRequest("POST", "/live/browser/hot_swap", {
+        track_index: trackIndex,
+        device_index: deviceIndex,
+        sample_path: samplePath
+    }, function(err, response) {
+        if (err) {
+            status("❌ Hot swap failed: " + err);
+        } else {
+            status("✅ Swapped sample");
+            outputJSON(response);
+        }
+    });
+}
+
+// ============================================================================
+// SESSION/SCENE CONTROL
+// ============================================================================
+
+function fireScene(sceneIndex) {
+    try {
+        var scene = new LiveAPI("live_set scenes " + sceneIndex);
+        scene.call("fire");
+        status("✅ Fired scene " + sceneIndex);
+        outputJSON({status: "ok", action: "fire_scene", scene: sceneIndex});
+    } catch (e) {
+        status("❌ Fire scene failed: " + e);
+    }
+}
+
+function stopScene() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("stop_all_clips");
+        status("✅ Stopped all clips");
+        outputJSON({status: "ok", action: "stop_scene"});
+    } catch (e) {
+        status("❌ Stop scene failed: " + e);
+    }
+}
+
+function createScene(name) {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        var sceneCount = liveSet.get("scenes").length / 2;
+        liveSet.call("create_scene", sceneCount);
+        
+        if (name) {
+            var scene = new LiveAPI("live_set scenes " + sceneCount);
+            scene.set("name", name);
+        }
+        
+        status("✅ Created scene " + (name || sceneCount));
+        outputJSON({status: "ok", action: "create_scene", index: sceneCount, name: name});
+    } catch (e) {
+        status("❌ Create scene failed: " + e);
+    }
+}
+
+function deleteScene(sceneIndex) {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("delete_scene", sceneIndex);
+        status("✅ Deleted scene " + sceneIndex);
+        outputJSON({status: "ok", action: "delete_scene", scene: sceneIndex});
+    } catch (e) {
+        status("❌ Delete scene failed: " + e);
+    }
+}
+
+function duplicateScene(sceneIndex) {
+    try {
+        var scene = new LiveAPI("live_set scenes " + sceneIndex);
+        scene.call("duplicate");
+        status("✅ Duplicated scene " + sceneIndex);
+        outputJSON({status: "ok", action: "duplicate_scene", scene: sceneIndex});
+    } catch (e) {
+        status("❌ Duplicate scene failed: " + e);
+    }
+}
+
+function setTempo(bpm) {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        bpm = Math.max(20, Math.min(999, bpm));
+        liveSet.set("tempo", bpm);
+        currentTempo = bpm;
+        status("✅ Tempo: " + bpm + " BPM");
+        outputJSON({status: "ok", action: "set_tempo", tempo: bpm});
+    } catch (e) {
+        status("❌ Set tempo failed: " + e);
+    }
+}
+
+function setQuantization(value) {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        var quantMap = {
+            "none": 0,
+            "8_bars": 1,
+            "4_bars": 2,
+            "2_bars": 3,
+            "1_bar": 4,
+            "1/2": 5,
+            "1/4": 6,
+            "1/8": 7,
+            "1/16": 8,
+            "1/32": 9
+        };
+        
+        var quantValue = quantMap[value] !== undefined ? quantMap[value] : 4;  // Default to 1 bar
+        liveSet.set("clip_trigger_quantization", quantValue);
+        status("✅ Quantization: " + value);
+        outputJSON({status: "ok", action: "set_quantization", quantization: value});
+    } catch (e) {
+        status("❌ Set quantization failed: " + e);
+    }
+}
+
+function performUndo() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("undo");
+        status("✅ Undo");
+        outputJSON({status: "ok", action: "undo"});
+    } catch (e) {
+        status("❌ Undo failed: " + e);
+    }
+}
+
+function performRedo() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("redo");
+        status("✅ Redo");
+        outputJSON({status: "ok", action: "redo"});
+    } catch (e) {
+        status("❌ Redo failed: " + e);
+    }
+}
+
+function getSessionState() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        
+        var state = {
+            tempo: parseFloat(liveSet.get("tempo")),
+            is_playing: parseInt(liveSet.get("is_playing")),
+            current_song_time: parseFloat(liveSet.get("current_song_time")),
+            loop_start: parseFloat(liveSet.get("loop_start")),
+            loop_length: parseFloat(liveSet.get("loop_length")),
+            track_count: liveSet.get("tracks").length / 2,
+            scene_count: liveSet.get("scenes").length / 2,
+            return_track_count: liveSet.get("return_tracks").length / 2
+        };
+        
+        status("✅ Session: " + state.tempo + " BPM, " + state.track_count + " tracks, " + state.scene_count + " scenes");
+        outputJSON({status: "ok", action: "get_session_state", state: state});
+    } catch (e) {
+        status("❌ Get session state failed: " + e);
+    }
+}
+
+// ============================================================================
+// TRANSPORT CONTROL
+// ============================================================================
+
+function transportPlay() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("start_playing");
+        status("▶️ Playing");
+        outputJSON({status: "ok", action: "transport_play"});
+    } catch (e) {
+        status("❌ Play failed: " + e);
+    }
+}
+
+function transportStop() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("stop_playing");
+        status("⏹️ Stopped");
+        outputJSON({status: "ok", action: "transport_stop"});
+    } catch (e) {
+        status("❌ Stop failed: " + e);
+    }
+}
+
+function transportRecord() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.set("record_mode", 1);
+        liveSet.call("start_playing");
+        status("🔴 Recording");
+        outputJSON({status: "ok", action: "transport_record"});
+    } catch (e) {
+        status("❌ Record failed: " + e);
+    }
+}
+
+function stopAllClips() {
+    try {
+        var liveSet = new LiveAPI("live_set");
+        liveSet.call("stop_all_clips");
+        status("⏹️ Stopped all clips");
+        outputJSON({status: "ok", action: "stop_all_clips"});
+    } catch (e) {
+        status("❌ Stop all clips failed: " + e);
+    }
+}
+
+// ============================================================================
+// MIXER CONTROL
+// ============================================================================
+
+function setTrackSend(trackIndex, sendIndex, level) {
+    try {
+        var send = new LiveAPI("live_set tracks " + trackIndex + " mixer_device sends " + sendIndex);
+        send.set("value", Math.max(0, Math.min(1, level)));
+        status("✅ Track " + trackIndex + " Send " + sendIndex + ": " + Math.round(level * 100) + "%");
+        outputJSON({status: "ok", action: "set_send", track: trackIndex, send: sendIndex, level: level});
+    } catch (e) {
+        status("❌ Set send failed: " + e);
+    }
+}
+
+// ============================================================================
+// MIDI GENERATION (API calls)
+// ============================================================================
+
+function checkHealth() {
+    status("Checking connection...");
+    
+    httpRequest("GET", "/gpt/health", null, function(err, response) {
+        if (err) {
+            isConnected = false;
+            status("❌ Disconnected: " + err);
+        } else {
+            isConnected = true;
+            status("✅ Connected - " + response.service + " v" + response.version);
+        }
+    });
+}
+
+function generateChords() {
+    status("Generating chords in " + currentKey + "...");
+    
+    var data = {
+        key: currentKey,
+        bars: currentBars,
+        voicing: currentVoicing,
+        progression_type: "i-VI-III-VII",
+        seventh_chords: true,
+        tempo: currentTempo
+    };
+    
+    httpRequest("POST", "/generate/chord_progression", data, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+            return;
+        }
+        
+        if (response.status === "ok") {
+            noteBuffer = response.notes;
+            status("✅ Generated " + response.count + " chord notes");
+            outputJSON(response);
+        } else {
+            status("❌ " + response.error);
+        }
+    });
+}
+
+function generateBass() {
+    status("Generating " + currentStyle + " bass in " + currentKey + "...");
+    
+    var data = {
+        key: currentKey,
+        style: currentStyle,
+        bars: currentBars,
+        chord_progression_type: "i-VI-III-VII",
+        tempo: currentTempo
+    };
+    
+    httpRequest("POST", "/generate/walking_bass", data, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+            return;
+        }
+        
+        if (response.status === "ok") {
+            noteBuffer = response.notes;
+            status("✅ Generated " + response.count + " bass notes");
+            outputJSON(response);
+        } else {
+            status("❌ " + response.error);
+        }
+    });
+}
+
+function generateArpeggios() {
+    status("Generating " + currentPattern + " arpeggios in " + currentKey + "...");
+    
+    var data = {
+        key: currentKey,
+        pattern: currentPattern,
+        bars: currentBars,
+        octaves: 2,
+        speed: 0.25,
+        chord_progression_type: "i-VI-III-VII",
+        tempo: currentTempo
+    };
+    
+    httpRequest("POST", "/generate/arpeggios", data, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+            return;
+        }
+        
+        if (response.status === "ok") {
+            noteBuffer = response.notes;
+            status("✅ Generated " + response.count + " arp notes");
+            outputJSON(response);
+        } else {
+            status("❌ " + response.error);
+        }
+    });
+}
+
+function naturalLanguageGenerate(prompt) {
+    status("Processing: " + prompt);
+    
+    var data = { prompt: prompt };
+    
+    httpRequest("POST", "/gpt/generate", data, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+            return;
+        }
+        
+        if (response.status === "ok") {
+            noteBuffer = response.result.notes;
+            status("✅ " + response.result.description);
+            outputJSON(response);
+        } else {
+            status("❌ " + response.error);
+        }
+    });
+}
+
+function naturalLanguageCommand(prompt) {
+    status("Processing command: " + prompt);
+    
+    var data = { prompt: prompt };
+    
+    httpRequest("POST", "/live/command", data, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+        } else if (response.status === "ok") {
+            status("✅ " + (response.result.description || "Command executed"));
+            outputJSON(response);
+        } else {
+            status("❌ " + (response.error || "Unknown error"));
+        }
+    });
+}
+
+// ============================================================================
+// DRUM GENERATION
+// ============================================================================
+
+function setDrumGenre(genre) {
+    currentDrumGenre = genre;
+    status("Drum genre: " + currentDrumGenre);
+}
+
+function setSwing(amount) {
+    currentSwing = Math.max(0, Math.min(100, amount));
+    status("Swing: " + currentSwing + "%");
+}
+
+function setHumanize(amount) {
+    currentHumanize = Math.max(0, Math.min(100, amount));
+    status("Humanize: " + currentHumanize + "%");
+}
+
+function setDensity(amount) {
+    currentDensity = Math.max(0.1, Math.min(2.0, amount));
+    status("Density: " + currentDensity);
+}
+
+function generateDrums() {
+    status("Generating " + currentDrumGenre + " drums (" + currentBars + " bars)...");
+    
+    var data = {
+        genre: currentDrumGenre,
+        bars: currentBars,
+        tempo: currentTempo,
+        swing: currentSwing,
+        humanize: currentHumanize,
+        density: currentDensity
+    };
+    
+    httpRequest("POST", "/drums/generate", data, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+            return;
+        }
+        
+        if (response.status === "ok") {
+            noteBuffer = response.notes;
+            status("✅ Generated " + response.count + " drum hits (" + response.genre + ")");
+            outputJSON(response);
+        } else {
+            status("❌ " + response.error);
+        }
+    });
+}
+
+function generateDrumsFast(genre) {
+    currentDrumGenre = genre || "house";
+    generateDrums();
+}
+
+function naturalLanguageDrums(prompt) {
+    status("Processing: " + prompt);
+    
+    var data = { prompt: prompt };
+    
+    httpRequest("POST", "/gpt/drums", data, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+            return;
+        }
+        
+        if (response.status === "ok") {
+            noteBuffer = response.notes;
+            status("✅ " + response.description);
+            outputJSON(response);
+        } else {
+            status("❌ " + response.error);
+        }
+    });
+}
+
+function getDrumGenres() {
+    httpRequest("GET", "/drums/genres", null, function(err, response) {
+        if (err) {
+            status("❌ Error: " + err);
+            return;
+        }
+        
+        if (response.status === "ok") {
+            status("✅ Available genres: " + response.genres.join(", "));
+            outputJSON(response);
+        }
+    });
+}
+
+// ============================================================================
+// PLAYBACK FUNCTIONS
+// ============================================================================
+
+function playNotes() {
+    if (noteBuffer.length === 0) {
+        status("No notes to play - generate first!");
+        return;
+    }
+    
+    status("Playing " + noteBuffer.length + " notes...");
+    
+    var liveApi = new LiveAPI("live_set");
+    currentTempo = liveApi.get("tempo");
+    
+    var msPerBeat = 60000 / currentTempo;
+    
+    for (var i = 0; i < noteBuffer.length; i++) {
+        var note = noteBuffer[i];
+        var startMs = note.start_time * msPerBeat;
+        var durationMs = note.duration * msPerBeat;
+        scheduleNote(note.pitch, note.velocity, startMs, durationMs);
+    }
+}
+
+function scheduleNote(pitch, velocity, startMs, durationMs) {
+    var noteOnTask = new Task(function() {
+        outlet(0, pitch, velocity);
+        outlet(2, pitch, startMs, durationMs, velocity);
+    });
+    noteOnTask.schedule(startMs);
+    
+    var noteOffTask = new Task(function() {
+        outlet(0, pitch, 0);
+    });
+    noteOffTask.schedule(startMs + durationMs);
+}
+
+function stopPlayback() {
+    status("Stopped");
+}
+
+function clearBuffer() {
+    noteBuffer = [];
+    status("Buffer cleared");
+}
+
+function insertToClip() {
+    if (noteBuffer.length === 0) {
+        status("No notes to insert - generate first!");
+        return;
+    }
+    
+    status("Inserting " + noteBuffer.length + " notes to clip...");
+    
+    try {
+        var liveApi = new LiveAPI("live_set view highlighted_clip_slot clip");
+        
+        if (!liveApi.id) {
+            status("❌ No clip selected");
+            return;
+        }
+        
+        liveApi.call("remove_notes", 0, 0, 128, 127);
+        
+        var loopEnd = currentBars * 4;
+        liveApi.set("loop_end", loopEnd);
+        
+        for (var i = 0; i < noteBuffer.length; i++) {
+            var note = noteBuffer[i];
+            
+            if (note.start_time >= loopEnd) continue;
+            
+            liveApi.call("add_new_notes");
+            liveApi.call("notes", 1);
+            liveApi.call("note", 
+                note.pitch, 
+                note.start_time, 
+                Math.min(note.duration, loopEnd - note.start_time),
+                note.velocity,
+                note.mute || 0
+            );
+            liveApi.call("done");
+        }
+        
+        status("✅ Inserted " + noteBuffer.length + " notes");
+        
+    } catch (e) {
+        status("❌ Insert failed: " + e);
+    }
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+function getState() {
+    return {
+        key: currentKey,
+        bars: currentBars,
+        style: currentStyle,
+        voicing: currentVoicing,
+        pattern: currentPattern,
+        tempo: currentTempo,
+        connected: isConnected,
+        buffer_size: noteBuffer.length
+    };
+}
+
+function loadbang() {
+    status("SERGIK AI Controller v2.0 loaded");
+    status("Full Ableton Integration: Tracks, Devices, Clips, Browser, Session");
+    status("API: " + API_BASE_URL);
+    
+    var initTask = new Task(function() {
+        checkHealth();
+    });
+    initTask.schedule(1000);
+}
+
+// Export for testing
+if (typeof exports !== 'undefined') {
+    exports.generateChords = generateChords;
+    exports.generateBass = generateBass;
+    exports.generateArpeggios = generateArpeggios;
+    exports.createTrack = createTrack;
+    exports.getTracks = getTracks;
+    exports.fireClip = fireClip;
+    exports.setTempo = setTempo;
+}
