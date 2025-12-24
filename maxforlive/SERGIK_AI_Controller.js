@@ -585,13 +585,29 @@ function getTracks() {
             var track = new LiveAPI("live_set tracks " + trackIndex);
             
             if (track.id) {
-                var mixer = new LiveAPI("live_set tracks " + trackIndex + " mixer_device");
                 var volume = new LiveAPI("live_set tracks " + trackIndex + " mixer_device volume");
                 var panning = new LiveAPI("live_set tracks " + trackIndex + " mixer_device panning");
+                var devices = track.get("devices");
+                
+                // Infer track type (schema expects a string; use midi/audio/return where possible)
+                var className = "";
+                try { className = track.get("class_name").toString(); } catch (e) { className = ""; }
+                var cls = (className || "").toLowerCase();
+                var trackType = "midi";
+                if (cls.indexOf("return") !== -1) trackType = "return";
+                else if (cls.indexOf("audio") !== -1) trackType = "audio";
+                else if (cls.indexOf("midi") !== -1) trackType = "midi";
+                else {
+                    // fallback based on inputs
+                    var hasMidi = parseInt(track.get("has_midi_input"));
+                    var hasAudio = parseInt(track.get("has_audio_input"));
+                    trackType = hasAudio ? "audio" : (hasMidi ? "midi" : "midi");
+                }
                 
                 tracks.push({
                     index: trackIndex,
                     name: track.get("name").toString(),
+                    track_type: trackType,
                     color: parseInt(track.get("color_index")),
                     arm: parseInt(track.get("arm")),
                     mute: parseInt(track.get("mute")),
@@ -599,7 +615,8 @@ function getTracks() {
                     volume: parseFloat(volume.get("value")),
                     pan: parseFloat(panning.get("value")),
                     has_midi_input: parseInt(track.get("has_midi_input")),
-                    has_audio_input: parseInt(track.get("has_audio_input"))
+                    has_audio_input: parseInt(track.get("has_audio_input")),
+                    device_count: Math.floor(devices.length / 2)
                 });
             }
         }
@@ -615,14 +632,28 @@ function getTracks() {
 function getTrackInfo(index) {
     try {
         var track = new LiveAPI("live_set tracks " + index);
-        var mixer = new LiveAPI("live_set tracks " + index + " mixer_device");
         var volume = new LiveAPI("live_set tracks " + index + " mixer_device volume");
         var panning = new LiveAPI("live_set tracks " + index + " mixer_device panning");
         var devices = track.get("devices");
+
+        // Infer track type (schema expects string)
+        var className = "";
+        try { className = track.get("class_name").toString(); } catch (e) { className = ""; }
+        var cls = (className || "").toLowerCase();
+        var trackType = "midi";
+        if (cls.indexOf("return") !== -1) trackType = "return";
+        else if (cls.indexOf("audio") !== -1) trackType = "audio";
+        else if (cls.indexOf("midi") !== -1) trackType = "midi";
+        else {
+            var hasMidi = parseInt(track.get("has_midi_input"));
+            var hasAudio = parseInt(track.get("has_audio_input"));
+            trackType = hasAudio ? "audio" : (hasMidi ? "midi" : "midi");
+        }
         
         var info = {
             index: index,
             name: track.get("name").toString(),
+            track_type: trackType,
             color: parseInt(track.get("color_index")),
             arm: parseInt(track.get("arm")),
             mute: parseInt(track.get("mute")),
@@ -758,16 +789,16 @@ function getDeviceParams(trackIndex, deviceIndex) {
 function toggleDevice(trackIndex, deviceIndex, state) {
     try {
         var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex);
-        var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters 0");
-        
-        if (state === null) {
-            var current = parseInt(param.get("value"));
-            param.set("value", current ? 0 : 1);
+        var current = parseInt(device.get("is_active"));
+        var newState;
+        if (state === null || typeof state === "undefined") {
+            newState = current ? 0 : 1;
+        } else if (typeof state === "boolean") {
+            newState = state ? 1 : 0;
         } else {
-            param.set("value", state);
+            newState = parseInt(state) ? 1 : 0;
         }
-        
-        var newState = parseInt(param.get("value"));
+        device.set("is_active", newState);
         var deviceName = device.get("name").toString();
         status("✅ " + deviceName + ": " + (newState ? "ON" : "OFF"));
         outputJSON({status: "ok", action: "toggle_device", device: deviceName, enabled: newState});

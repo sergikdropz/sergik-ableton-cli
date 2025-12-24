@@ -2039,17 +2039,46 @@ def live_natural_language_command(request: GPTGenerateRequest):
             track_match = re.search(r"track\s*(\d+)", prompt)
             if track_match:
                 track_idx = int(track_match.group(1))
-                osc_send("/scp/mute_track", {"track_index": track_idx, "state": 1})
-                result["actions"].append({"action": "mute_track", "track_index": track_idx})
-                result["description"] = f"Muted track {track_idx}"
+                # Parse intent: mute vs unmute vs toggle
+                # If user says "unmute"/"mute off" => state 0, else "mute" => 1, else toggle (None)
+                state = None
+                if re.search(r"\bunmute\b|\bun-mute\b|\bmute\s+off\b", prompt):
+                    state = 0
+                elif re.search(r"\bmute\b", prompt):
+                    state = 1
+                payload = {"track_index": track_idx}
+                if state is not None:
+                    payload["state"] = state
+                osc_send("/scp/mute_track", payload)
+                result["actions"].append({"action": "mute_track", "track_index": track_idx, "state": state})
+                if state == 0:
+                    result["description"] = f"Unmuted track {track_idx}"
+                elif state == 1:
+                    result["description"] = f"Muted track {track_idx}"
+                else:
+                    result["description"] = f"Toggled mute on track {track_idx}"
                 
         elif "solo" in prompt and "track" in prompt:
             track_match = re.search(r"track\s*(\d+)", prompt)
             if track_match:
                 track_idx = int(track_match.group(1))
-                osc_send("/scp/solo_track", {"track_index": track_idx, "state": 1})
-                result["actions"].append({"action": "solo_track", "track_index": track_idx})
-                result["description"] = f"Soloed track {track_idx}"
+                # Parse intent: solo vs unsolo vs toggle
+                state = None
+                if re.search(r"\bunsolo\b|\bun-solo\b|\bsolo\s+off\b", prompt):
+                    state = 0
+                elif re.search(r"\bsolo\b", prompt):
+                    state = 1
+                payload = {"track_index": track_idx}
+                if state is not None:
+                    payload["state"] = state
+                osc_send("/scp/solo_track", payload)
+                result["actions"].append({"action": "solo_track", "track_index": track_idx, "state": state})
+                if state == 0:
+                    result["description"] = f"Unsoloed track {track_idx}"
+                elif state == 1:
+                    result["description"] = f"Soloed track {track_idx}"
+                else:
+                    result["description"] = f"Toggled solo on track {track_idx}"
                 
         elif "fire" in prompt and "scene" in prompt:
             scene_match = re.search(r"scene\s*(\d+)", prompt)
