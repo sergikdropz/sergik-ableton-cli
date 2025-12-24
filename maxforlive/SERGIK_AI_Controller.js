@@ -281,7 +281,19 @@ function anything() {
             if (args.length >= 2) loadVST(parseInt(args[0]), args.slice(1).join(" "));
             break;
         case "set_param":
-            if (args.length >= 4) setDeviceParam(parseInt(args[0]), parseInt(args[1]), args[2], parseFloat(args[3]));
+            if (args.length >= 4) {
+                // Parse paramIndexOrName: if numeric string, use as index; otherwise use as name
+                var paramArg = args[2];
+                var paramIndexOrName;
+                if (typeof paramArg === "number") {
+                    paramIndexOrName = paramArg;
+                } else if (typeof paramArg === "string" && !isNaN(paramArg) && paramArg.trim() !== "") {
+                    paramIndexOrName = parseInt(paramArg);
+                } else {
+                    paramIndexOrName = paramArg;
+                }
+                setDeviceParam(parseInt(args[0]), parseInt(args[1]), paramIndexOrName, parseFloat(args[3]));
+            }
             break;
         case "get_params":
             if (args.length >= 2) getDeviceParams(parseInt(args[0]), parseInt(args[1]));
@@ -601,7 +613,7 @@ function getTracks() {
                     // fallback based on inputs
                     var hasMidi = parseInt(track.get("has_midi_input"));
                     var hasAudio = parseInt(track.get("has_audio_input"));
-                    trackType = hasAudio ? "audio" : (hasMidi ? "midi" : "midi");
+                    trackType = hasAudio ? "audio" : "midi";
                 }
                 
                 tracks.push({
@@ -647,7 +659,7 @@ function getTrackInfo(index) {
         else {
             var hasMidi = parseInt(track.get("has_midi_input"));
             var hasAudio = parseInt(track.get("has_audio_input"));
-            trackType = hasAudio ? "audio" : (hasMidi ? "midi" : "midi");
+            trackType = hasAudio ? "audio" : "midi";
         }
         
         var info = {
