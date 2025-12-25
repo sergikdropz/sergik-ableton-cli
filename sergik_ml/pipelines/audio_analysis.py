@@ -322,6 +322,9 @@ def _parse_musicbrainz_recording(recording: Dict) -> Dict[str, Any]:
     # Get tags if available
     tags = [t.get('name') for t in recording.get('tag-list', [])]
     
+    # Extract and limit genres to top 10
+    all_genres = _extract_genres_from_tags(tags)
+    
     return {
         "status": "ok",
         "source": "musicbrainz",
@@ -329,8 +332,8 @@ def _parse_musicbrainz_recording(recording: Dict) -> Dict[str, Any]:
         "artist": artist_name,
         "title": recording.get('title', 'Unknown'),
         "releases": [r.get('title') for r in recording.get('release-list', [])[:3]],
-        "genres": _extract_genres_from_tags(tags),
-        "tags": tags[:10]
+        "genres": all_genres[:10],  # Limit to top 10 genres
+        "tags": tags[:10]  # Already limited to 10
     }
 
 
@@ -525,10 +528,20 @@ def calculate_genre_influence(mb_data: Dict[str, Any], metadata: Dict[str, Any])
     # Calculate overall influence score
     influence_score = sum(sergik_alignment.values()) / len(sergik_alignment)
     
+    # Sort and limit to top 10 genres by alignment score
+    sorted_alignment = sorted(
+        sergik_alignment.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:10]
+    
+    # Convert back to dict for top 10
+    top_10_alignment = dict(sorted_alignment)
+    
     return {
-        "detected_genres": detected_genres,
-        "inferred_genres": inferred_genres,
-        "sergik_alignment": sergik_alignment,
+        "detected_genres": detected_genres[:10],  # Limit to top 10
+        "inferred_genres": inferred_genres[:10],  # Limit to top 10
+        "sergik_alignment": top_10_alignment,  # Top 10 only
         "influence_score": round(influence_score, 1),
         "primary_influence": max(sergik_alignment, key=sergik_alignment.get) if sergik_alignment else "unknown"
     }

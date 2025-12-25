@@ -1614,10 +1614,10 @@
                                 </div>
                             </div>
                             
-                            <!-- Genre Influence Bars -->
+                            <!-- Genre Influence Bars (Top 10) -->
                             <div class="genre-bars">
-                                <div class="panel-title">Genre Influence</div>
-                                
+                                <div class="panel-title">Genre Influence (Top 10)</div>
+                                <!-- Genre bars will be dynamically populated by updateDNAView() -->
                                 <div class="genre-bar">
                                     <div class="genre-bar-header">
                                         <span class="genre-bar-name">Hip-Hop</span>
@@ -1630,21 +1630,21 @@
                                 
                                 <div class="genre-bar">
                                     <div class="genre-bar-header">
-                                        <span class="genre-bar-name">Funk</span>
-                                        <span class="genre-bar-value">17%</span>
-                                    </div>
-                                    <div class="genre-bar-track">
-                                        <div class="genre-bar-fill funk" style="width: 17%;"></div>
-                                    </div>
-                                </div>
-                                
-                                <div class="genre-bar">
-                                    <div class="genre-bar-header">
                                         <span class="genre-bar-name">House</span>
                                         <span class="genre-bar-value">28%</span>
                                     </div>
                                     <div class="genre-bar-track">
                                         <div class="genre-bar-fill house" style="width: 28%;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="genre-bar">
+                                    <div class="genre-bar-header">
+                                        <span class="genre-bar-name">Funk</span>
+                                        <span class="genre-bar-value">17%</span>
+                                    </div>
+                                    <div class="genre-bar-track">
+                                        <div class="genre-bar-fill funk" style="width: 17%;"></div>
                                     </div>
                                 </div>
                                 
@@ -1676,9 +1676,9 @@
                                 <div class="track-album" id="mb-album">Album Name (2024)</div>
                             </div>
                             
-                            <!-- Genre Influence Bars -->
+                            <!-- Genre Influence Bars (Top 10) -->
                             <div class="genre-bars">
-                                <div class="panel-title">Genre Analysis</div>
+                                <div class="panel-title">Genre Analysis (Top 10)</div>
                                 
                                 <div class="genre-bar">
                                     <div class="genre-bar-header">
@@ -1951,12 +1951,46 @@
             updateStatus('analyzing', 'Analyzing...');
             
             // Simulate analysis (in real implementation, send to API)
+            // Example: fetch('/analyze/upload', { method: 'POST', body: formData })
             setTimeout(() => {
                 updateStatus('ready', 'Ready');
-                // Update DNA score randomly for demo
-                const score = Math.floor(Math.random() * 30) + 70;
-                document.getElementById('dna-score').textContent = score + '%';
-                document.querySelector('.gauge-fill').style.width = score + '%';
+                
+                // Simulate analysis response with top 10 genres
+                const mockAnalysisData = {
+                    sergik_dna: {
+                        overall_match: Math.floor(Math.random() * 30) + 70
+                    },
+                    genre_influence: {
+                        sergik_alignment: {
+                            'hiphop': 42,
+                            'house': 28,
+                            'funk': 17,
+                            'soul': 13,
+                            'techno': 8,
+                            'disco': 6,
+                            'r&b': 5,
+                            'jazz': 4,
+                            'ambient': 3,
+                            'reggae': 2,
+                            'trap': 1.5,  // Will be filtered out (top 10 only)
+                            'dubstep': 1.2,  // Will be filtered out (top 10 only)
+                            'drum and bass': 1.0  // Will be filtered out (top 10 only)
+                        }
+                    },
+                    musicbrainz: {
+                        title: file.name.replace('.wav', '').replace('.mp3', ''),
+                        artist: 'SERGIK',
+                        releases: ['Demo Album (2024)'],
+                        genres: ['house', 'tech house', 'electronic', 'dance', 'techno', 
+                                'deep house', 'progressive house', 'bass house', 
+                                'tropical house', 'garage house',
+                                'minimal techno', 'acid house', 'future house']  // Last 3 will be filtered (top 10 only)
+                    }
+                };
+                
+                // Update views with top 10 data
+                updateDNAView(mockAnalysisData);
+                updateMusicBrainzView(mockAnalysisData);
             }, 2000);
         }
         
@@ -2182,6 +2216,138 @@
                 setTimeout(() => updateStatus('ready', 'Ready'), 1000);
             }
         };
+        
+        // Update DNA view with analysis results (limit to top 10)
+        // Call this function when analysis completes: updateDNAView(analysisResponse)
+        function updateDNAView(analysisData) {
+            if (!analysisData || !analysisData.sergik_dna) return;
+            
+            const dnaData = analysisData.sergik_dna;
+            const genreInfluence = analysisData.genre_influence || {};
+            
+            // Update DNA score
+            const dnaScore = dnaData.overall_match || 0;
+            document.getElementById('dna-score').textContent = dnaScore + '%';
+            document.querySelector('.gauge-fill').style.width = dnaScore + '%';
+            
+            // Update genre bars (limit to top 10)
+            const genreBarsContainer = document.querySelector('#view-dna .genre-bars');
+            if (genreBarsContainer && genreInfluence.sergik_alignment) {
+                const alignment = genreInfluence.sergik_alignment;
+                
+                // Sort by value and take top 10
+                const allGenres = Object.entries(alignment).sort((a, b) => b[1] - a[1]);
+                const sortedGenres = allGenres.slice(0, 10);
+                const totalGenres = allGenres.length;
+                
+                // Clear existing bars (but keep the panel title)
+                const panelTitle = genreBarsContainer.querySelector('.panel-title');
+                const existingBars = genreBarsContainer.querySelectorAll('.genre-bar');
+                existingBars.forEach(bar => bar.remove());
+                
+                // Update panel title to show count if more than 10
+                if (panelTitle) {
+                    if (totalGenres > 10) {
+                        panelTitle.textContent = `Genre Influence (Top 10 of ${totalGenres})`;
+                    } else {
+                        panelTitle.textContent = `Genre Influence (Top ${sortedGenres.length})`;
+                    }
+                }
+                
+                // Add top 10 genre bars
+                if (sortedGenres.length === 0) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.style.cssText = 'padding: 20px; color: var(--text-secondary); text-align: center; font-size: 12px;';
+                    emptyMsg.textContent = 'No genre data available';
+                    genreBarsContainer.appendChild(emptyMsg);
+                } else {
+                    sortedGenres.forEach(([genre, percentage]) => {
+                        const genreBar = document.createElement('div');
+                        genreBar.className = 'genre-bar';
+                        genreBar.innerHTML = `
+                            <div class="genre-bar-header">
+                                <span class="genre-bar-name">${genre.charAt(0).toUpperCase() + genre.slice(1)}</span>
+                                <span class="genre-bar-value">${Math.round(percentage)}%</span>
+                            </div>
+                            <div class="genre-bar-track">
+                                <div class="genre-bar-fill ${genre}" style="width: ${Math.min(100, percentage)}%;"></div>
+                            </div>
+                        `;
+                        genreBarsContainer.appendChild(genreBar);
+                    });
+                }
+            }
+        }
+        
+        // Update MusicBrainz view with analysis results (limit to top 10)
+        // Call this function when analysis completes: updateMusicBrainzView(analysisResponse)
+        function updateMusicBrainzView(analysisData) {
+            if (!analysisData || !analysisData.musicbrainz) return;
+            
+            const mbData = analysisData.musicbrainz;
+            
+            // Update track info
+            if (mbData.title) document.getElementById('mb-title').textContent = mbData.title;
+            if (mbData.artist) document.getElementById('mb-artist').textContent = mbData.artist;
+            if (mbData.releases && mbData.releases.length > 0) {
+                document.getElementById('mb-album').textContent = mbData.releases[0];
+            }
+            
+            // Update genre bars (limit to top 10)
+            const genreBarsContainer = document.querySelector('#view-musicbrainz .genre-bars');
+            if (genreBarsContainer && mbData.genres) {
+                const allGenres = Array.isArray(mbData.genres) ? mbData.genres : [];
+                const genres = allGenres.slice(0, 10);
+                const totalGenres = allGenres.length;
+                
+                // Clear existing bars (but keep the panel title)
+                const panelTitle = genreBarsContainer.querySelector('.panel-title');
+                const existingBars = genreBarsContainer.querySelectorAll('.genre-bar');
+                existingBars.forEach(bar => bar.remove());
+                
+                // Update panel title to show count if more than 10
+                if (panelTitle) {
+                    if (totalGenres > 10) {
+                        panelTitle.textContent = `Genre Analysis (Top 10 of ${totalGenres})`;
+                    } else {
+                        panelTitle.textContent = `Genre Analysis (Top ${genres.length})`;
+                    }
+                }
+                
+                // Add top 10 genre bars
+                if (genres.length === 0) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.style.cssText = 'padding: 20px; color: var(--text-secondary); text-align: center; font-size: 12px;';
+                    emptyMsg.textContent = 'No genres found';
+                    genreBarsContainer.appendChild(emptyMsg);
+                } else {
+                    genres.forEach((genre, index) => {
+                        // Calculate percentage (decreasing for visual effect, max 10 items)
+                        const percentage = Math.max(20, 100 - (index * 8));
+                        
+                        // Map genre to DNA category for color coding
+                        const genreLower = genre.toLowerCase();
+                        let category = 'house';
+                        if (genreLower.includes('hip') || genreLower.includes('rap') || genreLower.includes('trap')) category = 'hiphop';
+                        else if (genreLower.includes('funk') || genreLower.includes('disco') || genreLower.includes('reggae')) category = 'funk';
+                        else if (genreLower.includes('soul') || genreLower.includes('r&b') || genreLower.includes('jazz')) category = 'soul';
+                        
+                        const genreBar = document.createElement('div');
+                        genreBar.className = 'genre-bar';
+                        genreBar.innerHTML = `
+                            <div class="genre-bar-header">
+                                <span class="genre-bar-name">${genre.charAt(0).toUpperCase() + genre.slice(1)}</span>
+                                <span class="genre-bar-value">${percentage}%</span>
+                            </div>
+                            <div class="genre-bar-track">
+                                <div class="genre-bar-fill ${category}" style="width: ${percentage}%;"></div>
+                            </div>
+                        `;
+                        genreBarsContainer.appendChild(genreBar);
+                    });
+                }
+            }
+        }
         
         // View toggle functionality (DNA / MusicBrainz / Media Browser)
         const viewToggleBtns = document.querySelectorAll('.view-toggle .toggle-btn');

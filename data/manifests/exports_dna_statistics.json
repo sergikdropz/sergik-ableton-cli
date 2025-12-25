@@ -1,0 +1,67 @@
+{
+  "total_tracks": 2,
+  "bpm": {
+    "average": 96.1,
+    "min": 63.0,
+    "max": 129.2,
+    "distribution": {
+      "125-129": {
+        "count": 1,
+        "percentage": 50.0
+      },
+      "< 90": {
+        "count": 1,
+        "percentage": 50.0
+      }
+    }
+  },
+  "keys": {
+    "distribution": {
+      "7B": {
+        "count": 1,
+        "percentage": 50.0
+      },
+      "7A": {
+        "count": 1,
+        "percentage": 50.0
+      }
+    },
+    "top_keys": [
+      "7B",
+      "7A"
+    ]
+  },
+  "energy": {
+    "average": 10.0,
+    "min": 10,
+    "max": 10,
+    "distribution": {
+      "10": 2
+    },
+    "sweet_spot_percentage": 0.0
+  },
+  "dna_match": {
+    "average": 50.0,
+    "min": 49,
+    "max": 51,
+    "high_match_count": 0,
+    "high_match_percentage": 0.0
+  },
+  "genres": {
+    "distribution": {
+      "house": 1,
+      "electronic": 1
+    },
+    "top_genres": [
+      "house",
+      "electronic"
+    ],
+    "total_unique": 2
+  },
+  "musicbrainz": {
+    "lookup_success": 2,
+    "lookup_failed": 0,
+    "success_rate": 100.0,
+    "total_looked_up": 2
+  }
+}

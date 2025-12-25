@@ -1,0 +1,56 @@
+{
+  "bpm": {
+    "average": 104.2,
+    "zones": {
+      "downtempo": {
+        "range": [
+          80,
+          90
+        ],
+        "percentage": 43.7
+      },
+      "house": {
+        "range": [
+          120,
+          129
+        ],
+        "percentage": 37.4
+      }
+    }
+  },
+  "keys": {
+    "primary": [
+      "7B",
+      "7A"
+    ],
+    "secondary": [
+      "7A",
+      "8A"
+    ],
+    "distribution": {
+      "10B": 31,
+      "11B": 21,
+      "7A": 24.1,
+      "8A": 12,
+      "7B": 15.0
+    }
+  },
+  "energy": {
+    "average": 7.2,
+    "sweet_spot": [
+      5,
+      7
+    ]
+  },
+  "genres": {
+    "hiphop": 29.4,
+    "funk": 11.9,
+    "house": 35.6,
+    "soul": 4.9
+  },
+  "refinement_metadata": {
+    "tracks_analyzed": 2,
+    "refinement_date": "1766669873.017059",
+    "base_dna_version": "1.0"
+  }
+}
