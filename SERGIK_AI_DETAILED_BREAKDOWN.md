@@ -804,6 +804,30 @@ python scripts/sync_cloud.py --push --s3
 - **Energy Sweet Spot:** Level 5-7 (91%)
 - **Genre Foundation:** Hip-Hop 42%, Funk 17%, House 8%, Soul 7%
 
+### Intelligence Profile (1,895 tracks analyzed)
+
+**Emotional Intelligence:**
+- **Primary Character:** Groovy (70%) - Funky, rhythmic, danceable
+- **Valence:** 0.76 (consistently positive emotion)
+- **Arousal:** 0.57 (moderate excitement)
+- **Emotional Range:** Groovy → Chill → Intense → Calm
+
+**Psychological Intelligence:**
+- **Primary Effects:** Social (51%), Background (21%), Productivity (19%)
+- **Focus:** 0.50 (balanced - not distracting, not boring)
+- **Relaxation:** 0.63 (moderately relaxing)
+- **Motivation:** 0.53 (moderately motivating)
+
+**Sonic Intelligence:**
+- **Timbre:** Neutral (98%) - Balanced tonal character
+- **Texture:** Balanced (98%) - Well-balanced harmonic/percussive
+- **Spatial:** Focused (99%) - Centered, controlled stereo
+- **Dynamics:** Dynamic (99%) - Good energy variation
+
+**Intent Intelligence:**
+- **Primary Intents:** Creative (31%), Chill (27%), Dance Floor (25%)
+- **Use Cases:** Studio/production, home/study, club/festival, social
+
 ### System Capabilities
 - **Drum Genres:** 12+
 - **MIDI Generation:** Chords, bass, arps, drums

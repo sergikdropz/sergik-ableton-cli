@@ -324,6 +324,30 @@ Based on comprehensive analysis of 1,895 tracks (1,167 SERGIK + 728 influences):
 - **Soul Textures**: 7%
 - **Other**: 26%
 
+### Intelligence Profile (Based on 1,895 tracks)
+
+**Emotional Signature:**
+- **Primary Emotion:** Groovy (70% of tracks) - Funky, rhythmic, danceable
+- **Average Valence:** 0.76 (consistently positive)
+- **Average Arousal:** 0.57 (moderately energetic)
+- **Top Emotions:** Funky, rhythmic, danceable, relaxed, laid-back
+
+**Psychological Signature:**
+- **Primary Effects:** Social (51%), Background (21%), Productivity (19%)
+- **Average Focus:** 0.50 (balanced)
+- **Average Relaxation:** 0.63 (moderately relaxing)
+- **Average Motivation:** 0.53 (moderately motivating)
+
+**Sonic Signature:**
+- **Timbre:** Neutral (98%) - Balanced tonal character
+- **Texture:** Balanced (98%) - Well-balanced harmonic/percussive mix
+- **Spatial:** Focused (99%) - Centered, controlled stereo image
+- **Dynamics:** Dynamic (99%) - Good energy variation
+
+**Intent Signature:**
+- **Primary Intents:** Creative (31%), Chill (27%), Dance Floor (25%)
+- **Top Use Cases:** Studio/production, home/study, club/festival, social settings
+
 ### Production Characteristics
 - **Groove-First Philosophy**: Rhythm drives composition decisions
 - **Multi-Layer Melodic Architecture**: 3+ melodic layers with spectral separation

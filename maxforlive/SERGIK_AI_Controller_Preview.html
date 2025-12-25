@@ -1472,16 +1472,73 @@
                             <div class="display-line">
                                 <span class="label">Genre:</span>
                                 <select class="dropdown-select" id="genre-select">
-                                    <option value="house" selected>House</option>
-                                    <option value="tech_house">Tech House</option>
-                                    <option value="deep_house">Deep House</option>
-                                    <option value="techno">Techno</option>
-                                    <option value="hiphop">Hip-Hop</option>
-                                    <option value="funk">Funk</option>
-                                    <option value="soul">Soul</option>
-                                    <option value="trap">Trap</option>
-                                    <option value="lofi">Lo-Fi</option>
-                                    <option value="disco">Disco</option>
+                                    <optgroup label="Electronic">
+                                        <option value="house" selected>House</option>
+                                        <option value="tech_house">Tech House</option>
+                                        <option value="deep_house">Deep House</option>
+                                        <option value="techno">Techno</option>
+                                        <option value="disco">Disco</option>
+                                        <option value="progressive_house">Progressive House</option>
+                                        <option value="minimal">Minimal</option>
+                                        <option value="trance">Trance</option>
+                                        <option value="hard_techno">Hard Techno</option>
+                                        <option value="acid_house">Acid House</option>
+                                        <option value="experimental">Experimental</option>
+                                        <option value="bass">Bass</option>
+                                    </optgroup>
+                                    <optgroup label="Hip-Hop & Urban">
+                                        <option value="hiphop">Hip-Hop</option>
+                                        <option value="boom_bap">Boom Bap</option>
+                                        <option value="trap">Trap</option>
+                                        <option value="lo_fi">Lo-Fi</option>
+                                        <option value="lofi">Lo-Fi (Alt)</option>
+                                        <option value="drill">Drill</option>
+                                        <option value="afrobeat">Afrobeat</option>
+                                    </optgroup>
+                                    <optgroup label="Breakbeat & DnB">
+                                        <option value="dnb">Drum & Bass</option>
+                                        <option value="jungle">Jungle</option>
+                                        <option value="breakbeat">Breakbeat</option>
+                                        <option value="garage">UK Garage</option>
+                                        <option value="2step">2-Step</option>
+                                    </optgroup>
+                                    <optgroup label="Latin & World">
+                                        <option value="reggaeton">Reggaeton</option>
+                                        <option value="dembow">Dembow</option>
+                                        <option value="reggae">Reggae</option>
+                                        <option value="salsa">Salsa</option>
+                                        <option value="bossa_nova">Bossa Nova</option>
+                                        <option value="samba">Samba</option>
+                                    </optgroup>
+                                    <optgroup label="Ambient & Downtempo">
+                                        <option value="ambient">Ambient</option>
+                                        <option value="downtempo">Downtempo</option>
+                                        <option value="chillout">Chillout</option>
+                                        <option value="trip_hop">Trip-Hop</option>
+                                    </optgroup>
+                                    <optgroup label="Funk & Soul">
+                                        <option value="funk">Funk</option>
+                                        <option value="soul">Soul</option>
+                                        <option value="r_and_b">R&B</option>
+                                        <option value="neo_soul">Neo-Soul</option>
+                                    </optgroup>
+                                    <optgroup label="Rock & Alternative">
+                                        <option value="indie_rock">Indie Rock</option>
+                                        <option value="alternative">Alternative</option>
+                                        <option value="post_rock">Post-Rock</option>
+                                        <option value="psychedelic">Psychedelic</option>
+                                    </optgroup>
+                                    <optgroup label="Jazz & Fusion">
+                                        <option value="jazz">Jazz</option>
+                                        <option value="jazz_fusion">Jazz Fusion</option>
+                                        <option value="nu_jazz">Nu-Jazz</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="display-line" id="subgenre-line" style="display: none;">
+                                <span class="label">Sub-Genre:</span>
+                                <select class="dropdown-select" id="subgenre-select">
+                                    <option value="">None</option>
                                 </select>
                             </div>
                             <div class="display-line">
@@ -1896,7 +1953,13 @@
         </div>
     </div>
     
-    <script>
+    <script type="module">
+        // Genre system - imported module
+        import { initializeGenreSystem } from './js/genre-system.js';
+        
+        // Initialize genre system
+        initializeGenreSystem();
+        
         // Tab switching functionality
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -2063,11 +2126,23 @@
             });
         }
         
-        // Dropdown change handlers
+        // Genre system initialization - using modular approach
+        // Import and initialize genre system
+        import('./js/genre-system.js').then(module => {
+            module.initializeGenreSystem();
+        }).catch(error => {
+            console.error('Failed to load genre system module:', error);
+            // Fallback to inline implementation if module loading fails
+            console.warn('Falling back to inline genre system');
+        });
+        
+        // Other dropdown change handlers
         document.querySelectorAll('.dropdown-select').forEach(select => {
-            select.addEventListener('change', function() {
-                console.log(`${this.id} changed to: ${this.value}`);
-            });
+            if (select.id !== 'genre-select' && select.id !== 'subgenre-select') {
+                select.addEventListener('change', function() {
+                    console.log(`${this.id} changed to: ${this.value}`);
+                });
+            }
         });
         
         // Status update function
