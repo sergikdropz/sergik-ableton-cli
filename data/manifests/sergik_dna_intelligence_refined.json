@@ -1,0 +1,97 @@
+{
+  "bpm": {
+    "average": 107.6,
+    "zones": {
+      "downtempo": {
+        "range": [
+          80,
+          90
+        ],
+        "percentage": 41
+      },
+      "house": {
+        "range": [
+          120,
+          129
+        ],
+        "percentage": 32
+      }
+    }
+  },
+  "keys": {
+    "primary": [
+      "10B",
+      "11B"
+    ],
+    "secondary": [
+      "7A",
+      "8A"
+    ],
+    "distribution": {
+      "10B": 31,
+      "11B": 21,
+      "7A": 13,
+      "8A": 12
+    }
+  },
+  "energy": {
+    "average": 6,
+    "sweet_spot": [
+      5,
+      7
+    ]
+  },
+  "genres": {
+    "hiphop": 42,
+    "funk": 17,
+    "house": 8,
+    "soul": 7
+  },
+  "intelligence": {
+    "emotional_profile": {
+      "primary_emotions": {
+        "intense": 2
+      },
+      "average_valence": 0.6,
+      "average_arousal": 0.9,
+      "top_emotions": {
+        "driving": 2,
+        "aggressive": 2,
+        "powerful": 2
+      }
+    },
+    "psychological_profile": {
+      "primary_effects": {
+        "workout": 2
+      },
+      "average_focus": 0.5,
+      "average_relaxation": 0.1,
+      "average_motivation": 0.95
+    },
+    "sonic_profile": {
+      "primary_timbre": {
+        "neutral": 2
+      },
+      "primary_texture": {
+        "balanced": 2
+      },
+      "primary_spatial": {
+        "focused": 2
+      },
+      "primary_dynamics": {
+        "dynamic": 2
+      }
+    },
+    "intent_profile": {
+      "primary_intents": {
+        "dance_floor": 2
+      },
+      "top_use_cases": {
+        "club": 2,
+        "festival": 2,
+        "party": 2,
+        "peak time": 2
+      }
+    }
+  }
+}
