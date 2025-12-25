@@ -168,9 +168,83 @@ export class VirtualDOM {
     }
 
     /**
-     * Update children efficiently
+     * Update children efficiently using key-based diffing
      */
     private updateChildren(container: HTMLElement, oldChildren: (VNode | string)[], newChildren: (VNode | string)[]): void {
+        // Create key maps for efficient lookup
+        const oldKeyMap = new Map<string | number, { node: VNode | string; index: number; domNode: Node }>();
+        const newKeyMap = new Map<string | number, { node: VNode | string; index: number }>();
+
+        // Build old key map
+        oldChildren.forEach((child, index) => {
+            if (typeof child !== 'string' && child.key !== undefined) {
+                oldKeyMap.set(child.key, { node: child, index, domNode: container.childNodes[index] });
+            }
+        });
+
+        // Build new key map
+        newChildren.forEach((child, index) => {
+            if (typeof child !== 'string' && child.key !== undefined) {
+                newKeyMap.set(child.key, { node: child, index });
+            }
+        });
+
+        // Track which keys are in use
+        const usedKeys = new Set<string | number>();
+        const newChildNodes: Node[] = [];
+
+        // Process new children
+        newChildren.forEach((newChild, newIndex) => {
+            const newKey = typeof newChild !== 'string' ? newChild.key : undefined;
+            
+            if (newKey !== undefined && oldKeyMap.has(newKey)) {
+                // Key exists in old tree - reuse node
+                const oldEntry = oldKeyMap.get(newKey)!;
+                const domNode = oldEntry.domNode;
+                
+                // Update the node if needed
+                if (typeof oldEntry.node !== 'string' && typeof newChild !== 'string') {
+                    this.updateNode(domNode, oldEntry.node, newChild);
+                }
+                
+                newChildNodes.push(domNode);
+                usedKeys.add(newKey);
+            } else {
+                // New node - create it
+                const newNode = this.createDOMNode(typeof newChild === 'string' ? { tag: '#text', children: [newChild] } : newChild);
+                newChildNodes.push(newNode);
+            }
+        });
+
+        // Remove unused old nodes
+        oldKeyMap.forEach((entry, key) => {
+            if (!usedKeys.has(key) && entry.domNode.parentNode === container) {
+                container.removeChild(entry.domNode);
+            }
+        });
+
+        // Reorder nodes to match new order
+        newChildNodes.forEach((node, index) => {
+            const currentChild = container.childNodes[index];
+            if (currentChild !== node) {
+                if (currentChild) {
+                    container.insertBefore(node, currentChild);
+                } else {
+                    container.appendChild(node);
+                }
+            }
+        });
+
+        // Fallback to index-based diffing if no keys are present
+        if (oldKeyMap.size === 0 && newKeyMap.size === 0) {
+            this.updateChildrenByIndex(container, oldChildren, newChildren);
+        }
+    }
+
+    /**
+     * Fallback: Update children using index-based diffing (when no keys)
+     */
+    private updateChildrenByIndex(container: HTMLElement, oldChildren: (VNode | string)[], newChildren: (VNode | string)[]): void {
         const maxLength = Math.max(oldChildren.length, newChildren.length);
 
         for (let i = 0; i < maxLength; i++) {
@@ -180,14 +254,16 @@ export class VirtualDOM {
 
             if (!oldChild && newChild) {
                 // Add new child
-                container.appendChild(this.createDOMNode(newChild as VNode));
+                container.appendChild(this.createDOMNode(typeof newChild === 'string' ? { tag: '#text', children: [newChild] } : newChild));
             } else if (oldChild && !newChild) {
                 // Remove old child
-                container.removeChild(childNode!);
+                if (childNode) {
+                    container.removeChild(childNode);
+                }
             } else if (oldChild && newChild) {
                 // Update existing child
                 if (childNode) {
-                    this.updateNode(childNode, oldChild as VNode, newChild as VNode);
+                    this.updateNode(childNode, typeof oldChild === 'string' ? { tag: '#text', children: [oldChild] } : oldChild, typeof newChild === 'string' ? { tag: '#text', children: [newChild] } : newChild);
                 }
             }
         }

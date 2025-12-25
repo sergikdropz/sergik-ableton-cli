@@ -3,6 +3,10 @@
  * @module ui-controller
  */
 
+import { createLogger } from './utils/logger.js';
+
+const logger = createLogger('UIController');
+
 /**
  * UIController class handles UI state and DOM interactions
  * @class
@@ -21,6 +25,33 @@ export class UIController {
         this.subGenreLine = elements.subGenreLine;
         
         this.validateElements();
+        
+        // Setup keyboard navigation
+        this.setupKeyboardNavigation();
+    }
+    
+    /**
+     * Setup keyboard navigation for dropdowns
+     * @private
+     */
+    setupKeyboardNavigation() {
+        if (this.genreSelect) {
+            new KeyboardNavigation(this.genreSelect, {
+                cycle: true,
+                onEscape: () => {
+                    this.genreSelect.blur();
+                }
+            });
+        }
+        
+        if (this.subGenreSelect) {
+            new KeyboardNavigation(this.subGenreSelect, {
+                cycle: true,
+                onEscape: () => {
+                    this.subGenreSelect.blur();
+                }
+            });
+        }
     }
 
     /**
@@ -58,6 +89,10 @@ export class UIController {
         if (this.subGenreLine) {
             this.subGenreLine.style.display = 'none';
         }
+        // Update ARIA attributes
+        if (this.subGenreSelect) {
+            this.subGenreSelect.setAttribute('aria-expanded', 'false');
+        }
     }
 
     /**
@@ -67,7 +102,7 @@ export class UIController {
      */
     updateSubGenreDropdown(subGenres, normalizeFn) {
         if (!this.subGenreSelect) {
-            console.error('UIController.updateSubGenreDropdown: subGenreSelect element not found');
+            logger.error('subGenreSelect element not found');
             return;
         }
 
@@ -83,7 +118,7 @@ export class UIController {
                     option.textContent = subGenre;
                     this.subGenreSelect.appendChild(option);
                 } catch (error) {
-                    console.error('UIController.updateSubGenreDropdown: Error creating option', error);
+                    logger.error('Error creating option', error);
                 }
             });
             this.showSubGenreDropdown();

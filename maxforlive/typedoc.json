@@ -1,0 +1,19 @@
+{
+  "entryPoints": ["js/**/*.ts", "js/**/*.js"],
+  "out": "docs/api",
+  "exclude": ["**/*.test.ts", "**/*.test.js", "node_modules"],
+  "includeVersion": true,
+  "readme": "README_SETUP.md",
+  "name": "SERGIK AI Genre System API",
+  "theme": "default",
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeInternal": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Core",
+    "Utilities",
+    "Components"
+  ]
+}
+

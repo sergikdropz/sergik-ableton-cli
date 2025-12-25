@@ -4,6 +4,11 @@
  */
 
 import { GenreManager } from './genre-manager.js';
+import { createLogger } from './utils/logger.js';
+import { debounce } from './utils/debounce.js';
+import { sanitizeSearchQuery, validateSearchQuery } from './utils/validator.js';
+
+const logger = createLogger('GenreSearch');
 
 /**
  * GenreSearch class provides search and filtering for genres
@@ -140,7 +145,7 @@ export class GenreSearch {
         if (this.genreSelect && this.genreSelect.parentElement) {
             this.genreSelect.parentElement.insertBefore(searchContainer, this.genreSelect);
         } else {
-            console.error('GenreSearch: Cannot insert search input - parent element not found');
+            logger.error('Cannot insert search input - parent element not found');
         }
     }
 
@@ -151,11 +156,21 @@ export class GenreSearch {
     setupEventListeners() {
         if (!this.searchInput) return;
 
-        // Search on input
+        // Debounced search function (300ms delay)
+        const debouncedFilter = debounce((query: string) => {
+            this.filterGenres(query);
+        }, 300);
+
+        // Search on input with debouncing
         this.searchInput.addEventListener('input', (e) => {
             const target = /** @type {HTMLInputElement} */ (e.target);
             if (target) {
-                this.filterGenres(target.value);
+                // Sanitize and validate input
+                const sanitized = sanitizeSearchQuery(target.value);
+                if (sanitized !== target.value) {
+                    target.value = sanitized;
+                }
+                debouncedFilter(sanitized);
             }
         });
 
@@ -183,6 +198,12 @@ export class GenreSearch {
      */
     filterGenres(query) {
         if (!this.genreSelect) return;
+
+        // Validate and sanitize query
+        if (!validateSearchQuery(query)) {
+            logger.warn('Invalid search query', { query });
+            return;
+        }
 
         const normalizedQuery = query.toLowerCase().trim();
 

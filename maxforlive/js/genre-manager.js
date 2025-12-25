@@ -4,6 +4,9 @@
  */
 
 import { subGenreMap, genreConfig } from './config.js';
+import { createLogger } from './utils/logger.js';
+
+const logger = createLogger('GenreManager');
 
 /**
  * GenreManager class handles genre and sub-genre operations
@@ -33,7 +36,7 @@ export class GenreManager {
     getSubGenres(genre) {
         if (!genre || typeof genre !== 'string') {
             if (this.enableLogging) {
-                console.warn('GenreManager.getSubGenres: Invalid genre parameter', genre);
+                logger.warn('Invalid genre parameter', { genre });
             }
             return [];
         }
@@ -42,7 +45,7 @@ export class GenreManager {
         const subGenres = this.subGenreMap[normalizedGenre] || [];
 
         if (this.enableLogging && subGenres.length === 0 && normalizedGenre !== '') {
-            console.debug(`GenreManager.getSubGenres: No sub-genres found for "${genre}"`);
+            logger.debug(`No sub-genres found for "${genre}"`);
         }
 
         return subGenres;

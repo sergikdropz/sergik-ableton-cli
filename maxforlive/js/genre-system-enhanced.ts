@@ -9,6 +9,9 @@ import { GenreManager } from './genre-manager.js';
 import { UIController } from './ui-controller.js';
 import { VirtualDOM, h } from './virtual-dom.js';
 import { genreConfig } from './config.js';
+import { createLogger } from './utils/logger.js';
+
+const logger = createLogger('EnhancedGenreSystem');
 
 // Type definitions (for JSDoc compatibility)
 /**
@@ -206,7 +209,7 @@ export function initializeEnhancedGenreSystem(config, useVirtualDOM = false) {
         const subGenreLine = document.getElementById('subgenre-line');
 
         if (!genreSelect || !subGenreSelect || !subGenreLine) {
-            console.error('EnhancedGenreSystem: Required DOM elements not found');
+            logger.error('Required DOM elements not found');
             return null;
         }
 
@@ -224,7 +227,7 @@ export function initializeEnhancedGenreSystem(config, useVirtualDOM = false) {
 
         return system;
     } catch (error) {
-        console.error('EnhancedGenreSystem: Failed to initialize', error);
+        logger.error('Failed to initialize', error);
         return null;
     }
 }

@@ -187,7 +187,10 @@ export class GenreSelectorComponent extends HTMLElement {
                 const genres = JSON.parse(genresData);
                 this.populateGenres(genres);
             } catch (e) {
-                console.error('Failed to parse genres data', e);
+                // Logger will be added when migrating to TypeScript
+                if (typeof console !== 'undefined') {
+                    console.error('Failed to parse genres data', e);
+                }
             }
         }
     }

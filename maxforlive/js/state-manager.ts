@@ -94,7 +94,7 @@ export class StateManager {
             try {
                 listener(this.getState());
             } catch (error) {
-                console.error('StateManager: Error in listener', error);
+                logger.error('Error in listener', error);
             }
         });
     }

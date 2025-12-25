@@ -3,6 +3,11 @@
  * @module recent-selections
  */
 
+import { createLogger } from './utils/logger.js';
+import { validateRecentSelectionsArray, validateGenre, validateSubGenre } from './utils/validator.js';
+
+const logger = createLogger('RecentSelections');
+
 /**
  * RecentSelections class manages recent genre/sub-genre selections
  * @class
@@ -30,7 +35,16 @@ export class RecentSelections {
      * @param {string} subGenre - Sub-genre value (optional)
      */
     addSelection(genre, subGenre = '') {
-        if (!genre) return;
+        // Validate inputs
+        if (!genre || !validateGenre(genre)) {
+            logger.warn('Invalid genre in addSelection', { genre });
+            return;
+        }
+
+        if (subGenre && !validateSubGenre(subGenre)) {
+            logger.warn('Invalid subGenre in addSelection', { subGenre });
+            subGenre = ''; // Clear invalid subGenre
+        }
 
         // Remove existing entry if present
         this.selections = this.selections.filter(
@@ -86,15 +100,11 @@ export class RecentSelections {
             const stored = localStorage.getItem(this.storageKey);
             if (stored) {
                 const parsed = JSON.parse(stored);
-                // Validate structure
-                if (Array.isArray(parsed)) {
-                    this.selections = parsed.filter(item => 
-                        item && item.genre && typeof item.genre === 'string'
-                    );
-                }
+                // Validate and sanitize using validator
+                this.selections = validateRecentSelectionsArray(parsed);
             }
         } catch (error) {
-            console.warn('RecentSelections: Failed to load from storage', error);
+            logger.warn('Failed to load from storage', error);
             this.selections = [];
         }
     }
@@ -105,9 +115,11 @@ export class RecentSelections {
      */
     saveToStorage() {
         try {
-            localStorage.setItem(this.storageKey, JSON.stringify(this.selections));
+            // Validate before saving
+            const validated = validateRecentSelectionsArray(this.selections);
+            localStorage.setItem(this.storageKey, JSON.stringify(validated));
         } catch (error) {
-            console.warn('RecentSelections: Failed to save to storage', error);
+            logger.warn('Failed to save to storage', error);
         }
     }
 

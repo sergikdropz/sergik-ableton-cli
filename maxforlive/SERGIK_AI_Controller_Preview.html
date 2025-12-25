@@ -34,6 +34,19 @@
             color: var(--text-primary);
         }
         
+        /* Screen reader only - visually hidden but accessible */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -1471,7 +1484,10 @@
                             </div>
                             <div class="display-line">
                                 <span class="label">Genre:</span>
-                                <select class="dropdown-select" id="genre-select">
+                                <select class="dropdown-select" id="genre-select" 
+                                        aria-label="Select music genre" 
+                                        aria-describedby="genre-description"
+                                        role="combobox">
                                     <optgroup label="Electronic">
                                         <option value="house" selected>House</option>
                                         <option value="tech_house">Tech House</option>
@@ -1537,10 +1553,16 @@
                             </div>
                             <div class="display-line" id="subgenre-line" style="display: none;">
                                 <span class="label">Sub-Genre:</span>
-                                <select class="dropdown-select" id="subgenre-select">
+                                <select class="dropdown-select" id="subgenre-select"
+                                        aria-label="Select sub-genre" 
+                                        aria-describedby="subgenre-description"
+                                        role="combobox"
+                                        aria-expanded="false">
                                     <option value="">None</option>
                                 </select>
                             </div>
+                            <div id="genre-description" class="sr-only">Select a music genre to filter available sub-genres</div>
+                            <div id="subgenre-description" class="sr-only">Select a sub-genre to further refine your selection</div>
                             <div class="display-line">
                                 <span class="label">Target:</span>
                                 <select class="dropdown-select" id="track-select">

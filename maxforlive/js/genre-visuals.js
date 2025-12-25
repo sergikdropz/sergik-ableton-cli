@@ -201,7 +201,10 @@ export class GenreVisuals {
                 this.genreSelect.parentElement.appendChild(this.bpmBadge);
             }
         } else {
-            console.error('GenreVisuals: Cannot insert BPM badge - parent element not found');
+            // Logger will be added when migrating to TypeScript
+            if (typeof console !== 'undefined') {
+                console.error('GenreVisuals: Cannot insert BPM badge - parent element not found');
+            }
         }
 
         this.updateBPMBadge();

@@ -10,6 +10,9 @@ import { GenreSearch } from './genre-search.js';
 import { RecentSelections } from './recent-selections.js';
 import { GenreTooltips } from './genre-tooltips.js';
 import { GenreVisuals } from './genre-visuals.js';
+import { createLogger } from './utils/logger.js';
+
+const logger = createLogger('GenreSystem');
 
 /**
  * GenreSystem class coordinates GenreManager and UIController
@@ -88,10 +91,10 @@ export class GenreSystem {
             this.initialized = true;
 
             if (this.genreManager.enableLogging) {
-                console.log('GenreSystem: Initialized successfully');
+                logger.info('Initialized successfully');
             }
         } catch (error) {
-            console.error('GenreSystem.initialize: Failed to initialize', error);
+            logger.error('Failed to initialize', error);
             throw error;
         }
     }
@@ -119,13 +122,13 @@ export class GenreSystem {
     handleGenreChange(genre) {
         try {
             if (this.genreManager.enableLogging) {
-                console.log(`GenreSystem: Genre changed to "${genre}"`);
+                logger.debug(`Genre changed to "${genre}"`);
             }
 
             // Validate genre before processing
             if (!genre || typeof genre !== 'string' || genre.trim() === '') {
                 if (this.genreManager.enableLogging) {
-                    console.warn('GenreSystem.handleGenreChange: Invalid genre parameter', genre);
+                    logger.warn('Invalid genre parameter', { genre });
                 }
                 // Hide dropdown for invalid genre
                 if (this.uiController) {
@@ -148,7 +151,7 @@ export class GenreSystem {
                 this.recentSelections.addSelection(genre, subGenre);
             }
         } catch (error) {
-            console.error('GenreSystem.handleGenreChange: Error handling genre change', error);
+            logger.error('Error handling genre change', error);
             if (this.genreManager.enableErrorHandling) {
                 // Fallback: hide sub-genre dropdown on error
                 if (this.uiController) {
@@ -164,7 +167,7 @@ export class GenreSystem {
      */
     updateSubGenres(genre) {
         if (!this.uiController) {
-            console.error('GenreSystem.updateSubGenres: UI controller not initialized');
+            logger.error('UI controller not initialized');
             return;
         }
 
@@ -180,7 +183,7 @@ export class GenreSystem {
             
             this.uiController.updateSubGenreDropdown(subGenres, normalizeFn);
         } catch (error) {
-            console.error('GenreSystem.updateSubGenres: Error updating sub-genres', error);
+            logger.error('Error updating sub-genres', error);
             this.uiController.hideSubGenreDropdown();
         }
     }
@@ -245,8 +248,8 @@ function createGenreSystem(config) {
         if (!subGenreLine) missingElements.push('subgenre-line');
 
         if (missingElements.length > 0) {
-            const errorMsg = `GenreSystem: Required DOM elements not found: ${missingElements.join(', ')}`;
-            console.error(errorMsg);
+            const errorMsg = `Required DOM elements not found: ${missingElements.join(', ')}`;
+            logger.error(errorMsg);
             throw new Error(errorMsg);
         }
 
@@ -264,10 +267,10 @@ function createGenreSystem(config) {
 
         return system;
     } catch (error) {
-        console.error('GenreSystem: Failed to create system', error);
+        logger.error('Failed to create system', error);
         // Log additional context for debugging
         if (error instanceof Error) {
-            console.error('Error details:', {
+            logger.debug('Error details', {
                 message: error.message,
                 stack: error.stack
             });
