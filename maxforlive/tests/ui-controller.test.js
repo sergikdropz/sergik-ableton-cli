@@ -120,6 +120,11 @@ describe('UIController', () => {
 
     describe('getSelectedSubGenre', () => {
         it('should return selected sub-genre value', () => {
+            // Add option first
+            const option = document.createElement('option');
+            option.value = 'classic_house';
+            option.textContent = 'Classic House';
+            subGenreSelect.appendChild(option);
             subGenreSelect.value = 'classic_house';
             expect(uiController.getSelectedSubGenre()).toBe('classic_house');
         });
@@ -132,21 +137,33 @@ describe('UIController', () => {
 
     describe('setGenre', () => {
         it('should set genre value', () => {
+            // Add option first
+            const option = document.createElement('option');
+            option.value = 'techno';
+            option.textContent = 'Techno';
+            genreSelect.appendChild(option);
             genreSelect.value = '';
             uiController.setGenre('techno');
             expect(genreSelect.value).toBe('techno');
         });
 
-        it('should trigger change event', (done) => {
-            genreSelect.addEventListener('change', () => {
-                done();
+        it('should trigger change event', async () => {
+            return new Promise((resolve) => {
+                genreSelect.addEventListener('change', () => {
+                    resolve();
+                }, { once: true });
+                uiController.setGenre('house');
             });
-            uiController.setGenre('house');
         });
     });
 
     describe('setSubGenre', () => {
         it('should set sub-genre value', () => {
+            // Add option first
+            const option = document.createElement('option');
+            option.value = 'classic_house';
+            option.textContent = 'Classic House';
+            subGenreSelect.appendChild(option);
             subGenreSelect.value = '';
             uiController.setSubGenre('classic_house');
             expect(subGenreSelect.value).toBe('classic_house');

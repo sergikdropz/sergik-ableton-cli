@@ -123,9 +123,13 @@ export class GenreSystem {
             }
 
             // Validate genre before processing
-            if (!genre || typeof genre !== 'string') {
+            if (!genre || typeof genre !== 'string' || genre.trim() === '') {
                 if (this.genreManager.enableLogging) {
                     console.warn('GenreSystem.handleGenreChange: Invalid genre parameter', genre);
+                }
+                // Hide dropdown for invalid genre
+                if (this.uiController) {
+                    this.uiController.hideSubGenreDropdown();
                 }
                 return;
             }
@@ -165,6 +169,12 @@ export class GenreSystem {
         }
 
         try {
+            // Validate genre first
+            if (!genre || typeof genre !== 'string' || genre.trim() === '') {
+                this.uiController.hideSubGenreDropdown();
+                return;
+            }
+
             const subGenres = this.genreManager.getSubGenres(genre);
             const normalizeFn = (subGenre) => this.genreManager.normalizeSubGenreValue(subGenre);
             

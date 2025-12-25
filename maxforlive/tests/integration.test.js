@@ -52,20 +52,20 @@ describe('GenreSystem Integration', () => {
             expect(subGenreSelect.querySelectorAll('option').length).toBeGreaterThan(1);
         });
 
-        it('should update sub-genres when genre changes', () => {
+        it('should update sub-genres when genre changes', async () => {
             // Change genre
             genreSelect.value = 'techno';
             genreSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
             // Wait for async update
-            setTimeout(() => {
-                expect(subGenreLine.style.display).toBe('flex');
-                const options = subGenreSelect.querySelectorAll('option');
-                expect(options.length).toBeGreaterThan(1);
-                // Check that techno sub-genres are present
-                const optionTexts = Array.from(options).map(opt => opt.textContent);
-                expect(optionTexts.some(text => text.includes('Techno'))).toBe(true);
-            }, 10);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            expect(subGenreLine.style.display).toBe('flex');
+            const options = subGenreSelect.querySelectorAll('option');
+            expect(options.length).toBeGreaterThan(1);
+            // Check that techno sub-genres are present
+            const optionTexts = Array.from(options).map(opt => opt.textContent);
+            expect(optionTexts.some(text => text.includes('Techno'))).toBe(true);
         });
 
         it('should handle rapid genre changes', () => {
@@ -103,14 +103,22 @@ describe('GenreSystem Integration', () => {
     });
 
     describe('Error Handling', () => {
-        it('should handle invalid genre gracefully', () => {
-            genreSelect.value = 'nonexistent';
+        it('should handle invalid genre gracefully', async () => {
+            // First set a valid genre to show sub-genres
+            genreSelect.value = 'house';
+            genreSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+            expect(subGenreLine.style.display).toBe('flex'); // Should be visible
+            
+            // Now set invalid genre (empty string)
+            genreSelect.value = '';
             genreSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
-            setTimeout(() => {
-                // Should hide dropdown for invalid genre
-                expect(subGenreLine.style.display).toBe('none');
-            }, 10);
+            // Wait for async update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // The system should hide dropdown for invalid/empty genre
+            expect(subGenreLine.style.display).toBe('none');
         });
 
         it('should handle missing DOM elements', () => {

@@ -17,13 +17,7 @@ export default defineConfig({
       }
     },
     sourcemap: true,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: false, // Keep console for debugging
-        drop_debugger: true
-      }
-    }
+    minify: 'esbuild' // Use esbuild (faster, built-in) instead of terser
   },
   server: {
     port: 8000,
