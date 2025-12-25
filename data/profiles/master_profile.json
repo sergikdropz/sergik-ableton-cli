@@ -426,47 +426,73 @@
   "intelligence": {
     "emotional_profile": {
       "primary_emotions": {
-        "intense": 2
+        "groovy": 1320,
+        "chill": 422,
+        "intense": 121,
+        "calm": 20
       },
-      "average_valence": 0.6,
-      "average_arousal": 0.9,
+      "average_valence": 0.763,
+      "average_arousal": 0.57,
       "top_emotions": {
-        "driving": 2,
-        "aggressive": 2,
-        "powerful": 2
+        "funky": 1320,
+        "rhythmic": 1320,
+        "danceable": 1320,
+        "relaxed": 422,
+        "laid-back": 422,
+        "comfortable": 422,
+        "driving": 121,
+        "aggressive": 121,
+        "powerful": 121,
+        "peaceful": 20
       }
     },
     "psychological_profile": {
       "primary_effects": {
-        "workout": 2
+        "social": 962,
+        "background": 396,
+        "productivity": 358,
+        "workout": 121,
+        "study": 26
       },
-      "average_focus": 0.5,
-      "average_relaxation": 0.1,
-      "average_motivation": 0.95
+      "average_focus": 0.496,
+      "average_relaxation": 0.625,
+      "average_motivation": 0.529
     },
     "sonic_profile": {
       "primary_timbre": {
-        "neutral": 2
+        "neutral": 1863,
+        "warm": 20
       },
       "primary_texture": {
-        "balanced": 2
+        "balanced": 1863,
+        "rich": 20
       },
       "primary_spatial": {
-        "focused": 2
+        "focused": 1883
       },
       "primary_dynamics": {
-        "dynamic": 2
+        "dynamic": 1883
       }
     },
     "intent_profile": {
       "primary_intents": {
-        "dance_floor": 2
+        "creative": 585,
+        "chill": 513,
+        "dance_floor": 476,
+        "background": 245,
+        "workout": 63
       },
       "top_use_cases": {
-        "club": 2,
-        "festival": 2,
-        "party": 2,
-        "peak time": 2
+        "studio": 585,
+        "production": 585,
+        "writing": 585,
+        "design": 585,
+        "home": 513,
+        "study": 513,
+        "reading": 513,
+        "social": 513,
+        "club": 476,
+        "festival": 476
       }
     }
   },
