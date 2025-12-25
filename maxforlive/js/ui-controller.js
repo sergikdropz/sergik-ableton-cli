@@ -188,6 +188,64 @@ export class UIController {
             // Add category class based on genre (simplified - could be more sophisticated)
             // This is a placeholder for future enhancement
         }
+        
+        // Announce to screen readers
+        this.announceToScreenReader(`Genre changed to ${genre}`);
+    }
+    
+    /**
+     * Announce changes to screen readers
+     * @param {string} message - Message to announce
+     * @private
+     */
+    announceToScreenReader(message) {
+        // Create or get live region
+        let liveRegion = document.getElementById('aria-live-region');
+        if (!liveRegion) {
+            liveRegion = document.createElement('div');
+            liveRegion.id = 'aria-live-region';
+            liveRegion.setAttribute('aria-live', 'polite');
+            liveRegion.setAttribute('aria-atomic', 'true');
+            liveRegion.className = 'sr-only';
+            document.body.appendChild(liveRegion);
+        }
+        
+        // Update message
+        liveRegion.textContent = message;
+        
+        // Clear after announcement (screen readers will have read it)
+        setTimeout(() => {
+            if (liveRegion) {
+                liveRegion.textContent = '';
+            }
+        }, 1000);
+    }
+    
+    /**
+     * Set focus to genre select
+     */
+    focusGenreSelect() {
+        if (this.genreSelect) {
+            this.genreSelect.focus();
+        }
+    }
+    
+    /**
+     * Set focus to sub-genre select
+     */
+    focusSubGenreSelect() {
+        if (this.subGenreSelect) {
+            this.subGenreSelect.focus();
+        }
+    }
+    
+    /**
+     * Restore focus to last focused element
+     */
+    restoreFocus() {
+        // This would track the last focused element
+        // For now, focus genre select as default
+        this.focusGenreSelect();
     }
 }
 

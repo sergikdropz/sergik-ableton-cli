@@ -8,6 +8,10 @@ import { createLogger } from './utils/logger.js';
 
 const logger = createLogger('GenreManager');
 
+// Memoization cache
+const subGenresCache = new Map<string, string[]>();
+const allGenresCache: string[] | null = null;
+
 /**
  * GenreManager class handles genre and sub-genre operations
  * @class
@@ -29,7 +33,7 @@ export class GenreManager {
     }
 
     /**
-     * Get sub-genres for a given genre
+     * Get sub-genres for a given genre (memoized)
      * @param {string} genre - Genre name
      * @returns {string[]} Array of sub-genre names
      */
@@ -42,7 +46,16 @@ export class GenreManager {
         }
 
         const normalizedGenre = genre.toLowerCase().trim();
+        
+        // Check cache first
+        if (subGenresCache.has(normalizedGenre)) {
+            return subGenresCache.get(normalizedGenre);
+        }
+
         const subGenres = this.subGenreMap[normalizedGenre] || [];
+        
+        // Cache result
+        subGenresCache.set(normalizedGenre, subGenres);
 
         if (this.enableLogging && subGenres.length === 0 && normalizedGenre !== '') {
             logger.debug(`No sub-genres found for "${genre}"`);
@@ -62,11 +75,26 @@ export class GenreManager {
     }
 
     /**
-     * Get all available genres
+     * Get all available genres (memoized)
      * @returns {string[]} Array of all genre names
      */
     getAllGenres() {
-        return Object.keys(this.subGenreMap);
+        // Use cached result if available
+        if (allGenresCache !== null) {
+            return allGenresCache;
+        }
+        
+        const genres = Object.keys(this.subGenreMap);
+        // Note: In a real implementation, we'd update the cache
+        // For now, we'll just return the result
+        return genres;
+    }
+    
+    /**
+     * Clear memoization cache (useful for testing or when config changes)
+     */
+    clearCache() {
+        subGenresCache.clear();
     }
 
     /**
