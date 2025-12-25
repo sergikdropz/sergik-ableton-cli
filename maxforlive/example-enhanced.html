@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERGIK AI - Enhanced Genre System Example</title>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 40px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        .state-display {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SERGIK AI - Enhanced Genre System</h1>
+
+        <!-- Example 1: Enhanced System with State Management -->
+        <div class="section">
+            <h2>1. Enhanced System (State Management)</h2>
+            <div class="display-line">
+                <span class="label">Genre:</span>
+                <select class="dropdown-select" id="genre-select-enhanced">
+                    <optgroup label="Electronic">
+                        <option value="house" selected>House</option>
+                        <option value="techno">Techno</option>
+                        <option value="trance">Trance</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="display-line" id="subgenre-line-enhanced" style="display: none;">
+                <span class="label">Sub-Genre:</span>
+                <select class="dropdown-select" id="subgenre-select-enhanced">
+                    <option value="">None</option>
+                </select>
+            </div>
+            <div class="state-display" id="state-display">
+                State: <span id="state-text">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Example 2: Web Component -->
+        <div class="section">
+            <h2>2. Web Component</h2>
+            <genre-selector id="genre-selector-component"></genre-selector>
+            <div class="state-display" id="component-state">
+                Component State: <span id="component-state-text">Waiting...</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Example 1: Enhanced System
+        import { initializeEnhancedGenreSystem } from './js/genre-system-enhanced.js';
+
+        const system = initializeEnhancedGenreSystem({
+            enableSearch: true,
+            enableRecentSelections: true,
+            enableTooltips: true,
+            enableVisuals: true
+        });
+
+        if (system) {
+            const stateManager = system.getStateManager();
+            const stateDisplay = document.getElementById('state-text');
+
+            // Subscribe to state changes
+            stateManager.subscribe((state) => {
+                if (stateDisplay) {
+                    stateDisplay.textContent = JSON.stringify({
+                        genre: state.selectedGenre,
+                        subGenre: state.selectedSubGenre,
+                        searchActive: state.isSearchActive
+                    }, null, 2);
+                }
+            });
+
+            // Make available globally
+            window.enhancedSystem = system;
+        }
+
+        // Example 2: Web Component
+        import './js/components/genre-selector.js';
+
+        const component = document.getElementById('genre-selector-component');
+        const componentStateDisplay = document.getElementById('component-state-text');
+
+        if (component) {
+            component.addEventListener('genre-change', (e) => {
+                if (componentStateDisplay) {
+                    componentStateDisplay.textContent = JSON.stringify(e.detail, null, 2);
+                }
+            });
+
+            // Populate with genres (example)
+            // In real usage, this would come from the HTML or API
+            setTimeout(() => {
+                if (component.populateGenres) {
+                    component.populateGenres([
+                        { value: 'house', text: 'House', group: 'Electronic' },
+                        { value: 'techno', text: 'Techno', group: 'Electronic' }
+                    ]);
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
+
