@@ -773,11 +773,39 @@ class PathAnalysisRequest(BaseModel):
     file_path: str = Field(..., description="Path to local audio file")
 
 
+class EnergyIntelligence(BaseModel):
+    """Enhanced energy analysis with emotional, psychological, sonic, and intent intelligence."""
+    energy_level: int = Field(..., ge=1, le=10, description="Energy level 1-10")
+    energy_category: str = Field(..., description="Energy category (very_low, low, medium, high, very_high)")
+    
+    emotional: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Emotional intelligence: category, valence, arousal, emotions, emotional_state"
+    )
+    psychological: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Psychological intelligence: primary_effect, focus, relaxation, motivation, psychological_state"
+    )
+    sonic: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Sonic intelligence: timbre, texture, spatial, dynamics, brightness, harmonic_ratio, etc."
+    )
+    intent: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Intent intelligence: primary intent, matches, use_cases, suitable_for"
+    )
+    summary: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Summary: description and tags"
+    )
+
+
 class AudioAnalysisResponse(BaseModel):
     """Complete audio analysis response."""
     status: Literal["ok", "error"]
     file: Optional[str] = Field(None, description="Analyzed filename")
     metadata: Optional[AudioMetadata] = Field(None, description="Audio metadata")
+    intelligence: Optional[EnergyIntelligence] = Field(None, description="Enhanced energy intelligence analysis")
     musicbrainz: Optional[MusicBrainzData] = Field(None, description="MusicBrainz data")
     sergik_dna: Optional[SergikDNAResult] = Field(None, description="SERGIK DNA match result")
     genre_influence: Optional[GenreInfluenceDNA] = Field(None, description="Genre influence DNA")

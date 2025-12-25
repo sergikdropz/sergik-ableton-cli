@@ -7,6 +7,7 @@ Comprehensive audio analysis with:
 - MusicBrainz genre/artist lookup
 - SERGIK DNA matching
 - Genre influence calculation
+- Enhanced Energy Intelligence (emotional, psychological, sonic, intent)
 """
 
 import logging
@@ -18,6 +19,14 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 
 logger = logging.getLogger(__name__)
+
+# Import energy intelligence
+try:
+    from ..features.energy_intelligence import enhance_audio_analysis_with_intelligence
+    ENERGY_INTELLIGENCE_AVAILABLE = True
+except ImportError:
+    ENERGY_INTELLIGENCE_AVAILABLE = False
+    logger.warning("Energy intelligence module not available")
 
 # SERGIK Style Signature (from gpt_config.json)
 SERGIK_DNA = {
@@ -119,7 +128,20 @@ def analyze_audio(file_path: str) -> Dict[str, Any]:
         # Zero crossing rate (rhythm complexity)
         zcr = np.mean(librosa.feature.zero_crossing_rate(y))
         
-        return {
+        # Harmonic/Percussive separation
+        y_harmonic = librosa.effects.harmonic(y)
+        y_percussive = librosa.effects.percussive(y)
+        harmonic_energy = np.mean(np.abs(y_harmonic))
+        percussive_energy = np.mean(np.abs(y_percussive))
+        total_energy = np.mean(np.abs(y)) + 1e-9
+        harmonic_ratio = harmonic_energy / total_energy
+        percussive_ratio = percussive_energy / total_energy
+        
+        # Energy standard deviation (variation)
+        energy_std = float(np.std(rms))
+        
+        # Build base analysis
+        analysis = {
             "status": "ok",
             "bpm": round(bpm, 1),
             "key": camelot_key,
@@ -130,8 +152,22 @@ def analyze_audio(file_path: str) -> Dict[str, Any]:
             "spectral_centroid": round(float(spectral_centroid), 2),
             "spectral_rolloff": round(float(spectral_rolloff), 2),
             "rhythm_complexity": round(float(zcr) * 1000, 2),
-            "loudness_db": round(float(20 * np.log10(np.mean(rms) + 1e-10)), 2)
+            "loudness_db": round(float(20 * np.log10(np.mean(rms) + 1e-10)), 2),
+            "brightness": round(float(spectral_centroid), 2),
+            "harmonic_ratio": round(float(harmonic_ratio), 3),
+            "percussive_ratio": round(float(percussive_ratio), 3),
+            "energy_std": round(float(energy_std), 4),
         }
+        
+        # Add energy intelligence if available
+        if ENERGY_INTELLIGENCE_AVAILABLE:
+            try:
+                enhanced = enhance_audio_analysis_with_intelligence(analysis)
+                analysis["intelligence"] = enhanced.get("intelligence", {})
+            except Exception as e:
+                logger.warning(f"Energy intelligence enhancement failed: {e}")
+        
+        return analysis
         
     except Exception as e:
         logger.error(f"Audio analysis failed: {e}")
@@ -631,10 +667,14 @@ def full_analysis(file_path: str = None, url: str = None) -> Dict[str, Any]:
     # Genre influence calculation
     genre_influence = calculate_genre_influence(mb_data, metadata)
     
+    # Extract intelligence data if available
+    intelligence = metadata.get("intelligence")
+    
     return {
         "status": "ok",
         "file": os.path.basename(file_path),
-        "metadata": metadata,
+        "metadata": {k: v for k, v in metadata.items() if k != "intelligence"},  # Remove intelligence from metadata
+        "intelligence": intelligence,  # Include intelligence separately
         "musicbrainz": mb_data,
         "sergik_dna": dna_match,
         "genre_influence": genre_influence

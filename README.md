@@ -55,7 +55,9 @@ AI-powered music generation and production assistant for Ableton Live. Generate 
 - **2022**: 4,631 projects
 - **2023**: 2,514 projects
 
-### Top Collaborators (by project count)
+### Top Collaborators
+
+**By Project Count:**
 1. Silent Jay (408 projects)
 2. Slick Floyd (285 projects)
 3. Breauxx (213 projects)
@@ -66,6 +68,20 @@ AI-powered music generation and production assistant for Ableton Live. Generate 
 8. Sean Hart (122 projects)
 9. CHKLZ (108 projects)
 10. LODIN (108 projects)
+
+**By Exported Tracks:**
+1. Silent Jay (27 exported tracks)
+2. ANDINO (16 exported tracks)
+3. Breauxx (16 exported tracks)
+4. Slick Floyd (16 exported tracks)
+5. Javi (8 exported tracks)
+6. L9V (8 exported tracks)
+7. Sean Hart (7 exported tracks)
+8. JIMII (6 exported tracks)
+9. Stan The Guitarman (6 exported tracks)
+10. ESHER (6 exported tracks)
+
+**Note:** 437 solo tracks (no collaborator) have been exported.
 
 ## Installation
 
