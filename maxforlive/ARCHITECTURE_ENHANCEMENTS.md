@@ -1,5 +1,132 @@
 # Architecture Enhancements
 
+## System Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph UI["UI Layer"]
+        HTML[HTML Interface]
+        CSS[Styling]
+    end
+    
+    subgraph Core["Core System"]
+        GS[GenreSystem]
+        GM[GenreManager]
+        UC[UIController]
+    end
+    
+    subgraph Utils["Utilities"]
+        Logger[Logger]
+        Validator[Validator]
+        ErrorHandler[ErrorHandler]
+        Debounce[Debounce]
+        KeyboardNav[KeyboardNav]
+    end
+    
+    subgraph State["State Management"]
+        SM[StateManager]
+        VDOM[VirtualDOM]
+    end
+    
+    subgraph Features["Features"]
+        Search[GenreSearch]
+        Recent[RecentSelections]
+        Tooltips[GenreTooltips]
+        Visuals[GenreVisuals]
+    end
+    
+    HTML --> GS
+    GS --> GM
+    GS --> UC
+    GS --> Search
+    GS --> Recent
+    GS --> Tooltips
+    GS --> Visuals
+    
+    GM --> Logger
+    UC --> Logger
+    UC --> KeyboardNav
+    Search --> Debounce
+    Search --> Validator
+    Recent --> Validator
+    
+    GS --> SM
+    SM --> VDOM
+    
+    ErrorHandler -.-> Logger
+    
+    style Core fill:#00d4aa
+    style Utils fill:#ff6b35
+    style State fill:#a855f7
+    style Features fill:#fbbf24
+```
+
+## Data Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant GenreSystem
+    participant GenreManager
+    participant StateManager
+    participant UIController
+    
+    User->>UI: Select Genre
+    UI->>GenreSystem: handleGenreChange()
+    GenreSystem->>GenreManager: getSubGenres()
+    GenreManager-->>GenreSystem: subGenres[]
+    GenreSystem->>StateManager: selectGenre()
+    StateManager->>UIController: updateSubGenreDropdown()
+    UIController->>UI: Update DOM
+    UI-->>User: Show Sub-Genres
+```
+
+## Component Relationships
+
+```mermaid
+classDiagram
+    class GenreSystem {
+        +GenreManager genreManager
+        +UIController uiController
+        +GenreSearch genreSearch
+        +initialize()
+        +handleGenreChange()
+    }
+    
+    class GenreManager {
+        +subGenreMap
+        +getSubGenres()
+        +getAllGenres()
+        +isValidGenre()
+    }
+    
+    class UIController {
+        +genreSelect
+        +subGenreSelect
+        +updateSubGenreDropdown()
+        +showSubGenreDropdown()
+    }
+    
+    class StateManager {
+        +state
+        +selectGenre()
+        +selectSubGenre()
+        +subscribe()
+    }
+    
+    class VirtualDOM {
+        +container
+        +render()
+        +updateNode()
+    }
+    
+    GenreSystem --> GenreManager
+    GenreSystem --> UIController
+    GenreSystem --> StateManager
+    StateManager --> VirtualDOM
+```
+
 This document describes the advanced architecture improvements implemented for the genre system.
 
 ## Overview

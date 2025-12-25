@@ -70,6 +70,13 @@ jobs:
         if [ -d "dist" ]; then
           echo "Build successful"
           du -sh dist/
+          SIZE=$(du -sk dist/ | cut -f1)
+          MAX_SIZE=5000  # 5MB limit
+          if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+            echo "ERROR: Bundle size ($SIZE KB) exceeds limit ($MAX_SIZE KB)"
+            exit 1
+          fi
+          echo "Bundle size: $SIZE KB (limit: $MAX_SIZE KB)"
         else
           echo "Build failed - dist directory not found"
           exit 1
