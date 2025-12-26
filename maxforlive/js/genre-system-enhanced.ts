@@ -48,9 +48,16 @@ export class EnhancedGenreSystem {
     /**
      * @param {any} config
      */
-    constructor(config = genreConfig) {
+    constructor(config: any = genreConfig) {
         this.stateManager = new StateManager();
-        this.genreManager = new GenreManager(config);
+        // GenreManager accepts config with required properties, ensure they exist
+        const managerConfig = {
+            subGenreMap: (config?.subGenreMap || genreConfig.subGenreMap || {}) as Record<string, string[]>,
+            defaultGenre: config?.defaultGenre || genreConfig.defaultGenre || 'house',
+            enableLogging: config?.enableLogging ?? genreConfig.enableLogging ?? true,
+            enableErrorHandling: config?.enableErrorHandling ?? genreConfig.enableErrorHandling ?? true
+        };
+        this.genreManager = new GenreManager(managerConfig as any);
     }
 
     /**

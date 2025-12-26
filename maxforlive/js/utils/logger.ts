@@ -98,7 +98,6 @@ export class Logger {
             return;
         }
 
-        const timestamp = new Date().toISOString();
         const logMessage = `${this.config.prefix} [${LogLevel[level]}] ${message}`;
 
         if (this.config.enableConsole) {
@@ -142,7 +141,6 @@ export class Logger {
                 context: this.context,
                 message,
                 args: args.length > 0 ? args : undefined,
-                timestamp: new Date().toISOString(),
                 userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
                 url: typeof window !== 'undefined' ? window.location.href : undefined
             };

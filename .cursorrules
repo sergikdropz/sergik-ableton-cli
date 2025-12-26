@@ -1,0 +1,56 @@
+# SERGIK AI Development Rules
+
+## Always Use SERGIK AI Team for Development
+
+**IMPORTANT**: When developing code, ALWAYS use the SERGIK AI Team agents to help orchestrate development.
+
+### Standard Import Pattern
+
+```python
+from sergik_ai_team import auto_help, develop_sync, code_review, best_practices
+
+# Before implementing: Get guidance
+guidance = auto_help("your development task description")
+# Use the guidance to inform your implementation
+
+# During implementation: Get help
+help_text = develop_sync("specific implementation question")
+# Use help_text for guidance
+
+# After implementing: Review code
+review = code_review("path/to/file.py")
+# Apply suggestions from review
+```
+
+## Development Workflow
+
+1. **Planning**: Use `best_practices()` to get guidance before coding
+2. **Implementation**: Use `develop_sync()` for real-time assistance
+3. **Review**: Use `code_review()` after writing code
+4. **Testing**: Use agent guidance for testing strategies
+
+## Agent Integration
+
+- **DevAssistant**: Code analysis, generation, best practices
+- **ControllerDev**: Max for Live controller development
+- **SergikCore**: Routes to appropriate agents
+- **Memoria**: Knowledge base queries
+- **VSTCraft**: Music generation guidance
+- **AbleAgent**: Ableton Live integration guidance
+
+## Code Quality Standards
+
+- Always use type hints
+- Add docstrings (Google/NumPy style)
+- Use structured error handling
+- Add logging for debugging
+- Follow PEP 8 style guidelines
+- Use dependency injection
+
+## SERGIK-Specific Patterns
+
+- Use knowledge base for SERGIK context
+- Use plugin knowledge for device recommendations
+- Follow SERGIK workflow patterns
+- Use SERGIK defaults (10B key, 125 BPM, tech_house style)
+

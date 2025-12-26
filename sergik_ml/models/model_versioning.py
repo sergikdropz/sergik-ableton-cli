@@ -6,6 +6,7 @@ Track, version, and manage ML models:
   - Training metadata logging
   - A/B testing support
   - Rollback capability
+  - MLflow integration for experiment tracking
 
 Storage structure:
     artifacts/
@@ -33,6 +34,15 @@ import hashlib
 from ..config import CFG
 
 logger = logging.getLogger(__name__)
+
+# MLflow integration (optional)
+try:
+    import mlflow
+    import mlflow.sklearn
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
+    logger.warning("MLflow not available. Install with: pip install mlflow")
 
 
 @dataclass
@@ -117,9 +127,10 @@ class ModelRegistry:
         metadata: ModelMetadata,
         metrics: Optional[ModelMetrics] = None,
         make_latest: bool = True,
+        mlflow_experiment: Optional[str] = None,
     ) -> Tuple[int, Path]:
         """
-        Save a model with versioning.
+        Save a model with versioning and MLflow tracking.
 
         Args:
             model: Model object to save
@@ -127,6 +138,7 @@ class ModelRegistry:
             metadata: Model metadata
             metrics: Optional evaluation metrics
             make_latest: Update 'latest' symlink
+            mlflow_experiment: Optional MLflow experiment name
 
         Returns:
             Tuple of (version, path)
@@ -140,15 +152,61 @@ class ModelRegistry:
         if not metadata.created_at:
             metadata.created_at = datetime.utcnow().isoformat()
 
+        # MLflow tracking
+        run_id = None
+        if MLFLOW_AVAILABLE and mlflow_experiment:
+            try:
+                mlflow.set_experiment(mlflow_experiment)
+                
+                with mlflow.start_run(run_name=f"{model_type}_v{version}"):
+                    # Log parameters
+                    mlflow.log_params(metadata.hyperparameters)
+                    mlflow.log_param("model_type", model_type)
+                    mlflow.log_param("version", version)
+                    mlflow.log_param("training_samples", metadata.training_samples)
+                    mlflow.log_param("feature_dim", metadata.feature_dim)
+                    
+                    # Log metrics
+                    if metrics:
+                        mlflow.log_metric("mse", metrics.mse)
+                        mlflow.log_metric("mae", metrics.mae)
+                        mlflow.log_metric("rmse", metrics.rmse)
+                        mlflow.log_metric("r2", metrics.r2)
+                        if metrics.val_mse:
+                            mlflow.log_metric("val_mse", metrics.val_mse)
+                        if metrics.val_mae:
+                            mlflow.log_metric("val_mae", metrics.val_mae)
+                    
+                    # Log feature importance
+                    if metrics and metrics.feature_importance:
+                        for feat, imp in metrics.feature_importance.items():
+                            mlflow.log_metric(f"feature_importance_{feat}", imp)
+                    
+                    # Log model
+                    mlflow.sklearn.log_model(model, "model")
+                    
+                    # Log metadata
+                    mlflow.log_dict(asdict(metadata), "metadata.json")
+                    if metrics:
+                        mlflow.log_dict(asdict(metrics), "metrics.json")
+                    
+                    run_id = mlflow.active_run().info.run_id
+                    logger.info(f"MLflow run ID: {run_id}")
+            except Exception as e:
+                logger.warning(f"MLflow tracking failed: {e}")
+
         # Save model
         model_path = version_dir / "model.pkl"
         with open(model_path, "wb") as f:
             pickle.dump(model, f)
 
-        # Save metadata
+        # Save metadata (include MLflow run ID)
+        metadata_dict = asdict(metadata)
+        if run_id:
+            metadata_dict["mlflow_run_id"] = run_id
         metadata_path = version_dir / "metadata.json"
         with open(metadata_path, "w") as f:
-            json.dump(asdict(metadata), f, indent=2)
+            json.dump(metadata_dict, f, indent=2)
 
         # Save metrics
         if metrics:
@@ -372,15 +430,19 @@ def save_preference_model(
     training_samples: int,
     metrics: Dict[str, float],
     hyperparameters: Optional[Dict[str, Any]] = None,
+    feature_dim: int = 7,
+    mlflow_experiment: Optional[str] = "sergik_preference_model",
 ) -> Tuple[int, Path]:
     """
-    Save preference model with versioning.
+    Save preference model with versioning and MLflow tracking.
 
     Args:
         model: PreferenceModel instance
         training_samples: Number of training samples
         metrics: Dict with mse, mae, etc.
         hyperparameters: Training hyperparameters
+        feature_dim: Feature dimension (7 for base, 20+ for enhanced)
+        mlflow_experiment: MLflow experiment name
 
     Returns:
         Tuple of (version, path)
@@ -392,7 +454,7 @@ def save_preference_model(
         model_type="preference",
         created_at=datetime.utcnow().isoformat(),
         training_samples=training_samples,
-        feature_dim=7,
+        feature_dim=feature_dim,
         hyperparameters=hyperparameters or {"l2": 0.01},
     )
 
@@ -401,10 +463,15 @@ def save_preference_model(
         mae=metrics.get("mae", 0),
         rmse=metrics.get("rmse", 0),
         r2=metrics.get("r2", 0),
+        val_mse=metrics.get("cv_mse_mean"),
+        val_mae=metrics.get("cv_mae_mean"),
         feature_importance=metrics.get("feature_importance", {}),
     )
 
-    return registry.save_model(model, "preference", metadata, model_metrics)
+    return registry.save_model(
+        model, "preference", metadata, model_metrics,
+        mlflow_experiment=mlflow_experiment
+    )
 
 
 def load_preference_model(version: Optional[int] = None):

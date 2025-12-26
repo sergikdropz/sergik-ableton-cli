@@ -18,6 +18,7 @@ import json
 import logging
 
 from ..config import CFG
+from ..utils.errors import AbletonConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -40,15 +41,28 @@ def osc_send(address: str, payload: Dict[str, Any]) -> bool:
 
     In Max for Live:
       [udpreceive 9000] -> [route /scp/status ...] -> [fromsymbol] -> [dict.deserialize]
+    
+    Raises:
+        AbletonConnectionError: If OSC communication fails
     """
     try:
         client = _get_client()
         client.send_message(address, [json.dumps(payload)])
         logger.debug(f"OSC sent: {address} -> {payload}")
         return True
+    except (OSError, ConnectionError, ValueError) as e:
+        logger.error(f"OSC send failed: {e}", exc_info=True)
+        raise AbletonConnectionError(
+            f"Failed to send OSC message to {address}",
+            details={"address": address, "payload": payload},
+            context={"host": CFG.ableton_osc_host, "port": CFG.ableton_osc_port}
+        ) from e
     except Exception as e:
-        logger.error(f"OSC send failed: {e}")
-        return False
+        logger.error(f"Unexpected error in OSC send: {e}", exc_info=True)
+        raise AbletonConnectionError(
+            f"Unexpected error sending OSC message: {e}",
+            details={"address": address, "payload": payload}
+        ) from e
 
 
 def osc_status(text: str, **extra) -> bool:

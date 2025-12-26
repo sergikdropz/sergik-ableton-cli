@@ -273,6 +273,12 @@ The CLI can also send OSC messages to port 9000:
 │  │ - Devices    │  │ - Push-to-talk│  │ - Search     │         │
 │  │ - Clips      │  │              │  │              │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │ State Mgmt   │  │ Metrics      │  │ Logging      │         │
+│  │ - Persistent │  │ - Collection │  │ - Structured │         │
+│  │ - Versioning │  │ - Health     │  │ - Correlation│         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
 └─────────────────────────────┬───────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -284,6 +290,30 @@ The CLI can also send OSC messages to port 9000:
 │ Device       │    │ OpenAPI      │    │              │
 └──────────────┘    └──────────────┘    └──────────────┘
 ```
+
+### Design Principles
+
+SERGIK AI follows these core design principles:
+
+1. **Fail Fast, Fail Explicitly**: Configuration validation fails on startup with clear errors. All exceptions are typed and contextual.
+
+2. **Structured Error Handling**: Custom exception hierarchy with context tracking (request IDs, user IDs, operations). No bare except clauses.
+
+3. **Database Connection Management**: Connection pooling with health checks, retry logic, and proper transaction management.
+
+4. **Dependency Injection Consistency**: Single DI pattern throughout codebase with thread-safe container and lifecycle management.
+
+5. **Security by Default**: CORS restricted to known origins, request size limits, authentication middleware foundation, no hardcoded secrets.
+
+6. **Observability & Monitoring**: Structured logging with correlation IDs, metrics collection, enhanced health checks with dependency status.
+
+7. **State Management**: Persistent state with database backing, optimistic locking for conflict resolution, state versioning and snapshots.
+
+8. **Configuration as Code**: Type-safe Pydantic configuration with environment-specific configs, validation on startup.
+
+9. **Testing Strategy**: Comprehensive test framework with unit, integration, and performance tests.
+
+10. **Code Organization**: Clear module boundaries, consistent patterns, comprehensive documentation.
 
 ### Integration Points
 
@@ -600,8 +630,55 @@ Full API documentation: `http://127.0.0.1:8000/docs`
 ### Running Tests
 
 ```bash
+# Run all tests
 python -m pytest tests/
+
+# Run with coverage
+python -m pytest tests/ --cov=sergik_ml --cov-report=html
+
+# Run specific test categories
+pytest -m unit
+pytest -m integration
+pytest -m performance
 ```
+
+### Code Quality
+
+```bash
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+
+# Run linting
+ruff check sergik_ml/
+
+# Format code
+black sergik_ml/
+
+# Type checking
+mypy sergik_ml/ --ignore-missing-imports
+```
+
+### Environment Configuration
+
+The application supports environment-specific configuration:
+
+```bash
+# Development (default)
+export SERGIK_ENV=dev
+export SERGIK_ALLOWED_ORIGINS="*"
+
+# Production
+export SERGIK_ENV=prod
+export SERGIK_ALLOWED_ORIGINS="https://yourdomain.com,https://app.yourdomain.com"
+export SERGIK_DB_URL="postgresql://user:pass@localhost/sergik_ml"
+```
+
+### Monitoring
+
+- **Health Check**: `GET /health` - Returns service and dependency health status
+- **Metrics**: `GET /metrics` - Returns application metrics (request counts, durations, errors)
+- **Logs**: Structured JSON logs with correlation IDs for request tracking
 
 ### Adding New Features
 

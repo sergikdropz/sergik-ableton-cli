@@ -107,11 +107,34 @@ class PreferenceModel:
             logger.warning(f"Could not load preference model: {e}")
         return model
 
-    def get_feature_importance(self) -> dict:
-        """Get feature importance from weights."""
+    def get_feature_importance(self, feature_names: Optional[list] = None) -> dict:
+        """
+        Get feature importance from weights.
+        
+        Args:
+            feature_names: Optional list of feature names. If None, uses default names.
+        
+        Returns:
+            Dictionary of feature importance scores
+        """
         if self.w is None:
             return {}
 
-        features = ["bpm", "energy", "brightness", "lufs", "harmonic", "percussive", "stereo"]
+        if feature_names is None:
+            # Default feature names for 7-dim base features
+            if self.feature_dim == 7:
+                features = ["bpm", "energy", "brightness", "lufs", "harmonic", "percussive", "stereo"]
+            else:
+                # Generic names for enhanced features
+                features = [f"feature_{i}" for i in range(self.feature_dim)]
+        else:
+            features = feature_names
+        
+        # Ensure we have enough feature names
+        if len(features) < len(self.w):
+            features.extend([f"feature_{i}" for i in range(len(features), len(self.w))])
+        elif len(features) > len(self.w):
+            features = features[:len(self.w)]
+        
         importance = {f: float(abs(w)) for f, w in zip(features, self.w)}
         return dict(sorted(importance.items(), key=lambda x: x[1], reverse=True))

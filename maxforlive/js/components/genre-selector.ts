@@ -176,8 +176,8 @@ export class GenreSelectorComponent extends HTMLElement {
         // Get options from light DOM (slotted content)
         const slot = this.querySelector('slot');
         if (slot) {
-            const assignedNodes = slot.assignedNodes();
-            // Process assigned nodes to extract options
+            slot.assignedNodes();
+            // Process assigned nodes to extract options (future implementation)
         }
 
         // Or get from attribute/data

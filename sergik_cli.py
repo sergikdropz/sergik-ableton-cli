@@ -30,7 +30,18 @@ from pathlib import Path
 from datetime import datetime
 
 # Add parent directory for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
+
+# Import sergik_ml modules
+try:
+    from sergik_ml.services.generation_service import GenerationService
+    from sergik_ml.connectors.ableton_osc import osc_send
+    from sergik_ml.utils.midi import parse_key_string, get_scale_notes
+    from sergik_ml.utils.validators import validate_bpm, validate_key
+    HAS_SERGIK_ML = True
+except ImportError as e:
+    HAS_SERGIK_ML = False
+    IMPORT_ERROR = str(e)
 
 # Optional imports with graceful fallback
 try:
@@ -93,7 +104,11 @@ CONFIG = load_config()
 # ============================================================================
 
 class AbletonOSC:
-    """OSC client for Ableton Live communication"""
+    """
+    OSC client for Ableton Live communication.
+    
+    Uses sergik_ml.connectors.ableton_osc if available, otherwise falls back to direct OSC.
+    """
 
     def __init__(self, host=None, port=None):
         self.host = host or CONFIG["osc_host"]
@@ -105,6 +120,16 @@ class AbletonOSC:
 
     def send(self, address, *args):
         """Send OSC message"""
+        # Try using sergik_ml OSC connector first
+        if HAS_SERGIK_ML:
+            try:
+                from sergik_ml.connectors.ableton_osc import osc_send
+                osc_send(address, {"args": list(args)})
+                return True
+            except Exception:
+                pass
+        
+        # Fallback to direct OSC
         if not self.client:
             click.echo(click.style("OSC not available. Install: pip install python-osc", fg="red"))
             return False
@@ -157,82 +182,42 @@ class AbletonOSC:
 # ============================================================================
 
 class SergikMIDIGenerator:
-    """Generate MIDI patterns in SERGIK style"""
-
-    # SERGIK style parameters (derived from analysis)
-    STYLE_PROFILES = {
-        "tech-house": {
-            "bpm_range": (122, 128),
-            "swing": 0.02,
-            "velocity_variation": 0.15,
-            "ghost_notes": True,
-        },
-        "house": {
-            "bpm_range": (118, 126),
-            "swing": 0.05,
-            "velocity_variation": 0.2,
-            "ghost_notes": True,
-        },
-        "techno": {
-            "bpm_range": (128, 138),
-            "swing": 0.0,
-            "velocity_variation": 0.1,
-            "ghost_notes": False,
-        },
-        "disco": {
-            "bpm_range": (110, 125),
-            "swing": 0.08,
-            "velocity_variation": 0.25,
-            "ghost_notes": True,
-        },
-        "trap": {
-            "bpm_range": (130, 170),
-            "swing": 0.0,
-            "velocity_variation": 0.3,
-            "ghost_notes": True,
-        },
-        "reggaeton": {
-            "bpm_range": (85, 100),
-            "swing": 0.03,
-            "velocity_variation": 0.2,
-            "ghost_notes": True,
-        },
-    }
-
-    # Scale definitions
-    SCALES = {
-        "major": [0, 2, 4, 5, 7, 9, 11],
-        "minor": [0, 2, 3, 5, 7, 8, 10],
-        "dorian": [0, 2, 3, 5, 7, 9, 10],
-        "phrygian": [0, 1, 3, 5, 7, 8, 10],
-        "mixolydian": [0, 2, 4, 5, 7, 9, 10],
-        "harmonic_minor": [0, 2, 3, 5, 7, 8, 11],
-        "melodic_minor": [0, 2, 3, 5, 7, 9, 11],
-        "pentatonic_major": [0, 2, 4, 7, 9],
-        "pentatonic_minor": [0, 3, 5, 7, 10],
-        "blues": [0, 3, 5, 6, 7, 10],
-    }
-
-    # Note name to MIDI number
-    NOTE_MAP = {
-        "C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3,
-        "E": 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "G#": 8,
-        "Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11
-    }
+    """
+    Generate MIDI patterns in SERGIK style.
+    
+    This is a compatibility wrapper that uses sergik_ml modules.
+    For new code, use GenerationService directly.
+    """
 
     def __init__(self, bpm=125, key="C", scale="minor"):
         self.bpm = bpm
         self.key = key
         self.scale = scale
         self.ticks_per_beat = 480
+        
+        # Use sergik_ml generation service if available
+        if HAS_SERGIK_ML:
+            try:
+                self.gen_service = GenerationService()
+            except Exception:
+                self.gen_service = None
+        else:
+            self.gen_service = None
 
         if HAS_NUMPY:
             np.random.seed(int(datetime.now().timestamp()) % 2**32)
 
     def _parse_key(self, key_str):
         """Parse key string like 'Cmin' or 'F#maj' to root note"""
+        if HAS_SERGIK_ML:
+            try:
+                root_midi, scale_type = parse_key_string(key_str)
+                return root_midi, scale_type
+            except Exception:
+                pass
+        
+        # Fallback to basic parsing
         key_str = key_str.strip()
-
         if len(key_str) >= 2 and key_str[1] in ['#', 'b']:
             root = key_str[:2]
             mode = key_str[2:].lower() if len(key_str) > 2 else ""
@@ -240,7 +225,12 @@ class SergikMIDIGenerator:
             root = key_str[0].upper()
             mode = key_str[1:].lower() if len(key_str) > 1 else ""
 
-        root_midi = self.NOTE_MAP.get(root, 0)
+        NOTE_MAP = {
+            "C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3,
+            "E": 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "G#": 8,
+            "Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11
+        }
+        root_midi = NOTE_MAP.get(root, 0)
 
         if "min" in mode or "m" == mode:
             scale_type = "minor"
@@ -259,7 +249,26 @@ class SergikMIDIGenerator:
 
     def _get_scale_notes(self, root, scale_name, octave_start=3, octave_range=2):
         """Get all notes in a scale across octave range"""
-        scale = self.SCALES.get(scale_name, self.SCALES["minor"])
+        if HAS_SERGIK_ML:
+            try:
+                return get_scale_notes(root, scale_name, octave_start, octave_range)
+            except Exception:
+                pass
+        
+        # Fallback
+        SCALES = {
+            "major": [0, 2, 4, 5, 7, 9, 11],
+            "minor": [0, 2, 3, 5, 7, 8, 10],
+            "dorian": [0, 2, 3, 5, 7, 9, 10],
+            "phrygian": [0, 1, 3, 5, 7, 8, 10],
+            "mixolydian": [0, 2, 4, 5, 7, 9, 10],
+            "harmonic_minor": [0, 2, 3, 5, 7, 8, 11],
+            "melodic_minor": [0, 2, 3, 5, 7, 9, 11],
+            "pentatonic_major": [0, 2, 4, 7, 9],
+            "pentatonic_minor": [0, 3, 5, 7, 10],
+            "blues": [0, 3, 5, 6, 7, 10],
+        }
+        scale = SCALES.get(scale_name, SCALES["minor"])
         notes = []
 
         for octave in range(octave_start, octave_start + octave_range):

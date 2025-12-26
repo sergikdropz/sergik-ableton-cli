@@ -4,13 +4,13 @@
  */
 
 import { subGenreMap, genreConfig } from './config.js';
-import { createLogger } from './utils/logger.js';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger('GenreManager');
 
 // Memoization cache
-const subGenresCache = new Map<string, string[]>();
-const allGenresCache: string[] | null = null;
+const subGenresCache = new Map();
+let allGenresCache = null;
 
 /**
  * GenreManager class handles genre and sub-genre operations

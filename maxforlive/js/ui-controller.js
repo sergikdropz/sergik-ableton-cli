@@ -3,7 +3,8 @@
  * @module ui-controller
  */
 
-import { createLogger } from './utils/logger.js';
+import { createLogger } from './utils/logger.ts';
+import { KeyboardNavigation } from './utils/keyboard-navigation.ts';
 
 const logger = createLogger('UIController');
 

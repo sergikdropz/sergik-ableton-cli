@@ -68,7 +68,7 @@ def main():
     print()
 
     uvicorn.run(
-        "sergik_ml.serving.api:app",
+        "sergik_ml.api.main:app",
         host=CFG.host,
         port=CFG.port,
         reload=True,

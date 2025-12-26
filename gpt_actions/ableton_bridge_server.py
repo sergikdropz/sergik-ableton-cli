@@ -88,10 +88,15 @@ def fire_clip():
     return jsonify({"status": "ok", "track": track, "clip": clip})
 
 if __name__ == '__main__':
+    # Fix: Use port 5000 instead of 8000 to avoid conflict with main API server
+    # Can be overridden with BRIDGE_PORT environment variable
+    bridge_port = int(os.getenv("BRIDGE_PORT", "5000"))
+    
     print("=" * 50)
     print("SERGIK Ableton Bridge")
     print("=" * 50)
-    print("Endpoints: /health, /transport/play, /tempo, etc.")
+    print(f"Endpoints: /health, /transport/play, /tempo, etc.")
+    print(f"Running on port: {bridge_port}")
     print("Run ngrok: ngrok http 5000")
     print("=" * 50)
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    app.run(host='0.0.0.0', port=bridge_port, debug=False)

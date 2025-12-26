@@ -2,9 +2,10 @@
 SERGIK ML Schemas - Pydantic models for API and database entities.
 """
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, validator
 from typing import Optional, Dict, Any, List, Literal
 import datetime as _dt
+import re
 
 
 # ============================================================================
@@ -868,3 +869,92 @@ class AnalysisPresets(BaseModel):
             {"value": "disco", "label": "Disco"},
         ]
     )
+
+
+# ============================================================================
+# LOM Validation Schemas
+# ============================================================================
+
+class LOMPathSchema(BaseModel):
+    """Schema for validating LOM paths."""
+    path: str = Field(..., description="Live Object Model path")
+    
+    @field_validator('path')
+    @classmethod
+    def validate_path(cls, v: str) -> str:
+        """Validate LOM path format."""
+        if not v or not isinstance(v, str):
+            raise ValueError("LOM path must be a non-empty string")
+        
+        # Basic path structure validation
+        valid_patterns = [
+            r"^live_set$",
+            r"^live_set tracks \d+$",
+            r"^live_set tracks \d+ devices \d+$",
+            r"^live_set tracks \d+ devices \d+ parameters \d+$",
+            r"^live_set tracks \d+ clip_slots \d+$",
+            r"^live_set tracks \d+ clip_slots \d+ clip$",
+            r"^live_set tracks \d+ mixer_device (volume|panning)$",
+            r"^live_set tracks \d+ mixer_device sends \d+$",
+            r"^live_set scenes \d+$",
+            r"^live_set view highlighted_clip_slot clip$",
+            r"^live_app browser$",
+        ]
+        
+        # Check if path matches any valid pattern
+        for pattern in valid_patterns:
+            if re.match(pattern, v):
+                return v
+        
+        # Allow more complex paths (with additional components)
+        if v.startswith("live_set") or v.startswith("live_app"):
+            return v
+        
+        raise ValueError(f"Invalid LOM path format: {v}")
+
+
+class TrackIndexSchema(BaseModel):
+    """Schema for validating track indices."""
+    track_index: int = Field(..., ge=0, description="Track index (0-based)")
+    
+    @field_validator('track_index')
+    @classmethod
+    def validate_track_index(cls, v: int) -> int:
+        """Validate track index."""
+        if not isinstance(v, int):
+            raise ValueError(f"Track index must be an integer, got: {type(v)}")
+        if v < 0:
+            raise ValueError(f"Track index must be non-negative, got: {v}")
+        return v
+
+
+class DeviceIndexSchema(BaseModel):
+    """Schema for validating device indices."""
+    track_index: int = Field(..., ge=0, description="Track index")
+    device_index: int = Field(..., ge=0, description="Device index (0-based)")
+    
+    @field_validator('device_index')
+    @classmethod
+    def validate_device_index(cls, v: int) -> int:
+        """Validate device index."""
+        if not isinstance(v, int):
+            raise ValueError(f"Device index must be an integer, got: {type(v)}")
+        if v < 0:
+            raise ValueError(f"Device index must be non-negative, got: {v}")
+        return v
+
+
+class ClipSlotSchema(BaseModel):
+    """Schema for validating clip slot indices."""
+    track_index: int = Field(..., ge=0, description="Track index")
+    slot_index: int = Field(..., ge=0, description="Clip slot index (0-based)")
+    
+    @field_validator('slot_index')
+    @classmethod
+    def validate_slot_index(cls, v: int) -> int:
+        """Validate clip slot index."""
+        if not isinstance(v, int):
+            raise ValueError(f"Clip slot index must be an integer, got: {type(v)}")
+        if v < 0:
+            raise ValueError(f"Clip slot index must be non-negative, got: {v}")
+        return v

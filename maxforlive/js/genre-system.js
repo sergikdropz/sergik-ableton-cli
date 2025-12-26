@@ -10,7 +10,8 @@ import { GenreSearch } from './genre-search.js';
 import { RecentSelections } from './recent-selections.js';
 import { GenreTooltips } from './genre-tooltips.js';
 import { GenreVisuals } from './genre-visuals.js';
-import { createLogger } from './utils/logger.js';
+import { createLogger } from './utils/logger.ts';
+import { initializeFieldAutoUpdater } from './field-auto-update.js';
 
 const logger = createLogger('GenreSystem');
 
@@ -30,11 +31,16 @@ export class GenreSystem {
         this.recentSelections = null;
         this.genreTooltips = null;
         this.genreVisuals = null;
+        this.fieldAutoUpdater = null;
         this.initialized = false;
-        this.enableSearch = config.enableSearch !== false;
+        // Disabled by default - modern browsers support native type-ahead in select elements
+        // Users can type to search genres directly in the dropdown
+        // Idea input field also provides smart genre detection
+        this.enableSearch = config.enableSearch === true;
         this.enableRecentSelections = config.enableRecentSelections !== false;
         this.enableTooltips = config.enableTooltips !== false;
         this.enableVisuals = config.enableVisuals !== false;
+        this.enableAutoUpdate = config.enableAutoUpdate !== false;
     }
 
     /**
@@ -53,7 +59,8 @@ export class GenreSystem {
             // Set up event listeners
             this.setupEventListeners();
 
-            // Initialize search if enabled
+            // Search is disabled by default - using native browser type-ahead instead
+            // GenreSearch can be enabled via config.enableSearch = true if needed
             if (this.enableSearch) {
                 this.genreSearch = new GenreSearch(
                     this.genreManager,
@@ -84,9 +91,19 @@ export class GenreSystem {
                 this.genreVisuals = new GenreVisuals(this.uiController.genreSelect);
             }
 
+            // Initialize field auto-updater if enabled
+            if (this.enableAutoUpdate) {
+                this.fieldAutoUpdater = initializeFieldAutoUpdater();
+            }
+
             // Initialize with default genre
             const defaultGenre = this.uiController.getSelectedGenre() || this.genreManager.defaultGenre;
             this.updateSubGenres(defaultGenre);
+            
+            // Auto-update fields for default genre
+            if (this.fieldAutoUpdater && defaultGenre) {
+                this.fieldAutoUpdater.updateFromGenre(defaultGenre, true);
+            }
 
             this.initialized = true;
 
@@ -137,19 +154,27 @@ export class GenreSystem {
                 return;
             }
 
-            this.updateSubGenres(genre);
-            this.uiController.updateGenreDisplay(genre);
+            // Batch all updates in single RAF for performance
+            requestAnimationFrame(() => {
+                this.updateSubGenres(genre);
+                this.uiController.updateGenreDisplay(genre);
 
-            // Update visuals
-            if (this.genreVisuals) {
-                this.genreVisuals.updateVisuals();
-            }
+                // Auto-update fields based on genre
+                if (this.fieldAutoUpdater) {
+                    this.fieldAutoUpdater.updateFromGenre(genre);
+                }
 
-            // Track in recent selections
-            if (this.recentSelections) {
-                const subGenre = this.uiController.getSelectedSubGenre();
-                this.recentSelections.addSelection(genre, subGenre);
-            }
+                // Update visuals
+                if (this.genreVisuals) {
+                    this.genreVisuals.updateVisuals();
+                }
+
+                // Track in recent selections
+                if (this.recentSelections) {
+                    const subGenre = this.uiController.getSelectedSubGenre();
+                    this.recentSelections.addSelection(genre, subGenre);
+                }
+            });
         } catch (error) {
             logger.error('Error handling genre change', error);
             if (this.genreManager.enableErrorHandling) {

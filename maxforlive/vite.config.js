@@ -20,7 +20,7 @@ export default defineConfig({
     minify: 'esbuild' // Use esbuild (faster, built-in) instead of terser
   },
   server: {
-    port: 8000,
+    port: 3000,
     open: true,
     cors: true,
     headers: {
@@ -30,7 +30,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'js')
-    }
+    },
+    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json']
   },
   optimizeDeps: {
     include: []

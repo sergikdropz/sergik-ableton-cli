@@ -3,8 +3,8 @@
  * @module recent-selections
  */
 
-import { createLogger } from './utils/logger.js';
-import { validateRecentSelectionsArray, validateGenre, validateSubGenre } from './utils/validator.js';
+import { createLogger } from './utils/logger.ts';
+import { validateRecentSelectionsArray, validateGenre, validateSubGenre } from './utils/validator.ts';
 
 const logger = createLogger('RecentSelections');
 

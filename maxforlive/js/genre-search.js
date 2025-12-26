@@ -4,9 +4,9 @@
  */
 
 import { GenreManager } from './genre-manager.js';
-import { createLogger } from './utils/logger.js';
-import { debounce } from './utils/debounce.js';
-import { sanitizeSearchQuery, validateSearchQuery } from './utils/validator.js';
+import { createLogger } from './utils/logger.ts';
+import { debounce } from './utils/debounce.ts';
+import { sanitizeSearchQuery, validateSearchQuery } from './utils/validator.ts';
 
 const logger = createLogger('GenreSearch');
 
@@ -157,7 +157,7 @@ export class GenreSearch {
         if (!this.searchInput) return;
 
         // Debounced search function (300ms delay)
-        const debouncedFilter = debounce((query: string) => {
+        const debouncedFilter = debounce((query) => {
             this.filterGenres(query);
         }, 300);
 

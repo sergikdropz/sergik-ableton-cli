@@ -34,7 +34,7 @@ export function validateGenre(genre: string): boolean {
  * Validate sub-genre name
  */
 export function validateSubGenre(subGenre: string): boolean {
-    if (!subGenre || typeof genre !== 'string') {
+    if (!subGenre || typeof subGenre !== 'string') {
         return false;
     }
 

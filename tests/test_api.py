@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def client():
     """Create test client."""
-    from sergik_ml.serving.api import app
+    from sergik_ml.api.main import app
     return TestClient(app)
 
 

@@ -47,8 +47,7 @@ module.exports = {
         {
             files: ['*.test.js', '*.test.ts'],
             env: {
-                jest: true,
-                vitest: true
+                node: true
             },
             rules: {
                 'no-console': 'off'

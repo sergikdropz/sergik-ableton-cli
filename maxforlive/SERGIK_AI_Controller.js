@@ -114,6 +114,70 @@ var API_HOST = "127.0.0.1";
 var API_PORT = 8000;
 var API_BASE_URL = "http://" + API_HOST + ":" + API_PORT;
 
+// Load LOM modules (these would be loaded via file references in Max for Live)
+// For now, we'll define minimal stubs if modules aren't available
+if (typeof buildLOMPath === "undefined") {
+    // Stub functions - will be replaced when LOM modules are loaded
+    function buildLOMPath(components) {
+        var parts = ["live_set"];
+        if (components.track !== undefined) parts.push("tracks", components.track);
+        if (components.device !== undefined) parts.push("devices", components.device);
+        if (components.parameter !== undefined) parts.push("parameters", components.parameter);
+        if (components.clipSlot !== undefined) {
+            parts.push("clip_slots", components.clipSlot);
+            if (components.clip) parts.push("clip");
+        }
+        return parts.join(" ");
+    }
+    
+    function safeLOMCall(operation, path, context) {
+        context = context || {};
+        try {
+            var api = new LiveAPI(path);
+            if (context.required && !api.id) {
+                throw new Error("LOM object does not exist: " + path);
+            }
+            return operation(api);
+        } catch (e) {
+            if (typeof handleLOMError === "function") {
+                handleLOMError(e, context);
+            }
+            if (context.throwOnError !== false) {
+                throw e;
+            }
+            return null;
+        }
+    }
+    
+    function validateTrackIndex(index) {
+        if (typeof index !== "number" || index < 0 || !Number.isInteger(index)) {
+            throw new Error("Track index must be non-negative integer");
+        }
+    }
+    
+    function validateDeviceIndex(trackIndex, deviceIndex) {
+        validateTrackIndex(trackIndex);
+        if (typeof deviceIndex !== "number" || deviceIndex < 0 || !Number.isInteger(deviceIndex)) {
+            throw new Error("Device index must be non-negative integer");
+        }
+    }
+    
+    function validateClipSlot(trackIndex, slotIndex) {
+        validateTrackIndex(trackIndex);
+        if (typeof slotIndex !== "number" || slotIndex < 0 || !Number.isInteger(slotIndex)) {
+            throw new Error("Clip slot index must be non-negative integer");
+        }
+    }
+    
+    // Cache stub
+    var lomStateCache = {
+        get: function(key, fetcher) { return fetcher ? fetcher() : null; },
+        set: function(key, value) {},
+        invalidate: function(pattern) {},
+        isFresh: function(key) { return false; }
+    };
+}
+
 // Current state
 var currentKey = "10B";
 var currentBars = 8;
@@ -139,26 +203,65 @@ var TRACK_COLORS = 70;
 // ============================================================================
 
 function httpRequest(method, endpoint, data, callback) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:141',message:'httpRequest called',data:{method:method,endpoint:endpoint,hasData:!!data,url:API_BASE_URL + endpoint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     var url = API_BASE_URL + endpoint;
     var request = new XMLHttpRequest();
     
     request.open(method, url, true);
     request.setRequestHeader("Content-Type", "application/json");
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:149',message:'HTTP request opened',data:{method:method,url:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     request.onreadystatechange = function() {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:152',message:'HTTP state change',data:{readyState:request.readyState,status:request.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
         if (request.readyState === 4) {
             if (request.status === 200) {
                 try {
                     var response = JSON.parse(request.responseText);
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:157',message:'HTTP success',data:{status:request.status,responseStatus:response.status || 'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     callback(null, response);
                 } catch (e) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:161',message:'JSON parse error',data:{error:e.toString(),responseText:request.responseText.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     callback("JSON parse error: " + e, null);
                 }
             } else {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:166',message:'HTTP error status',data:{status:request.status,statusText:request.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
                 callback("HTTP error: " + request.status, null);
             }
         }
     };
+    
+    // Add error handler for network failures
+    request.onerror = function() {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:173',message:'HTTP network error',data:{url:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        callback("Network error: Unable to connect to " + url, null);
+    };
+    
+    // Add timeout handler
+    request.ontimeout = function() {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:179',message:'HTTP timeout',data:{url:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        callback("Request timeout: " + url, null);
+    };
+    
+    request.timeout = 10000; // 10 second timeout
     
     if (data) {
         request.send(JSON.stringify(data));
@@ -433,6 +536,127 @@ function bang() {
     checkHealth();
 }
 
+// ============================================================================
+// Mouse and Gesture Support
+// ============================================================================
+
+// Handle mouse events from Max
+function mouse(x, y, button, modifiers) {
+    // x, y: mouse position
+    // button: 0=left, 1=right, 2=middle
+    // modifiers: bitmask (1=shift, 2=ctrl, 4=alt, 8=cmd)
+    
+    var cmd = "mouse_event";
+    var args = [x, y, button, modifiers];
+    
+    // Send to outlet for processing
+    outlet(1, "Mouse: " + x + ", " + y + ", button: " + button);
+}
+
+// Handle gesture events
+function gesture(type, value1, value2) {
+    // type: "swipe", "pinch", "rotate", "tap"
+    // value1, value2: gesture-specific values
+    
+    var cmd = "gesture_" + type;
+    var args = [value1, value2];
+    
+    outlet(1, "Gesture: " + type + " (" + value1 + ", " + value2 + ")");
+    
+    // Map gestures to commands
+    switch(type) {
+        case "swipe":
+            if (value1 > 0) {
+                // Swipe right - scrub forward
+                // Could trigger timeline navigation
+            } else {
+                // Swipe left - scrub backward
+            }
+            break;
+        case "pinch":
+            // Pinch zoom
+            // Could trigger zoom commands
+            break;
+        case "rotate":
+            // Rotate gesture
+            break;
+        case "tap":
+            // Tap gesture
+            break;
+    }
+}
+
+// Handle keyboard events from Max
+function key(keycode, modifiers, pressed) {
+    // keycode: key code
+    // modifiers: bitmask
+    // pressed: 1=pressed, 0=released
+    
+    if (pressed) {
+        // Map to commands based on keycode
+        var cmd = mapKeyToCommand(keycode, modifiers);
+        if (cmd) {
+            outlet(0, cmd);
+        }
+    }
+}
+
+function mapKeyToCommand(keycode, modifiers) {
+    // Map keyboard shortcuts to commands
+    // This is a simplified mapping - full implementation would handle all Ableton shortcuts
+    
+    var hasCtrl = (modifiers & 2) !== 0;
+    var hasShift = (modifiers & 1) !== 0;
+    var hasAlt = (modifiers & 4) !== 0;
+    
+    // Space = play/stop
+    if (keycode === 32) {
+        return "transport_play";
+    }
+    
+    // Enter = record
+    if (keycode === 13) {
+        return "transport_record";
+    }
+    
+    // Ctrl+Z = undo
+    if (keycode === 90 && hasCtrl) {
+        return "undo";
+    }
+    
+    // Ctrl+Shift+Z = redo
+    if (keycode === 90 && hasCtrl && hasShift) {
+        return "redo";
+    }
+    
+    // Ctrl+A = select all
+    if (keycode === 65 && hasCtrl) {
+        return "select_all";
+    }
+    
+    // Ctrl+D = duplicate
+    if (keycode === 68 && hasCtrl) {
+        return "duplicate";
+    }
+    
+    // Ctrl+U = quantize
+    if (keycode === 85 && hasCtrl) {
+        return "set_quantization 1/16";
+    }
+    
+    // Ctrl+E = split
+    if (keycode === 69 && hasCtrl) {
+        return "split";
+    }
+    
+    // Ctrl+J = consolidate
+    if (keycode === 74 && hasCtrl) {
+        return "consolidate";
+    }
+    
+    return null;
+}
+
 // Inlet 1-5: Parameters
 function in1(key) { currentKey = key; status("Key: " + currentKey); }
 function in2(bars) { currentBars = Math.max(1, Math.min(32, bars)); status("Bars: " + currentBars); }
@@ -446,7 +670,17 @@ function in5(pattern) { currentPattern = pattern; status("Pattern: " + currentPa
 
 function createTrack(trackType, name) {
     try {
-        var liveSet = new LiveAPI("live_set");
+        // Use safe LOM call with validation
+        var liveSet = safeLOMCall(
+            function(api) { return api; },
+            "live_set",
+            {name: "createTrack", required: true}
+        );
+        
+        if (!liveSet) {
+            throw new Error("Failed to access live_set");
+        }
+        
         var trackCount = parseInt(liveSet.get("tracks").length / 2);
         
         if (trackType === "midi") {
@@ -463,11 +697,23 @@ function createTrack(trackType, name) {
             return;
         }
         
-        // Rename if name provided
+        // Rename if name provided - use safe call
         if (name) {
-            var newTrack = new LiveAPI("live_set tracks " + trackCount);
-            newTrack.set("name", name);
+            var trackPath = buildLOMPath({track: trackCount});
+            safeLOMCall(
+                function(track) {
+                    track.set("name", name);
+                    return true;
+                },
+                trackPath,
+                {name: "createTrack.rename", required: true}
+            );
             status("✅ Created " + trackType + " track: " + name);
+        }
+        
+        // Invalidate cache
+        if (lomStateCache) {
+            lomStateCache.invalidate("track");
         }
         
         outputJSON({status: "ok", action: "create_track", track_type: trackType, name: name, index: trackCount});
@@ -747,28 +993,69 @@ function loadVST(trackIndex, pluginName) {
 
 function setDeviceParam(trackIndex, deviceIndex, paramIndexOrName, value) {
     try {
-        var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex);
-        var params = device.get("parameters");
+        // Validate indices
+        validateDeviceIndex(trackIndex, deviceIndex);
         
+        // Use safe LOM call to get device
+        var devicePath = buildLOMPath({track: trackIndex, device: deviceIndex});
+        var device = safeLOMCall(
+            function(api) { return api; },
+            devicePath,
+            {name: "setDeviceParam.getDevice", required: true}
+        );
+        
+        if (!device) {
+            throw new Error("Device not found");
+        }
+        
+        var params = device.get("parameters");
         var paramIndex = paramIndexOrName;
+        
+        // Find parameter by name if string provided
         if (typeof paramIndexOrName === "string") {
-            // Find parameter by name
             for (var i = 0; i < params.length; i += 2) {
-                var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + Math.floor(i / 2));
-                if (param.get("name").toString().toLowerCase() === paramIndexOrName.toLowerCase()) {
+                var paramPath = buildLOMPath({
+                    track: trackIndex,
+                    device: deviceIndex,
+                    parameter: Math.floor(i / 2)
+                });
+                var param = safeLOMCall(
+                    function(api) { return api; },
+                    paramPath,
+                    {name: "setDeviceParam.findParam", required: false}
+                );
+                if (param && param.get("name").toString().toLowerCase() === paramIndexOrName.toLowerCase()) {
                     paramIndex = Math.floor(i / 2);
                     break;
                 }
             }
         }
         
-        var param = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex + " parameters " + paramIndex);
-        param.set("value", Math.max(0, Math.min(1, value)));
+        // Set parameter value
+        var paramPath = buildLOMPath({
+            track: trackIndex,
+            device: deviceIndex,
+            parameter: paramIndex
+        });
+        safeLOMCall(
+            function(param) {
+                param.set("value", Math.max(0, Math.min(1, value)));
+                return true;
+            },
+            paramPath,
+            {name: "setDeviceParam.setValue", required: true}
+        );
+        
+        // Invalidate cache
+        if (lomStateCache) {
+            lomStateCache.invalidate("device_state_" + trackIndex + "_" + deviceIndex);
+        }
         
         status("✅ Set param " + paramIndex + " = " + Math.round(value * 100) + "%");
         outputJSON({status: "ok", action: "set_param", track: trackIndex, device: deviceIndex, param: paramIndex, value: value});
     } catch (e) {
         status("❌ Set param failed: " + e);
+        outputJSON({status: "error", error: e.toString()});
     }
 }
 
@@ -870,19 +1157,38 @@ function getDevices(trackIndex) {
 
 function createClip(trackIndex, slotIndex, lengthBeats) {
     try {
-        var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + slotIndex);
+        // Validate indices
+        validateClipSlot(trackIndex, slotIndex);
         
-        // Check if slot is empty
-        if (clipSlot.get("has_clip")) {
-            status("❌ Slot already has a clip");
-            return;
+        // Use safe LOM call with path builder
+        var clipSlotPath = buildLOMPath({track: trackIndex, clipSlot: slotIndex});
+        var clipSlot = safeLOMCall(
+            function(api) {
+                // Check if slot is empty
+                if (api.get("has_clip")) {
+                    throw new Error("Slot already has a clip");
+                }
+                api.call("create_clip", lengthBeats || 16);
+                return true;
+            },
+            clipSlotPath,
+            {name: "createClip", required: true}
+        );
+        
+        if (!clipSlot) {
+            throw new Error("Failed to create clip");
         }
         
-        clipSlot.call("create_clip", lengthBeats || 16);
+        // Invalidate cache
+        if (lomStateCache) {
+            lomStateCache.invalidate("clip_state_" + trackIndex + "_" + slotIndex);
+        }
+        
         status("✅ Created clip in track " + trackIndex + " slot " + slotIndex);
         outputJSON({status: "ok", action: "create_clip", track: trackIndex, slot: slotIndex, length: lengthBeats});
     } catch (e) {
         status("❌ Create clip failed: " + e);
+        outputJSON({status: "error", error: e.toString()});
     }
 }
 
@@ -1074,50 +1380,409 @@ function getClipInfo(trackIndex, slotIndex) {
 // BROWSER/LIBRARY ACCESS
 // ============================================================================
 
+// Helper: Parse browser query (BPM:120, key:C, name:kick)
+function parseBrowserQuery(query) {
+    var parsed = {
+        text: "",
+        bpm_min: null,
+        bpm_max: null,
+        key: null,
+        name_pattern: null,
+        genre: null
+    };
+    
+    // Pattern for KEY:VALUE
+    var filterPattern = /(\w+):([^\s,]+)/g;
+    var match;
+    var freeText = query;
+    
+    while ((match = filterPattern.exec(query)) !== null) {
+        var key = match[1].toLowerCase();
+        var value = match[2];
+        
+        // Remove filter from free text
+        freeText = freeText.replace(match[0], "").trim();
+        
+        if (key === "bpm") {
+            // BPM range or single value
+            if (value.indexOf("-") !== -1) {
+                var parts = value.split("-");
+                parsed.bpm_min = parseFloat(parts[0]);
+                parsed.bpm_max = parseFloat(parts[1]);
+            } else {
+                var bpm = parseFloat(value);
+                parsed.bpm_min = bpm - 5;
+                parsed.bpm_max = bpm + 5;
+            }
+        } else if (key === "key") {
+            parsed.key = value.toUpperCase();
+        } else if (key === "name") {
+            parsed.name_pattern = value.toLowerCase();
+        } else if (key === "genre") {
+            parsed.genre = value.toLowerCase();
+        }
+    }
+    
+    // Clean up free text
+    freeText = freeText.replace(/[,\s]+/g, " ").trim();
+    parsed.text = freeText;
+    
+    return parsed;
+}
+
+// Helper: Filter results by parsed query
+function filterResults(items, parsed) {
+    var filtered = [];
+    
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var match = true;
+        
+        // BPM filter (if item has bpm property)
+        if (parsed.bpm_min !== null && item.bpm !== undefined) {
+            if (item.bpm < parsed.bpm_min || item.bpm > parsed.bpm_max) {
+                match = false;
+            }
+        }
+        
+        // Key filter
+        if (match && parsed.key && item.key) {
+            if (item.key.toUpperCase() !== parsed.key) {
+                match = false;
+            }
+        }
+        
+        // Name pattern
+        if (match && parsed.name_pattern) {
+            var nameLower = (item.name || "").toLowerCase();
+            if (nameLower.indexOf(parsed.name_pattern) === -1) {
+                match = false;
+            }
+        }
+        
+        // Text search
+        if (match && parsed.text) {
+            var textLower = parsed.text.toLowerCase();
+            var itemNameLower = (item.name || "").toLowerCase();
+            var itemPathLower = (item.path || "").toLowerCase();
+            if (itemNameLower.indexOf(textLower) === -1 && itemPathLower.indexOf(textLower) === -1) {
+                match = false;
+            }
+        }
+        
+        // Genre filter
+        if (match && parsed.genre && item.genre) {
+            if (item.genre.toLowerCase() !== parsed.genre) {
+                match = false;
+            }
+        }
+        
+        if (match) {
+            filtered.push(item);
+        }
+    }
+    
+    return filtered;
+}
+
+// Helper: Extract metadata from Live browser item
+function extractMetadataFromLiveItem(item) {
+    // Try to extract BPM, key, duration from item properties
+    // Live browser items may have metadata in various formats
+    var metadata = {
+        bpm: null,
+        key: null,
+        duration: null
+    };
+    
+    // Attempt to get metadata (Live API dependent)
+    try {
+        // These would need to be adapted based on actual Live API structure
+        // For now, return null values - can be enhanced later
+    } catch (e) {
+        // Metadata extraction failed
+    }
+    
+    return metadata;
+}
+
 function searchLibrary(query) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1324',message:'searchLibrary called',data:{query:query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
     status("Searching library: " + query);
     
-    httpRequest("GET", "/live/browser/search?query=" + encodeURIComponent(query), null, function(err, response) {
+    // Parse structured query
+    var parsed = parseBrowserQuery(query);
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1331',message:'Query parsed',data:{parsed:JSON.stringify(parsed)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
+    // Search Live browser via LOM
+    var liveResults = [];
+    try {
+        // Note: Live browser search via LOM is limited
+        // We can try to access browser items, but full search may not be available
+        // For now, we'll rely on API results and add Live browser items if accessible
+        
+        // Attempt to get browser items (this is a simplified approach)
+        // In practice, Live browser access via LOM is limited
+        // The Max device would need to implement browser navigation differently
+        
+    } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1342',message:'LOM browser search error',data:{error:e.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        post("[Browser] Live browser search error: " + e + "\n");
+    }
+    
+    // Search via API (SERGIK catalog + Live browser results from API)
+    var apiUrl = "/live/browser/search?query=" + encodeURIComponent(query);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1348',message:'Calling API search',data:{apiUrl:apiUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
+    httpRequest("GET", apiUrl, null, function(err, response) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1351',message:'API search callback',data:{hasError:!!err,responseStatus:response ? response.status : null,itemCount:response ? (response.items ? response.items.length : 0) : 0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        
         if (err) {
             status("❌ Search failed: " + err);
+            outputJSON({
+                status: "error",
+                query: query,
+                items: [],
+                count: 0,
+                error: err
+            });
         } else {
-            status("✅ Found " + response.count + " results");
-            outputJSON(response);
+            // Merge Live browser results with API results
+            var allResults = liveResults.concat(response.items || []);
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1362',message:'Merging results',data:{liveResultsCount:liveResults.length,apiResultsCount:response.items ? response.items.length : 0,totalBeforeFilter:allResults.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
+            
+            // Filter by parsed query criteria
+            var filtered = filterResults(allResults, parsed);
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1368',message:'Filtering complete',data:{filteredCount:filtered.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
+            
+            status("✅ Found " + filtered.length + " results");
+            outputJSON({
+                status: "ok",
+                query: query,
+                items: filtered,
+                count: filtered.length
+            });
         }
     });
 }
 
 function loadSample(trackIndex, samplePath) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1374',message:'loadSample called',data:{trackIndex:trackIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    
     status("Loading sample: " + samplePath);
     
-    httpRequest("POST", "/live/browser/load", {
-        item_path: samplePath,
-        track_index: trackIndex
-    }, function(err, response) {
-        if (err) {
-            status("❌ Load sample failed: " + err);
-        } else {
-            status("✅ Loaded sample to track " + trackIndex);
-            outputJSON(response);
+    try {
+        // Validate track exists
+        var track = new LiveAPI("live_set tracks " + trackIndex);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1382',message:'Track LOM access',data:{trackIndex:trackIndex,hasId:!!track.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
+        if (!track.id) {
+            throw new Error("Track " + trackIndex + " not found");
         }
-    });
+        
+        // Load item into track via LOM
+        // Note: load_item may need the full path or URI format
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1389',message:'Calling LOM load_item',data:{samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
+        var result = track.call("load_item", samplePath);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1392',message:'LOM load_item result',data:{result:result ? result.toString() : 'null'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
+        // Find which clip slot was used (if any)
+        var clipSlots = track.get("clip_slots");
+        var slotIndex = null;
+        var slotCount = Math.floor(clipSlots.length / 2);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1398',message:'Finding clip slot',data:{slotCount:slotCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
+        // Try to find the loaded clip slot
+        // This is approximate - Live may load to first empty slot or create new
+        for (var i = 0; i < slotCount; i++) {
+            var slot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + i);
+            if (slot.get("has_clip")) {
+                var clip = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + i + " clip");
+                var clipPath = clip.get("file_path");
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1406',message:'Checking clip slot',data:{slotIndex:i,clipPath:clipPath ? clipPath.toString() : 'null',samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
+                
+                // Match by filename or full path
+                if (clipPath) {
+                    var clipPathStr = clipPath.toString();
+                    var samplePathBase = samplePath.split("/").pop().split("\\").pop(); // Get filename
+                    if (clipPathStr.indexOf(samplePath) !== -1 || clipPathStr.indexOf(samplePathBase) !== -1) {
+                        slotIndex = i;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1413',message:'Found matching clip slot',data:{slotIndex:slotIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Also send to API for logging
+        httpRequest("POST", "/live/browser/load", {
+            item_path: samplePath,
+            track_index: trackIndex
+        }, function(err, response) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1425',message:'API load callback',data:{hasError:!!err,responseStatus:response ? response.status : null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            
+            // API response is for logging/confirmation
+            if (!err && response.status === "ok") {
+                status("✅ Loaded sample to track " + trackIndex + (slotIndex !== null ? " slot " + slotIndex : ""));
+                outputJSON({
+                    status: "ok",
+                    track_index: trackIndex,
+                    item_path: samplePath,
+                    clip_slot: slotIndex
+                });
+            } else {
+                // LOM load succeeded but API call failed - still report success
+                status("✅ Loaded sample to track " + trackIndex + (slotIndex !== null ? " slot " + slotIndex : ""));
+                outputJSON({
+                    status: "ok",
+                    track_index: trackIndex,
+                    item_path: samplePath,
+                    clip_slot: slotIndex,
+                    note: "LOM load succeeded, API notification failed"
+                });
+            }
+        });
+        
+    } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1443',message:'loadSample exception',data:{error:e.toString(),trackIndex:trackIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        status("❌ Load sample failed: " + e);
+        outputJSON({
+            status: "error",
+            error: e.toString(),
+            track_index: trackIndex,
+            item_path: samplePath
+        });
+    }
 }
 
 function hotSwapSample(trackIndex, deviceIndex, samplePath) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1444',message:'hotSwapSample called',data:{trackIndex:trackIndex,deviceIndex:deviceIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
     status("Hot swapping sample...");
     
-    httpRequest("POST", "/live/browser/hot_swap", {
-        track_index: trackIndex,
-        device_index: deviceIndex,
-        sample_path: samplePath
-    }, function(err, response) {
-        if (err) {
-            status("❌ Hot swap failed: " + err);
-        } else {
-            status("✅ Swapped sample");
-            outputJSON(response);
+    try {
+        // Get device
+        var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1452',message:'Device LOM access',data:{trackIndex:trackIndex,deviceIndex:deviceIndex,hasId:!!device.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        
+        if (!device.id) {
+            throw new Error("Device not found at track " + trackIndex + " device " + deviceIndex);
         }
-    });
+        
+        // Verify device type (Simpler/Sampler only)
+        var deviceName = device.get("name").toString();
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1460',message:'Device type check',data:{deviceName:deviceName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        
+        if (deviceName !== "Simpler" && deviceName !== "Sampler") {
+            throw new Error("Hot-swap only works with Simpler/Sampler, found: " + deviceName);
+        }
+        
+        // Perform hot-swap via LOM
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1467',message:'Calling LOM hot_swap',data:{samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        
+        device.call("hot_swap", samplePath);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1471',message:'LOM hot_swap completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        
+        // Also send to API for logging
+        httpRequest("POST", "/live/browser/hot_swap", {
+            track_index: trackIndex,
+            device_index: deviceIndex,
+            sample_path: samplePath
+        }, function(err, response) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1479',message:'API hot_swap callback',data:{hasError:!!err,responseStatus:response ? response.status : null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
+            
+            // API response is for logging/confirmation
+            if (!err && response.status === "ok") {
+                status("✅ Hot-swapped sample in " + deviceName);
+                outputJSON({
+                    status: "ok",
+                    track_index: trackIndex,
+                    device_index: deviceIndex,
+                    sample_path: samplePath,
+                    device_name: deviceName
+                });
+            } else {
+                // LOM hot-swap succeeded but API call failed - still report success
+                status("✅ Hot-swapped sample in " + deviceName);
+                outputJSON({
+                    status: "ok",
+                    track_index: trackIndex,
+                    device_index: deviceIndex,
+                    sample_path: samplePath,
+                    device_name: deviceName,
+                    note: "LOM hot-swap succeeded, API notification failed"
+                });
+            }
+        });
+        
+    } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1501',message:'hotSwapSample exception',data:{error:e.toString(),trackIndex:trackIndex,deviceIndex:deviceIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        status("❌ Hot swap failed: " + e);
+        outputJSON({
+            status: "error",
+            error: e.toString(),
+            track_index: trackIndex,
+            device_index: deviceIndex,
+            sample_path: samplePath
+        });
+    }
 }
 
 // ============================================================================
@@ -1620,17 +2285,28 @@ function insertToClip() {
     status("Inserting " + noteBuffer.length + " notes to clip...");
     
     try {
-        var liveApi = new LiveAPI("live_set view highlighted_clip_slot clip");
+        // Use safe LOM call with path builder
+        var clipPath = buildLOMPath({view: true, highlightedClipSlot: true, clip: true});
+        var clip = safeLOMCall(
+            function(api) {
+                if (!api.id) {
+                    throw new Error("No clip selected");
+                }
+                return api;
+            },
+            clipPath,
+            {name: "insertToClip", required: true}
+        );
         
-        if (!liveApi.id) {
+        if (!clip) {
             status("❌ No clip selected");
             return;
         }
         
-        liveApi.call("remove_notes", 0, 0, 128, 127);
+        clip.call("remove_notes", 0, 0, 128, 127);
         
         var loopEnd = currentBars * 4;
-        liveApi.set("loop_end", loopEnd);
+        clip.set("loop_end", loopEnd);
         
         // Build the note list that fits within loopEnd
         var notesToInsert = [];
@@ -1647,13 +2323,13 @@ function insertToClip() {
         }
         
         // Insert notes (batch API)
-        liveApi.call("add_new_notes");
-        liveApi.call("notes", notesToInsert.length);
+        clip.call("add_new_notes");
+        clip.call("notes", notesToInsert.length);
         for (var j = 0; j < notesToInsert.length; j++) {
             var n = notesToInsert[j];
-            liveApi.call("note", n.pitch, n.start_time, n.duration, n.velocity, n.mute);
+            clip.call("note", n.pitch, n.start_time, n.duration, n.velocity, n.mute);
         }
-        liveApi.call("done");
+        clip.call("done");
         
         status("✅ Inserted " + notesToInsert.length + " notes");
         

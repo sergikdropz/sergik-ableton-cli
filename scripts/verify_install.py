@@ -299,7 +299,7 @@ def test_api_server() -> bool:
     
     try:
         # Check if FastAPI app can be imported
-        from sergik_ml.serving.api import app
+        from sergik_ml.api.main import app
         print("   ✅ FastAPI app imported successfully")
         
         # List available routes

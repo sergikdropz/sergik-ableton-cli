@@ -194,7 +194,7 @@ export class VirtualDOM {
         const newChildNodes: Node[] = [];
 
         // Process new children
-        newChildren.forEach((newChild, newIndex) => {
+        newChildren.forEach((newChild) => {
             const newKey = typeof newChild !== 'string' ? newChild.key : undefined;
             
             if (newKey !== undefined && oldKeyMap.has(newKey)) {

@@ -8,19 +8,21 @@
  * Maps each genre to an array of available sub-genres
  * @type {Object.<string, string[]>}
  */
+// SERGIK DNA Intelligence Categories (10 core categories)
+const SERGIK_DNA_CATEGORIES = ['Groovy', 'Chill', 'Intense', 'Calm', 'Social', 'Productivity', 'Creative', 'Dance Floor', 'Background', 'Workout'];
+
 export const subGenreMap = {
-    // Electronic sub-genres
+    // Electronic sub-genres (original sub-genres for other optgroups)
     'house': ['Classic House', 'Deep House', 'Tech House', 'Progressive House', 'Acid House', 'Future House', 'Tropical House', 'Garage House', 'Bass House', 'French House', 'Disco House', 'Soulful House'],
     'tech_house': ['Minimal Tech House', 'Dark Tech House', 'Driving Tech House', 'Groovy Tech House'],
     'deep_house': ['Soulful Deep House', 'Vocal Deep House', 'Instrumental Deep House', 'Classic Deep House'],
     'techno': ['Minimal Techno', 'Hard Techno', 'Industrial Techno', 'Acid Techno', 'Detroit Techno', 'Berlin Techno', 'Raw Techno', 'Melodic Techno'],
     'trance': ['Progressive Trance', 'Uplifting Trance', 'Vocal Trance', 'Psytrance', 'Tech Trance', 'Hard Trance'],
-    'disco': ['Classic Disco', 'Nu-Disco', 'Italo Disco', 'French Disco', 'Disco House'],
     'progressive_house': ['Progressive Trance', 'Progressive Breaks', 'Progressive Techno'],
     'minimal': ['Minimal Techno', 'Minimal House', 'Microhouse', 'Minimal Deep'],
     'experimental': ['IDM', 'Glitch', 'Ambient Techno', 'Drone', 'Noise', 'Electroacoustic', 'Sound Art'],
     'bass': ['Dubstep', 'Future Bass', 'Trap', 'Bass House', 'UK Bass', 'Wonky', 'Juke', 'Footwork'],
-    // Hip-Hop sub-genres
+    // Hip-Hop sub-genres (original sub-genres for other optgroups)
     'hiphop': ['Boom Bap', 'Trap', 'Drill', 'Mumble Rap', 'Conscious Hip-Hop', 'Gangsta Rap', 'Alternative Hip-Hop', 'Jazz Rap'],
     'boom_bap': ['Classic Boom Bap', 'Modern Boom Bap', 'Jazzy Boom Bap'],
     'trap': ['Atlanta Trap', 'Drill Trap', 'Melodic Trap', 'Latin Trap', 'Trap Metal'],
@@ -51,7 +53,21 @@ export const subGenreMap = {
     // Jazz & Fusion sub-genres
     'jazz': ['Bebop', 'Cool Jazz', 'Hard Bop', 'Free Jazz', 'Smooth Jazz', 'Acid Jazz'],
     'jazz_fusion': ['Jazz Fusion', 'Jazz Funk', 'Electric Jazz', 'Progressive Jazz'],
-    'nu_jazz': ['Nu-Jazz', 'Jazz-House', 'Acid Jazz', 'Jazztronica']
+    'nu_jazz': ['Nu-Jazz', 'Jazz-House', 'Acid Jazz', 'Jazztronica'],
+    
+    // SERGIK DNA optgroup genres - ONLY these use DNA intelligence categories
+    // Top 10 preferred genres from influences (separate from regular genres)
+    'sergik_dna': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_hiphop': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_funk': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_house': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_soul': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_reggae': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_techno': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_disco': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_ambient': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_jazz': SERGIK_DNA_CATEGORIES,
+    'sergik_dna_dnb': SERGIK_DNA_CATEGORIES
 };
 
 /**
