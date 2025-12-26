@@ -7,7 +7,8 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,  // Don't strictly check JS files
-    "strict": false,   // Less strict for gradual migration
+    "noEmit": true,    // Don't emit files, only type check
+    "strict": true,   // Enable strict type checking
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
@@ -23,14 +24,23 @@
     "types": ["vite/client", "node"]
   },
   "include": [
-    "js/**/*",
-    "tests/**/*",
-    "*.ts",
-    "*.js"
+    "js/**/*.ts",
+    "tests/**/*.ts",
+    "*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "**/*.js",
+    "js/**/*.js",
+    "tests/**/*.js",
+    "SERGIK_AI_Controller.js",
+    "SERGIK_OSC_Receiver.amxd.js",
+    "verify-setup.js",
+    "vite.config.js",
+    "vitest.config.js",
+    "js/genre-manager.js",
+    "js/ui-controller.js"
   ]
 }
 
