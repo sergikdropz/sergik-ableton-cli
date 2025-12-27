@@ -835,7 +835,7 @@
 		},
 		"dependency_cache" : [ 			{
 				"name" : "SERGIK_AI_Controller.js",
-				"bootpath" : "~/sergik_custom_gpt/maxforlive",
+				"bootpath" : "/Users/machd/sergik_custom_gpt/maxforlive",
 				"type" : "TEXT",
 				"implicit" : 1
 			}
