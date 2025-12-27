@@ -98,6 +98,94 @@ export class EditorHandlers {
         }
     }
 
+    /**
+     * Time shift clip (move left or right in time)
+     * @param {string} direction - Direction ('left' or 'right')
+     * @param {number} amount - Amount to shift in beats (default: 0.25 = 16th note)
+     * @returns {Promise<Object>} Operation result
+     */
+    async timeShift(direction, amount = 0.25) {
+        try {
+            logger.debug('Time shifting clip', { direction, amount });
+            const trackIndex = this._getCurrentTrackIndex();
+            const clipSlot = this._getCurrentClipSlot();
+            
+            const response = await fetch(`${this.apiBaseUrl}/api/transform/time_shift`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    track_index: trackIndex,
+                    clip_slot: clipSlot,
+                    direction: direction,
+                    amount: amount
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Time shift failed');
+            }
+
+            return await response.json();
+        } catch (error) {
+            logger.error('Time shift failed', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Rotate clip (transpose + time shift for MIDI, time reverse + pitch for audio)
+     * @param {number} angle - Rotation angle in degrees (0-360)
+     * @returns {Promise<Object>} Operation result
+     */
+    async rotate(angle) {
+        try {
+            logger.debug('Rotating clip', { angle });
+            const trackIndex = this._getCurrentTrackIndex();
+            const clipSlot = this._getCurrentClipSlot();
+            
+            // Determine editor type (waveform or piano-roll)
+            const editorType = this._getCurrentEditorType();
+            
+            if (editorType === 'piano-roll' || editorType === 'midi') {
+                // For MIDI: transpose and time shift
+                const semitones = Math.round(angle / 30); // 30 degrees = 1 semitone
+                const timeShift = (angle / 360) * 4; // 4 beats per full rotation
+                
+                // Apply transpose
+                if (semitones !== 0) {
+                    await this.transpose(semitones);
+                }
+                
+                // Apply time shift
+                if (timeShift !== 0) {
+                    const direction = timeShift > 0 ? 'right' : 'left';
+                    await this.timeShift(direction, Math.abs(timeShift));
+                }
+                
+                return { status: 'ok', message: `Rotated MIDI clip ${angle} degrees` };
+            } else {
+                // For audio: time reverse and pitch shift
+                // Note: Time reverse requires special handling
+                const semitones = Math.round(angle / 30);
+                
+                // Apply pitch shift
+                if (semitones !== 0) {
+                    await this.pitchShift(semitones);
+                }
+                
+                // Time reverse would require special API endpoint
+                // For now, just apply pitch shift
+                return { status: 'ok', message: `Rotated audio clip ${angle} degrees (pitch shift only)` };
+            }
+        } catch (error) {
+            logger.error('Rotation failed', error);
+            throw error;
+        }
+    }
+
     // ============================================================================
     // MIDI Operations
     // ============================================================================
@@ -433,6 +521,33 @@ export class EditorHandlers {
             return getCurrentClipSlot();
         }
         return window.currentClipSlot || 0;
+    }
+
+    /**
+     * Get current editor type
+     * @private
+     * @returns {string} Editor type ('waveform', 'piano-roll', 'midi', 'audio')
+     */
+    _getCurrentEditorType() {
+        // Check active editor tab
+        const waveformTab = document.querySelector('#waveform-tab.active');
+        const pianoRollTab = document.querySelector('#piano-roll-tab.active');
+        
+        if (pianoRollTab) {
+            return 'piano-roll';
+        } else if (waveformTab) {
+            return 'waveform';
+        }
+        
+        // Fallback: check current media type
+        if (window.mediaLoader && window.mediaLoader.currentMedia) {
+            const mediaData = window.mediaLoader.mediaCache.get(window.mediaLoader.currentMedia);
+            if (mediaData && mediaData.type === 'midi') {
+                return 'piano-roll';
+            }
+        }
+        
+        return 'waveform'; // Default
     }
 }
 

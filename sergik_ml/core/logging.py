@@ -122,3 +122,17 @@ def clear_context() -> None:
     """Clear correlation ID and request context."""
     correlation_id.set(None)
     request_context.set(None)
+
+
+def get_logger(name: str) -> logging.Logger:
+    """
+    Get logger with structured logging support.
+    
+    Args:
+        name: Logger name (typically __name__)
+        
+    Returns:
+        Configured logger instance
+    """
+    logger = logging.getLogger(name)
+    return logger

@@ -8054,7 +8054,9 @@
         }
         
         // Generate Button Handlers
-        if (generateButtons.length > 0) {
+        // Note: Generation buttons are now wired up by controller-handlers.js
+        // This code serves as a fallback if handlers are not available
+        if (generateButtons.length > 0 && !window.controllerHandlers) {
             generateButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
                     if (this.disabled) return;
@@ -8072,7 +8074,7 @@
                     // Update status
                     updateStatus('processing', 'Generating ' + type + '...');
                     
-                    // Generate media using real API
+                    // Generate media using real API (fallback)
                     (async () => {
                         try {
                             const outputTypes = [];

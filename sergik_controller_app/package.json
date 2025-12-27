@@ -9,7 +9,9 @@
     "build": "electron-builder",
     "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux"
+    "build:linux": "electron-builder --linux",
+    "test": "node test-media-storage.js",
+    "verify": "node verify-media-storage.js"
   },
   "keywords": [
     "ableton",
@@ -22,12 +24,13 @@
   "author": "SERGIK AI",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0"
   },
   "dependencies": {
-    "axios": "^1.6.0",
-    "form-data": "^4.0.0"
+    "axios": "^1.7.9",
+    "form-data": "^4.0.1",
+    "jsmidgen": "^0.1.8"
   },
   "build": {
     "appId": "com.sergik.ai.controller",
@@ -59,4 +62,3 @@
     }
   }
 }
-

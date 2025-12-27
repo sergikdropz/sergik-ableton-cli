@@ -80,42 +80,42 @@ class SergikServiceBridge:
         logger.info("Service bridge initialized")
     
     @retry_on_failure(max_attempts=3, delay=1.0)
-    def get_generation_service(self) -> GenerationService:
+    def get_generation_service(self) -> "GenerationService":
         """Get generation service with retry logic."""
         if "generation" not in self._services:
             self._services["generation"] = self.container.get("generation_service")
         return self._services["generation"]
-    
+
     @retry_on_failure(max_attempts=3, delay=1.0)
-    def get_ableton_service(self) -> AbletonService:
+    def get_ableton_service(self) -> "AbletonService":
         """Get Ableton service with retry logic."""
         if "ableton" not in self._services:
             self._services["ableton"] = self.container.get("ableton_service")
         return self._services["ableton"]
-    
+
     @retry_on_failure(max_attempts=3, delay=1.0)
-    def get_analysis_service(self) -> AnalysisService:
+    def get_analysis_service(self) -> "AnalysisService":
         """Get analysis service with retry logic."""
         if "analysis" not in self._services:
             self._services["analysis"] = self.container.get("analysis_service")
         return self._services["analysis"]
-    
+
     @retry_on_failure(max_attempts=3, delay=1.0)
-    def get_track_service(self) -> TrackService:
+    def get_track_service(self) -> "TrackService":
         """Get track service with retry logic."""
         if "track" not in self._services:
             self._services["track"] = self.container.get("track_service")
         return self._services["track"]
-    
+
     @retry_on_failure(max_attempts=3, delay=1.0)
-    def get_voice_service(self) -> VoiceService:
+    def get_voice_service(self) -> "VoiceService":
         """Get voice service with retry logic."""
         if "voice" not in self._services:
             self._services["voice"] = self.container.get("voice_service")
         return self._services["voice"]
-    
+
     @retry_on_failure(max_attempts=3, delay=1.0)
-    def get_state_service(self) -> StateService:
+    def get_state_service(self) -> "StateService":
         """Get state service with retry logic."""
         if "state" not in self._services:
             self._services["state"] = self.container.get("state_service")

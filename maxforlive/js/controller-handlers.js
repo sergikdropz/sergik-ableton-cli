@@ -41,6 +41,7 @@ export class ControllerHandlers {
             const { LibraryHandlers } = await import('./library-handlers.js');
             const { AIChatHandler } = await import('./ai-chat-handler.js');
             const { QuickActionHandlers } = await import('./quick-action-handlers.js');
+            const { GenerationHandlers } = await import('./generation-handlers.js');
 
             // Initialize handlers
             this.handlers.analysis = new AnalysisHandlers(this.apiBaseUrl);
@@ -49,6 +50,7 @@ export class ControllerHandlers {
             this.handlers.library = new LibraryHandlers(this.apiBaseUrl);
             this.handlers.chat = new AIChatHandler(this.apiBaseUrl);
             this.handlers.quickActions = new QuickActionHandlers(this.apiBaseUrl);
+            this.handlers.generation = new GenerationHandlers(this.apiBaseUrl);
 
             this.initialized = true;
             logger.info('All handlers initialized successfully');
@@ -100,6 +102,9 @@ export class ControllerHandlers {
             
             // Wire quick actions
             this.wireQuickActions();
+            
+            // Wire generation buttons
+            this.wireGenerationButtons();
 
             logger.info('All buttons wired up successfully');
         } catch (error) {
@@ -359,6 +364,95 @@ export class ControllerHandlers {
                     }
                 });
             }
+        });
+    }
+
+    /**
+     * Wire generation buttons
+     */
+    wireGenerationButtons() {
+        const generation = this.handlers.generation;
+        const generateButtons = document.querySelectorAll('.btn-generate');
+
+        generateButtons.forEach(btn => {
+            // Remove existing listeners to avoid duplicates
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.addEventListener('click', async function() {
+                if (this.disabled) return;
+                
+                const type = this.dataset.type;
+                const audioEnabled = document.getElementById('toggle-audio')?.checked !== false;
+                const midiEnabled = document.getElementById('toggle-midi')?.checked !== false;
+                
+                // Visual feedback
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+                
+                // Update status
+                updateStatus('processing', `Generating ${type}...`);
+                
+                try {
+                    // Get generation parameters from UI
+                    const key = document.getElementById('key-select')?.value || '10B';
+                    const bars = parseInt(document.getElementById('bars-input')?.value) || 8;
+                    const style = document.getElementById('style-select')?.value || 'tech_house';
+                    
+                    let result;
+                    const outputTypes = [];
+                    if (audioEnabled) outputTypes.push('audio');
+                    if (midiEnabled) outputTypes.push('midi');
+                    
+                    // Map button types to generation methods
+                    switch(type) {
+                        case 'chords':
+                            result = await generation.generateChords({ key, bars, voicing: 'stabs', tempo: 125 });
+                            break;
+                        case 'bass':
+                            result = await generation.generateBass({ key, style, bars, tempo: 125 });
+                            break;
+                        case 'arps':
+                            result = await generation.generateArpeggios({ key, pattern: 'up', bars, tempo: 125 });
+                            break;
+                        case 'drums':
+                            result = await generation.generateDrums({ style, bars, tempo: 125 });
+                            break;
+                        case 'kicks':
+                        case 'claps':
+                        case 'hats':
+                        case 'percussion':
+                        case 'synths':
+                        case 'vocals':
+                        case 'fx':
+                            result = await generation.generateElement(type, { style, bars, tempo: 125 });
+                            break;
+                        default:
+                            throw new Error(`Unknown generation type: ${type}`);
+                    }
+                    
+                    // Add to media list
+                    if (typeof addToMediaList === 'function') {
+                        addToMediaList(type, outputTypes, result);
+                    }
+                    
+                    updateStatus('ready', 'Generation complete');
+                    
+                    // Switch to library tab after generation
+                    setTimeout(() => {
+                        const libraryTab = document.querySelector('[data-main-tab="library"]');
+                        if (libraryTab) {
+                            libraryTab.click();
+                        }
+                    }, 500);
+                } catch (error) {
+                    console.error('Generation error:', error);
+                    updateStatus('error', 'Generation failed: ' + error.message);
+                    alert('Generation failed: ' + error.message);
+                }
+            });
         });
     }
 }

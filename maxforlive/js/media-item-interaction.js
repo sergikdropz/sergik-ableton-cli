@@ -70,11 +70,25 @@ export class MediaItemInteraction {
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
+            // Only handle if Library tab is active
+            const libraryTab = document.getElementById('library-tab');
+            if (!libraryTab || !libraryTab.classList.contains('active')) {
+                return;
+            }
+
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 return; // Don't interfere with text input
             }
 
             switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.navigate(-1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.navigate(1);
+                    break;
                 case 'Enter':
                     if (this.selectedItem) {
                         this.loadMedia(this.selectedItem);
@@ -207,6 +221,28 @@ export class MediaItemInteraction {
             // Show error notification
             this.showError(`Failed to load media: ${error.message}`);
         }
+    }
+
+    /**
+     * Navigate through media items
+     * @param {number} direction - Direction (-1 for up, 1 for down)
+     */
+    navigate(direction) {
+        const items = Array.from(document.querySelectorAll('.browser-item[data-media-id]'));
+        if (items.length === 0) return;
+
+        let currentIndex = -1;
+        if (this.selectedItem) {
+            currentIndex = items.findIndex(item => 
+                item.getAttribute('data-media-id') === this.selectedItem
+            );
+        }
+
+        const newIndex = Math.max(0, Math.min(items.length - 1, currentIndex + direction));
+        const newItem = items[newIndex];
+        const mediaId = newItem.getAttribute('data-media-id');
+        
+        this.selectItem(mediaId, newItem);
     }
 
     /**

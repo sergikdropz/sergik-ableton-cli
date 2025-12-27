@@ -24,7 +24,7 @@ from queue import Queue
 from ..config import CFG
 from ..core.container import get_container
 from ..core.metrics import get_metrics_collector
-from ..models.model_versioning import ModelVersioning, ModelMetadata, ModelMetrics
+from ..models.model_versioning import ModelRegistry, ModelMetadata, ModelMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +134,7 @@ class MLPipeline:
         """Initialize pipeline."""
         self.config = config or PipelineConfig()
         self.status = PipelineStatus.IDLE
-        self.versioning = ModelVersioning()
+        self.versioning = ModelRegistry()
         self.container = get_container()
         self.metrics_collector = get_metrics_collector()
         
