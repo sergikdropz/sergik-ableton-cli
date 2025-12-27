@@ -8,6 +8,8 @@ class SettingsManager {
         this.settings = this.getDefaultSettings();
         this.loadSettings();
         this.setupEventListeners();
+        // Load API settings from main process after a short delay
+        setTimeout(() => this.loadApiSettingsFromMain(), 500);
     }
     
     getDefaultSettings() {
@@ -15,7 +17,47 @@ class SettingsManager {
             api: {
                 url: 'http://127.0.0.1:8000',
                 timeout: 10000,
-                retryCount: 3
+                retryCount: 3,
+                retryDelay: 1000,
+                retryBackoff: true,
+                // Authentication
+                authType: 'none', // none, api_key, bearer, basic
+                apiKey: '',
+                apiKeyHeader: 'X-API-Key',
+                bearerToken: '',
+                basicUsername: '',
+                basicPassword: '',
+                // Custom headers
+                customHeaders: {},
+                // Per-endpoint timeouts (ms)
+                endpointTimeouts: {
+                    health: 5000,
+                    generate: 30000,
+                    analyze: 60000,
+                    live: 10000,
+                    transport: 5000,
+                    browser: 10000
+                },
+                // Request configuration
+                maxRequestSize: 10485760, // 10MB
+                followRedirects: true,
+                validateSSL: true,
+                // Proxy settings
+                useProxy: false,
+                proxyHost: '',
+                proxyPort: '',
+                proxyAuth: false,
+                proxyUsername: '',
+                proxyPassword: '',
+                // Logging and monitoring
+                logRequests: false,
+                logResponses: false,
+                logErrors: true,
+                showRequestDetails: false,
+                // Connection settings
+                keepAlive: true,
+                maxConnections: 10,
+                connectionTimeout: 5000
             },
             appearance: {
                 theme: 'dark',
@@ -69,7 +111,7 @@ class SettingsManager {
         }
     }
     
-    applySettings() {
+    async applySettings() {
         // Apply theme
         if (this.settings.appearance.theme === 'light') {
             document.body.classList.add('theme-light');
@@ -89,9 +131,28 @@ class SettingsManager {
             document.body.classList.add(`density-${this.settings.appearance.uiDensity}`);
         }
         
-        // Update API URL if needed
-        if (window.sergikAPI && this.settings.api.url) {
-            // API URL is managed in main.js, would need IPC to update
+        // Sync API settings with main process
+        if (window.sergikAPI && window.sergikAPI.setApiSettings && this.settings.api) {
+            try {
+                await window.sergikAPI.setApiSettings(this.settings.api);
+            } catch (error) {
+                console.error('[Settings] Failed to sync API settings:', error);
+            }
+        }
+    }
+    
+    async loadApiSettingsFromMain() {
+        // Load API settings from main process if available
+        if (window.sergikAPI && window.sergikAPI.getApiSettings) {
+            try {
+                const mainSettings = await window.sergikAPI.getApiSettings();
+                if (mainSettings) {
+                    this.settings.api = { ...this.getDefaultSettings().api, ...mainSettings };
+                    this.saveSettings();
+                }
+            } catch (error) {
+                console.error('[Settings] Failed to load API settings from main:', error);
+            }
         }
     }
     
@@ -134,6 +195,12 @@ class SettingsManager {
         const testBtn = document.getElementById('test-api-connection');
         if (testBtn) {
             testBtn.addEventListener('click', () => this.testConnection());
+        }
+        
+        // Auth type change handler
+        const authType = document.getElementById('settings-auth-type');
+        if (authType) {
+            authType.addEventListener('change', () => this.updateAuthFieldsVisibility());
         }
         
         // Export/Import
@@ -183,14 +250,70 @@ class SettingsManager {
     }
     
     populateUI() {
-        // API
+        // API - Basic
         const apiUrl = document.getElementById('settings-api-url');
         const timeout = document.getElementById('settings-timeout');
         const retryCount = document.getElementById('settings-retry-count');
+        const retryDelay = document.getElementById('settings-retry-delay');
+        const retryBackoff = document.getElementById('settings-retry-backoff');
         
-        if (apiUrl) apiUrl.value = this.settings.api.url;
-        if (timeout) timeout.value = this.settings.api.timeout;
-        if (retryCount) retryCount.value = this.settings.api.retryCount;
+        if (apiUrl) apiUrl.value = this.settings.api.url || 'http://127.0.0.1:8000';
+        if (timeout) timeout.value = this.settings.api.timeout || 10000;
+        if (retryCount) retryCount.value = this.settings.api.retryCount || 3;
+        if (retryDelay) retryDelay.value = this.settings.api.retryDelay || 1000;
+        if (retryBackoff) retryBackoff.checked = this.settings.api.retryBackoff !== false;
+        
+        // API - Authentication
+        const authType = document.getElementById('settings-auth-type');
+        const apiKey = document.getElementById('settings-api-key');
+        const apiKeyHeader = document.getElementById('settings-api-key-header');
+        const bearerToken = document.getElementById('settings-bearer-token');
+        const basicUsername = document.getElementById('settings-basic-username');
+        const basicPassword = document.getElementById('settings-basic-password');
+        
+        if (authType) authType.value = this.settings.api.authType || 'none';
+        if (apiKey) apiKey.value = this.settings.api.apiKey || '';
+        if (apiKeyHeader) apiKeyHeader.value = this.settings.api.apiKeyHeader || 'X-API-Key';
+        if (bearerToken) bearerToken.value = this.settings.api.bearerToken || '';
+        if (basicUsername) basicUsername.value = this.settings.api.basicUsername || '';
+        if (basicPassword) basicPassword.value = this.settings.api.basicPassword || '';
+        
+        // API - Endpoint Timeouts
+        const timeoutHealth = document.getElementById('settings-timeout-health');
+        const timeoutGenerate = document.getElementById('settings-timeout-generate');
+        const timeoutAnalyze = document.getElementById('settings-timeout-analyze');
+        const timeoutLive = document.getElementById('settings-timeout-live');
+        
+        const timeouts = this.settings.api.endpointTimeouts || {};
+        if (timeoutHealth) timeoutHealth.value = timeouts.health || 5000;
+        if (timeoutGenerate) timeoutGenerate.value = timeouts.generate || 30000;
+        if (timeoutAnalyze) timeoutAnalyze.value = timeouts.analyze || 60000;
+        if (timeoutLive) timeoutLive.value = timeouts.live || 10000;
+        
+        // API - Logging
+        const logRequests = document.getElementById('settings-log-requests');
+        const logResponses = document.getElementById('settings-log-responses');
+        const logErrors = document.getElementById('settings-log-errors');
+        const showRequestDetails = document.getElementById('settings-show-request-details');
+        
+        if (logRequests) logRequests.checked = this.settings.api.logRequests === true;
+        if (logResponses) logResponses.checked = this.settings.api.logResponses === true;
+        if (logErrors) logErrors.checked = this.settings.api.logErrors !== false;
+        if (showRequestDetails) showRequestDetails.checked = this.settings.api.showRequestDetails === true;
+        
+        // API - Connection
+        const keepAlive = document.getElementById('settings-keep-alive');
+        const maxConnections = document.getElementById('settings-max-connections');
+        const connectionTimeout = document.getElementById('settings-connection-timeout');
+        const validateSSL = document.getElementById('settings-validate-ssl');
+        
+        if (keepAlive) keepAlive.checked = this.settings.api.keepAlive !== false;
+        if (maxConnections) maxConnections.value = this.settings.api.maxConnections || 10;
+        if (connectionTimeout) connectionTimeout.value = this.settings.api.connectionTimeout || 5000;
+        if (validateSSL) validateSSL.checked = this.settings.api.validateSSL !== false;
+        
+        // Update auth visibility
+        this.updateAuthFieldsVisibility();
         
         // Appearance
         const theme = document.getElementById('settings-theme');
@@ -251,14 +374,69 @@ class SettingsManager {
     }
     
     saveFromUI() {
-        // API
+        // API - Basic
         const apiUrl = document.getElementById('settings-api-url');
         const timeout = document.getElementById('settings-timeout');
         const retryCount = document.getElementById('settings-retry-count');
+        const retryDelay = document.getElementById('settings-retry-delay');
+        const retryBackoff = document.getElementById('settings-retry-backoff');
         
         if (apiUrl) this.settings.api.url = apiUrl.value;
-        if (timeout) this.settings.api.timeout = parseInt(timeout.value);
-        if (retryCount) this.settings.api.retryCount = parseInt(retryCount.value);
+        if (timeout) this.settings.api.timeout = parseInt(timeout.value) || 10000;
+        if (retryCount) this.settings.api.retryCount = parseInt(retryCount.value) || 3;
+        if (retryDelay) this.settings.api.retryDelay = parseInt(retryDelay.value) || 1000;
+        if (retryBackoff) this.settings.api.retryBackoff = retryBackoff.checked;
+        
+        // API - Authentication
+        const authType = document.getElementById('settings-auth-type');
+        const apiKey = document.getElementById('settings-api-key');
+        const apiKeyHeader = document.getElementById('settings-api-key-header');
+        const bearerToken = document.getElementById('settings-bearer-token');
+        const basicUsername = document.getElementById('settings-basic-username');
+        const basicPassword = document.getElementById('settings-basic-password');
+        
+        if (authType) this.settings.api.authType = authType.value;
+        if (apiKey) this.settings.api.apiKey = apiKey.value;
+        if (apiKeyHeader) this.settings.api.apiKeyHeader = apiKeyHeader.value;
+        if (bearerToken) this.settings.api.bearerToken = bearerToken.value;
+        if (basicUsername) this.settings.api.basicUsername = basicUsername.value;
+        if (basicPassword) this.settings.api.basicPassword = basicPassword.value;
+        
+        // API - Endpoint Timeouts
+        const timeoutHealth = document.getElementById('settings-timeout-health');
+        const timeoutGenerate = document.getElementById('settings-timeout-generate');
+        const timeoutAnalyze = document.getElementById('settings-timeout-analyze');
+        const timeoutLive = document.getElementById('settings-timeout-live');
+        
+        if (!this.settings.api.endpointTimeouts) {
+            this.settings.api.endpointTimeouts = {};
+        }
+        if (timeoutHealth) this.settings.api.endpointTimeouts.health = parseInt(timeoutHealth.value) || 5000;
+        if (timeoutGenerate) this.settings.api.endpointTimeouts.generate = parseInt(timeoutGenerate.value) || 30000;
+        if (timeoutAnalyze) this.settings.api.endpointTimeouts.analyze = parseInt(timeoutAnalyze.value) || 60000;
+        if (timeoutLive) this.settings.api.endpointTimeouts.live = parseInt(timeoutLive.value) || 10000;
+        
+        // API - Logging
+        const logRequests = document.getElementById('settings-log-requests');
+        const logResponses = document.getElementById('settings-log-responses');
+        const logErrors = document.getElementById('settings-log-errors');
+        const showRequestDetails = document.getElementById('settings-show-request-details');
+        
+        if (logRequests) this.settings.api.logRequests = logRequests.checked;
+        if (logResponses) this.settings.api.logResponses = logResponses.checked;
+        if (logErrors) this.settings.api.logErrors = logErrors.checked;
+        if (showRequestDetails) this.settings.api.showRequestDetails = showRequestDetails.checked;
+        
+        // API - Connection
+        const keepAlive = document.getElementById('settings-keep-alive');
+        const maxConnections = document.getElementById('settings-max-connections');
+        const connectionTimeout = document.getElementById('settings-connection-timeout');
+        const validateSSL = document.getElementById('settings-validate-ssl');
+        
+        if (keepAlive) this.settings.api.keepAlive = keepAlive.checked;
+        if (maxConnections) this.settings.api.maxConnections = parseInt(maxConnections.value) || 10;
+        if (connectionTimeout) this.settings.api.connectionTimeout = parseInt(connectionTimeout.value) || 5000;
+        if (validateSSL) this.settings.api.validateSSL = validateSSL.checked;
         
         // Appearance
         const theme = document.getElementById('settings-theme');
@@ -298,6 +476,35 @@ class SettingsManager {
         this.hide();
     }
     
+    updateAuthFieldsVisibility() {
+        const authType = document.getElementById('settings-auth-type');
+        if (!authType) return;
+        
+        const selectedType = authType.value;
+        
+        // Hide all auth fields
+        const apiKeyGroup = document.getElementById('settings-auth-api-key-group');
+        const bearerGroup = document.getElementById('settings-auth-bearer-group');
+        const basicGroup = document.getElementById('settings-auth-basic-group');
+        
+        if (apiKeyGroup) apiKeyGroup.classList.remove('active');
+        if (bearerGroup) bearerGroup.classList.remove('active');
+        if (basicGroup) basicGroup.classList.remove('active');
+        
+        // Show relevant fields
+        switch (selectedType) {
+            case 'api_key':
+                if (apiKeyGroup) apiKeyGroup.classList.add('active');
+                break;
+            case 'bearer':
+                if (bearerGroup) bearerGroup.classList.add('active');
+                break;
+            case 'basic':
+                if (basicGroup) basicGroup.classList.add('active');
+                break;
+        }
+    }
+    
     async testConnection() {
         const apiUrl = document.getElementById('settings-api-url');
         const url = apiUrl ? apiUrl.value : this.settings.api.url;
@@ -307,23 +514,36 @@ class SettingsManager {
         }
         
         try {
-            const response = await fetch(`${url}/health`, { 
-                method: 'GET',
-                timeout: 5000 
-            });
-            
-            if (response.ok) {
-                if (window.showNotification) {
-                    window.showNotification('Connection successful!', 'success', 2000);
+            // Use IPC to test connection with proper auth
+            if (window.sergikAPI && window.sergikAPI.checkHealth) {
+                const result = await window.sergikAPI.checkHealth();
+                if (result.success) {
+                    if (window.showNotification) {
+                        window.showNotification('Connection successful!', 'success', 2000);
+                    }
+                } else {
+                    throw new Error(result.error || 'Connection failed');
                 }
             } else {
-                throw new Error('Connection failed');
+                // Fallback to direct fetch
+                const response = await fetch(`${url}/health`, { 
+                    method: 'GET',
+                    timeout: 5000 
+                });
+                
+                if (response.ok) {
+                    if (window.showNotification) {
+                        window.showNotification('Connection successful!', 'success', 2000);
+                    }
+                } else {
+                    throw new Error('Connection failed');
+                }
             }
         } catch (error) {
             if (window.errorHandler) {
                 window.errorHandler.showError(error);
             } else if (window.showNotification) {
-                window.showNotification('Connection failed', 'error', 3000);
+                window.showNotification(`Connection failed: ${error.message}`, 'error', 3000);
             }
         } finally {
             if (window.loadingStates) {

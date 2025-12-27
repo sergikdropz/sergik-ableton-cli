@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('sergikAPI', {
   // API Configuration
   getApiUrl: () => ipcRenderer.invoke('get-api-url'),
   setApiUrl: (url) => ipcRenderer.invoke('set-api-url', url),
+  getApiSettings: () => ipcRenderer.invoke('get-api-settings'),
+  setApiSettings: (settings) => ipcRenderer.invoke('set-api-settings', settings),
   
   // Health Checks
   checkHealth: () => ipcRenderer.invoke('check-health'),
@@ -76,5 +78,9 @@ contextBridge.exposeInMainWorld('sergikAPI', {
   saveAnalysisToLibrary: (analysisData, filename) => ipcRenderer.invoke('save-analysis-to-library', analysisData, filename),
   getLibraryPath: () => ipcRenderer.invoke('get-library-path'),
   listLibraryFiles: (subdir) => ipcRenderer.invoke('list-library-files', subdir),
+  
+  // Media Storage Management (new dedicated storage)
+  getMediaStoragePath: () => ipcRenderer.invoke('get-media-storage-path'),
+  listMediaStorageFiles: (options) => ipcRenderer.invoke('list-media-storage-files', options),
 });
 

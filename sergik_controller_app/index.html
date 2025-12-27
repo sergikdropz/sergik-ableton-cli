@@ -211,25 +211,116 @@
                                 </div>
                                 <div class="display-line">
                                     <span class="label">Intelligence:</span>
-                                    <select class="dropdown-select" id="intelligence-select" data-info-title="Intelligence Category" data-info-desc="Select SERGIK DNA intelligence category for mood and context">
-                                        <option value="">Select Intelligence Category</option>
-                                        <option value="groovy">Groovy</option>
-                                        <option value="chill">Chill</option>
-                                        <option value="intense">Intense</option>
-                                        <option value="calm">Calm</option>
-                                        <option value="social">Social</option>
-                                        <option value="productivity">Productivity</option>
-                                        <option value="creative">Creative</option>
-                                        <option value="dance_floor">Dance Floor</option>
-                                        <option value="background">Background</option>
-                                        <option value="workout">Workout</option>
-                                    </select>
+                                    <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+                                        <select class="dropdown-select" id="intelligence-select" data-info-title="Intelligence Category" data-info-desc="Select SERGIK DNA intelligence category for mood and context" style="flex: 1;">
+                                            <option value="">Select Intelligence Category</option>
+                                            <option value="groovy">Groovy</option>
+                                            <option value="chill">Chill</option>
+                                            <option value="intense">Intense</option>
+                                            <option value="calm">Calm</option>
+                                            <option value="social">Social</option>
+                                            <option value="productivity">Productivity</option>
+                                            <option value="creative">Creative</option>
+                                            <option value="dance_floor">Dance Floor</option>
+                                            <option value="background">Background</option>
+                                            <option value="workout">Workout</option>
+                                        </select>
+                                        <button class="btn-icon-small" id="intelligence-advanced-toggle" data-info-title="Advanced Intelligence Options" data-info-desc="Open advanced intelligence and sub-category features" style="padding: 4px 6px; font-size: 12px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; cursor: pointer; color: var(--text-secondary);">⚙️</button>
+                                    </div>
                                 </div>
-                                <div class="display-line" id="intelligence-sub-line" style="display: none;">
-                                    <span class="label">Intelligence Sub:</span>
-                                    <select class="dropdown-select" id="intelligence-sub-select" data-info-title="Intelligence Sub-Category" data-info-desc="Refine intelligence category with specific sub-options">
-                                        <option value="">None</option>
-                                    </select>
+                                
+                                <!-- Advanced Intelligence Panel (Collapsible) -->
+                                <div class="advanced-key-panel" id="advanced-intelligence-panel" style="display: none;">
+                                    <div class="advanced-key-header">
+                                        <span class="advanced-key-title">Advanced Intelligence Settings</span>
+                                        <button class="btn-icon-small" id="advanced-intelligence-close" style="padding: 2px 4px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; line-height: 1;">×</button>
+                                    </div>
+                                    <div class="advanced-key-content">
+                                        <!-- Intelligence Category Area -->
+                                        <div class="advanced-area intelligence-area">
+                                            <div class="area-header">
+                                                <span class="area-title">Intelligence Category</span>
+                                            </div>
+                                            <div class="area-content">
+                                                <!-- Category Info Display -->
+                                                <div class="advanced-section">
+                                                    <div class="key-info-display" id="intelligence-info-display">
+                                                        <div class="key-info-item">
+                                                            <span class="key-info-label">Current:</span>
+                                                            <span class="key-info-value" id="current-intelligence-display">None</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Category Quick Select -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Quick Select</label>
+                                                    <div class="compatible-keys" id="intelligence-categories">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Category Descriptions -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Category Info</label>
+                                                    <div class="key-info-display" id="intelligence-description">
+                                                        <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">
+                                                            Select a category to see details
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Suggested Keys -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Suggested Keys</label>
+                                                    <div class="compatible-keys" id="intelligence-key-suggestions">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Apply Suggestions Button -->
+                                                <div class="advanced-section">
+                                                    <button class="quick-action-btn" id="apply-intelligence-suggestions" style="width: 100%;">
+                                                        Apply Suggested Keys & Scales
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Intelligence Sub-Category Area -->
+                                        <div class="advanced-area intelligence-sub-area">
+                                            <div class="area-header">
+                                                <span class="area-title">Sub-Categories</span>
+                                            </div>
+                                            <div class="area-content">
+                                                <!-- Sub-Category Select -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Sub-Category</label>
+                                                    <select class="dropdown-select" id="intelligence-sub-select" style="width: 100%;">
+                                                        <option value="">None</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <!-- Sub-Category Options -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Available Options</label>
+                                                    <div class="scale-suggestions" id="intelligence-sub-options">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Sub-Category Info Display -->
+                                                <div class="advanced-section">
+                                                    <div class="key-info-display" id="intelligence-sub-info-display">
+                                                        <div class="key-info-item">
+                                                            <span class="key-info-label">Current:</span>
+                                                            <span class="key-info-value" id="current-intelligence-sub-display">None</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="display-line">
                                     <span class="label">Key:</span>
@@ -253,61 +344,91 @@
                                         <button class="btn-icon-small" id="advanced-key-close" style="padding: 2px 4px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; line-height: 1;">×</button>
                                     </div>
                                     <div class="advanced-key-content">
-                                        <!-- Notation Toggle -->
-                                        <div class="advanced-section">
-                                            <label class="advanced-label">Key Notation</label>
-                                            <div class="toggle-group">
-                                                <button class="toggle-option active" id="notation-camelot" data-notation="camelot">Camelot</button>
-                                                <button class="toggle-option" id="notation-standard" data-notation="standard">Standard</button>
-                                                <button class="toggle-option" id="notation-hybrid" data-notation="hybrid">Hybrid</button>
+                                        <!-- KEY AREA -->
+                                        <div class="advanced-area key-area">
+                                            <div class="area-header">
+                                                <span class="area-title">Key</span>
                                             </div>
-                                        </div>
-                                        
-                                        <!-- Compatible Keys -->
-                                        <div class="advanced-section">
-                                            <label class="advanced-label">Compatible Keys</label>
-                                            <div class="compatible-keys" id="compatible-keys">
-                                                <!-- Populated dynamically -->
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Scale Suggestions -->
-                                        <div class="advanced-section">
-                                            <label class="advanced-label">Suggested Scales</label>
-                                            <div class="scale-suggestions" id="scale-suggestions">
-                                                <!-- Populated dynamically -->
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Key History -->
-                                        <div class="advanced-section">
-                                            <label class="advanced-label">Recent Keys</label>
-                                            <div class="key-history" id="key-history">
-                                                <!-- Populated dynamically -->
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Quick Actions -->
-                                        <div class="advanced-section">
-                                            <label class="advanced-label">Quick Actions</label>
-                                            <div class="quick-actions-grid">
-                                                <button class="quick-action-btn" id="key-relative">Relative Key</button>
-                                                <button class="quick-action-btn" id="key-parallel">Parallel Key</button>
-                                                <button class="quick-action-btn" id="key-up">+1 Key</button>
-                                                <button class="quick-action-btn" id="key-down">-1 Key</button>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Key Info Display -->
-                                        <div class="advanced-section">
-                                            <div class="key-info-display" id="key-info-display">
-                                                <div class="key-info-item">
-                                                    <span class="key-info-label">Current:</span>
-                                                    <span class="key-info-value" id="current-key-display">10B (D major)</span>
+                                            <div class="area-content">
+                                                <!-- Notation Toggle -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Key Notation</label>
+                                                    <div class="toggle-group">
+                                                        <button class="toggle-option active" id="notation-camelot" data-notation="camelot">Camelot</button>
+                                                        <button class="toggle-option" id="notation-standard" data-notation="standard">Standard</button>
+                                                        <button class="toggle-option" id="notation-hybrid" data-notation="hybrid">Hybrid</button>
+                                                    </div>
                                                 </div>
-                                                <div class="key-info-item">
-                                                    <span class="key-info-label">Scale:</span>
-                                                    <span class="key-info-value" id="current-scale-display">Major</span>
+                                                
+                                                <!-- Compatible Keys -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Compatible Keys</label>
+                                                    <div class="compatible-keys" id="compatible-keys">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Key History -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Recent Keys</label>
+                                                    <div class="key-history" id="key-history">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Quick Actions -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Quick Actions</label>
+                                                    <div class="quick-actions-grid">
+                                                        <button class="quick-action-btn" id="key-relative">Relative Key</button>
+                                                        <button class="quick-action-btn" id="key-parallel">Parallel Key</button>
+                                                        <button class="quick-action-btn" id="key-up">+1 Key</button>
+                                                        <button class="quick-action-btn" id="key-down">-1 Key</button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Key Info Display -->
+                                                <div class="advanced-section">
+                                                    <div class="key-info-display" id="key-info-display">
+                                                        <div class="key-info-item">
+                                                            <span class="key-info-label">Current:</span>
+                                                            <span class="key-info-value" id="current-key-display">10B (D major)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- SCALE AREA -->
+                                        <div class="advanced-area scale-area">
+                                            <div class="area-header">
+                                                <span class="area-title">Scale</span>
+                                            </div>
+                                            <div class="area-content">
+                                                <!-- Scale Suggestions -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Suggested Scales</label>
+                                                    <div class="scale-suggestions" id="scale-suggestions">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Intelligence Scale Suggestions -->
+                                                <div class="advanced-section">
+                                                    <label class="advanced-label">Intelligence Suggestions</label>
+                                                    <div class="scale-suggestions" id="intelligence-scale-suggestions">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Scale Info Display -->
+                                                <div class="advanced-section">
+                                                    <div class="key-info-display" id="scale-info-display">
+                                                        <div class="key-info-item">
+                                                            <span class="key-info-label">Current:</span>
+                                                            <span class="key-info-value" id="current-scale-display">Major</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -935,24 +1056,178 @@
                     <button class="settings-nav-btn" data-section="keyboard">Keyboard</button>
                     <button class="settings-nav-btn" data-section="notifications">Notifications</button>
                     <button class="settings-nav-btn" data-section="storage">Storage</button>
+                    <button class="settings-nav-btn" data-section="developer">Developer</button>
                     <button class="settings-nav-btn" data-section="advanced">Advanced</button>
                 </div>
                 <div class="settings-content">
                     <!-- API Section -->
                     <div class="settings-section active" id="settings-api">
                         <h3>API Configuration</h3>
-                        <div class="settings-field">
-                            <label for="settings-api-url">API URL</label>
-                            <input type="text" id="settings-api-url" placeholder="http://127.0.0.1:8000">
-                            <button class="btn btn-small" id="test-api-connection">Test Connection</button>
+                        
+                        <!-- Basic Settings -->
+                        <div class="settings-group">
+                            <h4>Basic Settings</h4>
+                            <div class="settings-field">
+                                <label for="settings-api-url">API URL</label>
+                                <input type="text" id="settings-api-url" placeholder="http://127.0.0.1:8000">
+                                <button class="btn btn-small" id="test-api-connection">Test Connection</button>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-timeout">Default Timeout (ms)</label>
+                                <input type="number" id="settings-timeout" value="10000" min="1000" max="60000" step="1000">
+                                <span class="field-hint">Default timeout for API requests</span>
+                            </div>
                         </div>
-                        <div class="settings-field">
-                            <label for="settings-timeout">Timeout (ms)</label>
-                            <input type="number" id="settings-timeout" value="10000" min="1000" max="60000" step="1000">
+                        
+                        <!-- Retry Settings -->
+                        <div class="settings-group">
+                            <h4>Retry Settings</h4>
+                            <div class="settings-field">
+                                <label for="settings-retry-count">Retry Count</label>
+                                <input type="number" id="settings-retry-count" value="3" min="0" max="10">
+                                <span class="field-hint">Number of retry attempts for failed requests</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-retry-delay">Retry Delay (ms)</label>
+                                <input type="number" id="settings-retry-delay" value="1000" min="100" max="10000" step="100">
+                                <span class="field-hint">Initial delay between retries</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-retry-backoff">
+                                    Exponential Backoff
+                                </label>
+                                <span class="field-hint">Increase delay exponentially with each retry</span>
+                            </div>
                         </div>
-                        <div class="settings-field">
-                            <label for="settings-retry-count">Retry Count</label>
-                            <input type="number" id="settings-retry-count" value="3" min="0" max="10">
+                        
+                        <!-- Authentication -->
+                        <div class="settings-group">
+                            <h4>Authentication</h4>
+                            <div class="settings-field">
+                                <label for="settings-auth-type">Authentication Type</label>
+                                <select id="settings-auth-type">
+                                    <option value="none">None</option>
+                                    <option value="api_key">API Key</option>
+                                    <option value="bearer">Bearer Token</option>
+                                    <option value="basic">Basic Auth</option>
+                                </select>
+                            </div>
+                            
+                            <!-- API Key Auth -->
+                            <div id="settings-auth-api-key-group" class="auth-field-group">
+                                <div class="settings-field">
+                                    <label for="settings-api-key">API Key</label>
+                                    <input type="password" id="settings-api-key" placeholder="Enter API key">
+                                </div>
+                                <div class="settings-field">
+                                    <label for="settings-api-key-header">Header Name</label>
+                                    <input type="text" id="settings-api-key-header" value="X-API-Key" placeholder="X-API-Key">
+                                </div>
+                            </div>
+                            
+                            <!-- Bearer Token Auth -->
+                            <div id="settings-auth-bearer-group" class="auth-field-group">
+                                <div class="settings-field">
+                                    <label for="settings-bearer-token">Bearer Token</label>
+                                    <input type="password" id="settings-bearer-token" placeholder="Enter bearer token">
+                                </div>
+                            </div>
+                            
+                            <!-- Basic Auth -->
+                            <div id="settings-auth-basic-group" class="auth-field-group">
+                                <div class="settings-field">
+                                    <label for="settings-basic-username">Username</label>
+                                    <input type="text" id="settings-basic-username" placeholder="Enter username">
+                                </div>
+                                <div class="settings-field">
+                                    <label for="settings-basic-password">Password</label>
+                                    <input type="password" id="settings-basic-password" placeholder="Enter password">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Endpoint Timeouts -->
+                        <div class="settings-group">
+                            <h4>Per-Endpoint Timeouts (ms)</h4>
+                            <div class="settings-field">
+                                <label for="settings-timeout-health">Health Checks</label>
+                                <input type="number" id="settings-timeout-health" value="5000" min="1000" max="30000" step="1000">
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-timeout-generate">Generation Endpoints</label>
+                                <input type="number" id="settings-timeout-generate" value="30000" min="5000" max="120000" step="5000">
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-timeout-analyze">Analysis Endpoints</label>
+                                <input type="number" id="settings-timeout-analyze" value="60000" min="10000" max="300000" step="10000">
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-timeout-live">Ableton Live Endpoints</label>
+                                <input type="number" id="settings-timeout-live" value="10000" min="1000" max="60000" step="1000">
+                            </div>
+                        </div>
+                        
+                        <!-- Logging & Monitoring -->
+                        <div class="settings-group">
+                            <h4>Logging & Monitoring</h4>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-log-requests">
+                                    Log Requests
+                                </label>
+                                <span class="field-hint">Log all outgoing API requests</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-log-responses">
+                                    Log Responses
+                                </label>
+                                <span class="field-hint">Log all API responses</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-log-errors" checked>
+                                    Log Errors
+                                </label>
+                                <span class="field-hint">Log API errors (recommended)</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-show-request-details">
+                                    Show Request Details
+                                </label>
+                                <span class="field-hint">Display detailed request info in console</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Connection Settings -->
+                        <div class="settings-group">
+                            <h4>Connection Settings</h4>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-keep-alive" checked>
+                                    Keep-Alive Connections
+                                </label>
+                                <span class="field-hint">Reuse connections for better performance</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-max-connections">Max Connections</label>
+                                <input type="number" id="settings-max-connections" value="10" min="1" max="50" step="1">
+                                <span class="field-hint">Maximum concurrent connections</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-connection-timeout">Connection Timeout (ms)</label>
+                                <input type="number" id="settings-connection-timeout" value="5000" min="1000" max="30000" step="1000">
+                                <span class="field-hint">Timeout for establishing connections</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-validate-ssl" checked>
+                                    Validate SSL Certificates
+                                </label>
+                                <span class="field-hint">Verify SSL/TLS certificates (disable for self-signed certs)</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -1047,6 +1322,72 @@
                         </div>
                     </div>
                     
+                    <!-- Developer Console Section -->
+                    <div class="settings-section" id="settings-developer">
+                        <h3>Developer Console</h3>
+                        <div class="settings-field">
+                            <label class="settings-checkbox">
+                                <input type="checkbox" id="settings-console-enabled" checked>
+                                <span>Enable Developer Console</span>
+                            </label>
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-checkbox">
+                                <input type="checkbox" id="settings-console-api-calls" checked>
+                                <span>Log API Calls</span>
+                            </label>
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-checkbox">
+                                <input type="checkbox" id="settings-console-errors" checked>
+                                <span>Log Errors</span>
+                            </label>
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-checkbox">
+                                <input type="checkbox" id="settings-console-performance">
+                                <span>Log Performance Metrics</span>
+                            </label>
+                        </div>
+                        <div class="settings-field">
+                            <label for="settings-console-max-logs">Max Logs</label>
+                            <input type="number" id="settings-console-max-logs" value="1000" min="100" max="10000" step="100">
+                        </div>
+                        <div class="settings-field">
+                            <label for="settings-console-filter">Filter by Level</label>
+                            <select id="settings-console-filter">
+                                <option value="all">All</option>
+                                <option value="error">Error</option>
+                                <option value="warn">Warning</option>
+                                <option value="info">Info</option>
+                                <option value="success">Success</option>
+                                <option value="debug">Debug</option>
+                            </select>
+                        </div>
+                        <div class="settings-field">
+                            <button class="btn btn-cyan" id="console-clear">Clear Console</button>
+                            <button class="btn btn-gray" id="console-export">Export Logs</button>
+                            <button class="btn btn-orange" id="console-copy">Copy All</button>
+                        </div>
+                        <div class="settings-field" style="margin-top: 20px;">
+                            <label>Console Output</label>
+                            <div id="developer-console" style="
+                                background: #0a0a0a;
+                                border: 1px solid var(--border-color);
+                                border-radius: 4px;
+                                padding: 12px;
+                                height: 400px;
+                                overflow-y: auto;
+                                font-family: 'JetBrains Mono', monospace;
+                                font-size: 11px;
+                                line-height: 1.5;
+                                color: #00d4aa;
+                            ">
+                                <div style="color: #666; font-style: italic;">Console ready. Logs will appear here...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Advanced Section -->
                     <div class="settings-section" id="settings-advanced">
                         <h3>Advanced</h3>
@@ -1075,6 +1416,9 @@
         </div>
     </div>
 
+    <!-- Developer Console - Load FIRST to intercept everything -->
+    <script src="js/developer-console.js"></script>
+    
     <!-- Feature Modules -->
     <script src="js/keyboard-shortcuts.js"></script>
     <script src="js/notifications.js"></script>
