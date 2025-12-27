@@ -25,7 +25,8 @@
                     <div class="device-status" data-info-title="Device Status" data-info-desc="Connection status to SERGIK ML API">
                         <div class="status-led" id="status-led" data-info-title="Status LED" data-info-desc="Green = Connected, Red = Disconnected, Yellow = Connecting"></div>
                         <span class="status-text" id="status-text" data-info-title="Status Text" data-info-desc="Current connection status text">CONNECTING</span>
-                        <button class="btn-icon-small" id="btn-settings" data-info-title="Settings" data-info-desc="Open settings (Ctrl+,)" style="margin-left: 12px; padding: 4px 8px; font-size: 14px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; cursor: pointer;">⚙️</button>
+                        <button class="btn-icon-small" id="btn-refresh-connection" data-info-title="Refresh Connection" data-info-desc="Reconnect to SERGIK ML API server" style="margin-left: 8px; padding: 4px 8px; font-size: 14px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; cursor: pointer; transition: transform 0.2s;" title="Refresh Connection">🔄</button>
+                        <button class="btn-icon-small" id="btn-settings" data-info-title="Settings" data-info-desc="Open settings (Ctrl+,)" style="margin-left: 8px; padding: 4px 8px; font-size: 14px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; cursor: pointer;">⚙️</button>
                     </div>
                 </div>
                 
@@ -70,25 +71,121 @@
                                 </label>
             </div>
                             
+                            <!-- Batch Mode Toggle -->
+                            <div class="batch-mode-section" style="margin-top: 10px;">
+                                <label class="toggle-switch" data-info-title="Batch Mode" data-info-desc="Enable batch generation for multiple elements">
+                                    <input type="checkbox" id="batch-mode-toggle">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">BATCH MODE</span>
+                                </label>
+                                <div class="batch-queue collapsed" id="batch-queue">
+                                    <div class="batch-queue-header" id="batch-queue-header">
+                                        <span class="batch-queue-count">Batch Queue (0)</span>
+                                        <button class="btn btn-small" id="clear-batch">Clear</button>
+                                        <button class="btn btn-small btn-cyan" id="execute-batch">Generate All</button>
+                                    </div>
+                                    <div class="batch-queue-list" id="batch-queue-list"></div>
+                                </div>
+                            </div>
+                            
                             <div class="button-grid">
-                                <button class="btn btn-generate btn-kicks" data-type="kicks" data-info-title="Generate Kicks" data-info-desc="Generate kick drum samples using AI">KICKS</button>
-                                <button class="btn btn-generate btn-claps" data-type="claps" data-info-title="Generate Claps & Snares" data-info-desc="Generate clap and snare drum samples">CLAPS N SNARE</button>
-                                <button class="btn btn-generate btn-hats" data-type="hats" data-info-title="Generate Hats & Shakers" data-info-desc="Generate hi-hat and shaker samples">HATS N SHAKER</button>
-                                <button class="btn btn-generate btn-perc" data-type="percussion" data-info-title="Generate Percussion" data-info-desc="Generate various percussion samples">PERCUSSION</button>
-                                <button class="btn btn-generate btn-bass" data-type="bass" data-info-title="Generate Bass" data-info-desc="Generate bass sounds and patterns">BASS</button>
-                                <button class="btn btn-generate btn-synths" data-type="synths" data-info-title="Generate Synths & Sounds" data-info-desc="Generate synthesizer sounds and textures">SYNTHS N SOUN</button>
-                                <button class="btn btn-generate btn-vocals" data-type="vocals" data-info-title="Generate Vocals" data-info-desc="Generate vocal samples and phrases">VOCALS</button>
-                                <button class="btn btn-generate btn-fx" data-type="fx" data-info-title="Generate FX" data-info-desc="Generate sound effects and textures">FX</button>
+                                <button class="btn btn-generate btn-kicks" data-type="kicks" data-context-menu="generate-button" data-info-title="Generate Kicks" data-info-desc="Generate kick drum samples using AI">KICKS</button>
+                                <button class="btn btn-generate btn-claps" data-type="claps" data-context-menu="generate-button" data-info-title="Generate Claps & Snares" data-info-desc="Generate clap and snare drum samples">CLAPS N SNARE</button>
+                                <button class="btn btn-generate btn-hats" data-type="hats" data-context-menu="generate-button" data-info-title="Generate Hats & Shakers" data-info-desc="Generate hi-hat and shaker samples">HATS N SHAKER</button>
+                                <button class="btn btn-generate btn-perc" data-type="percussion" data-context-menu="generate-button" data-info-title="Generate Percussion" data-info-desc="Generate various percussion samples">PERCUSSION</button>
+                                <button class="btn btn-generate btn-bass" data-type="bass" data-context-menu="generate-button" data-info-title="Generate Bass" data-info-desc="Generate bass sounds and patterns">BASS</button>
+                                <button class="btn btn-generate btn-synths" data-type="synths" data-context-menu="generate-button" data-info-title="Generate Synths & Sounds" data-info-desc="Generate synthesizer sounds and textures">SYNTHS N SOUN</button>
+                                <button class="btn btn-generate btn-vocals" data-type="vocals" data-context-menu="generate-button" data-info-title="Generate Vocals" data-info-desc="Generate vocal samples and phrases">VOCALS</button>
+                                <button class="btn btn-generate btn-fx" data-type="fx" data-context-menu="generate-button" data-info-title="Generate FX" data-info-desc="Generate sound effects and textures">FX</button>
                     </div>
 
-                            <div class="panel-title" style="margin-top: 15px;">🎛️ Track Control</div>
-                            <div class="button-grid">
-                                <button class="btn btn-cyan" id="btn-create-track" data-info-title="Create Track" data-info-desc="Create a new track in Ableton Live">Create</button>
-                                <button class="btn btn-gray" id="btn-delete-track" data-info-title="Delete Track" data-info-desc="Delete the selected track">Delete</button>
-                                <button class="btn btn-yellow" id="btn-arm-track" data-info-title="Arm Track" data-info-desc="Arm track for recording">Arm</button>
-                                <button class="btn btn-orange" id="btn-mute-track" data-info-title="Mute Track" data-info-desc="Mute/unmute the track">Mute</button>
-                                <button class="btn btn-purple" id="btn-solo-track" data-info-title="Solo Track" data-info-desc="Solo/unsolo the track">Solo</button>
-                                <button class="btn btn-gray" id="btn-rename-track" data-info-title="Rename Track" data-info-desc="Rename the selected track">Rename</button>
+                            <!-- Quick Presets Panel -->
+                            <div class="presets-panel expandable-panel" style="margin-top: 15px;">
+                                <div class="panel-header">
+                                    <div class="panel-title">⚡ Quick Presets</div>
+                                    <button class="panel-toggle">
+                                        <span class="expand-icon">▼</span>
+                                    </button>
+                                </div>
+                                <div class="panel-content">
+                                    <div class="presets-grid">
+                                        <button class="preset-btn" id="preset-dna" data-preset="sergik_dna" data-info-title="SERGIK DNA Preset" data-info-desc="Load SERGIK DNA parameters based on your musical profile">
+                                            <span class="preset-icon">🧬</span>
+                                            <span class="preset-name">SERGIK DNA</span>
+                                        </button>
+                                        <button class="preset-btn" id="preset-random" data-info-title="Random Preset" data-info-desc="Load a random preset">
+                                            <span class="preset-icon">🎲</span>
+                                            <span class="preset-name">Random</span>
+                                        </button>
+                                        <button class="preset-btn" id="save-preset-btn" data-info-title="Save Current Preset" data-info-desc="Save current parameters as a custom preset">
+                                            <span class="preset-icon">💾</span>
+                                            <span class="preset-name">Save</span>
+                                        </button>
+                                    </div>
+                                    <div style="margin-top: 8px;">
+                                        <div class="preset-dropdown-wrapper">
+                                            <button class="preset-dropdown-toggle" id="preset-dropdown-toggle" data-info-title="Preset Selector" data-info-desc="Select a preset from dropdown">
+                                                <span>Select preset...</span>
+                                                <span class="expand-icon">▼</span>
+                                            </button>
+                                            <div class="preset-dropdown-menu collapsed" id="preset-dropdown-menu">
+                                                <div class="preset-category" data-category="sergik_dna">
+                                                    <div class="preset-category-header" data-category="sergik_dna">
+                                                        <span>SERGIK DNA</span>
+                                                        <span class="expand-icon">▼</span>
+                                                    </div>
+                                                    <div class="preset-category-content collapsed">
+                                                        <div class="preset-dropdown-item" data-preset="sergik_dna">SERGIK DNA</div>
+                                                        <div class="preset-dropdown-item" data-preset="random_dna">Random DNA</div>
+                                                    </div>
+                                                </div>
+                                                <div class="preset-category" data-category="standard">
+                                                    <div class="preset-category-header" data-category="standard">
+                                                        <span>Standard Presets</span>
+                                                        <span class="expand-icon">▼</span>
+                                                    </div>
+                                                    <div class="preset-category-content collapsed">
+                                                        <div class="preset-dropdown-item" data-preset="tech_house">Tech House</div>
+                                                        <div class="preset-dropdown-item" data-preset="hiphop">Hip-Hop</div>
+                                                        <div class="preset-dropdown-item" data-preset="techno">Techno</div>
+                                                        <div class="preset-dropdown-item" data-preset="ambient">Ambient</div>
+                                                    </div>
+                                                </div>
+                                                <div class="preset-category" data-category="intelligence">
+                                                    <div class="preset-category-header" data-category="intelligence">
+                                                        <span>Intelligence Presets</span>
+                                                        <span class="expand-icon">▼</span>
+                                                    </div>
+                                                    <div class="preset-category-content collapsed">
+                                                        <div class="preset-dropdown-item" data-preset="groovy">Groovy</div>
+                                                        <div class="preset-dropdown-item" data-preset="chill">Chill</div>
+                                                        <div class="preset-dropdown-item" data-preset="intense">Intense</div>
+                                                        <div class="preset-dropdown-item" data-preset="social">Social</div>
+                                                        <div class="preset-dropdown-item" data-preset="creative">Creative</div>
+                                                        <div class="preset-dropdown-item" data-preset="dance_floor">Dance Floor</div>
+                                                        <div class="preset-dropdown-item" data-preset="background">Background</div>
+                                                        <div class="preset-dropdown-item" data-preset="workout">Workout</div>
+                                                    </div>
+                                                </div>
+                                                <div class="preset-category" data-category="custom" id="preset-category-custom" style="display: none;">
+                                                    <div class="preset-category-header" data-category="custom">
+                                                        <span>Custom Presets</span>
+                                                        <span class="expand-icon">▼</span>
+                                                    </div>
+                                                    <div class="preset-category-content collapsed" id="preset-category-custom-content">
+                                                        <!-- Populated dynamically -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 6px; margin-top: 6px;">
+                                            <input type="text" class="preset-search" id="preset-search" placeholder="Search presets..." style="flex: 1; padding: 4px 6px; font-size: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 2px; color: var(--text-primary);" data-info-title="Search Presets" data-info-desc="Search presets by name, genre, or category">
+                                        </div>
+                                        <div class="preset-search-results collapsed" id="preset-search-results">
+                                            <div class="preset-search-results-list" id="preset-search-results-list"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                     </div>
 
@@ -108,8 +205,8 @@
                                     <input type="text" class="idea-input" id="idea-input" placeholder="Enter your musical idea or concept..." data-info-title="Idea Input" data-info-desc="Describe your musical idea. Auto-fills genre, tempo, energy, key, and scale from text">
                                 </div>
                                 <div class="display-line">
-                                    <span class="label">Genre:</span>
-                                    <select class="dropdown-select" id="genre-select" data-info-title="Genre Selector" data-info-desc="Select the musical genre. Sub-genres will appear automatically">
+                                    <span class="label">Genre:<span class="parameter-indicator"></span></span>
+                                    <select class="dropdown-select" id="genre-select" aria-label="Genre Selector" data-info-title="Genre Selector" data-info-desc="Select the musical genre. Sub-genres will appear automatically">
                                         <optgroup label="Electronic">
                                             <option value="house" selected>House</option>
                             <option value="tech_house">Tech House</option>
@@ -180,8 +277,8 @@
                                     </select>
                                 </div>
                                 <div class="display-line">
-                                    <span class="label">Tempo:</span>
-                                    <select class="dropdown-select orange" id="tempo-select" data-info-title="Tempo" data-info-desc="Set BPM for generation. Use 'Follow Live' to sync with Ableton">
+                                    <span class="label">Tempo:<span class="parameter-indicator"></span></span>
+                                    <select class="dropdown-select orange" id="tempo-select" aria-label="Tempo" data-info-title="Tempo" data-info-desc="Set BPM for generation. Use 'Follow Live' to sync with Ableton">
                                         <option value="80">80 BPM</option>
                                         <option value="120">120 BPM</option>
                                         <option value="124" selected>124 BPM</option>
@@ -195,8 +292,8 @@
                                     </label>
                                 </div>
                                 <div class="display-line">
-                                    <span class="label">Energy:</span>
-                                    <select class="dropdown-select yellow" id="energy-select" data-info-title="Energy Level" data-info-desc="Set energy level from 1 (Ambient) to 10 (Festival)">
+                                    <span class="label">Energy:<span class="parameter-indicator"></span></span>
+                                    <select class="dropdown-select yellow" id="energy-select" aria-label="Energy Level" data-info-title="Energy Level" data-info-desc="Set energy level from 1 (Ambient) to 10 (Festival)">
                                         <option value="1">1 - Ambient</option>
                                         <option value="2">2 - Chill</option>
                                         <option value="3">3 - Lo-Fi</option>
@@ -210,9 +307,34 @@
                                     </select>
                                 </div>
                                 <div class="display-line">
-                                    <span class="label">Intelligence:</span>
+                                    <span class="label">Length:<span class="parameter-indicator"></span></span>
                                     <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
-                                        <select class="dropdown-select" id="intelligence-select" data-info-title="Intelligence Category" data-info-desc="Select SERGIK DNA intelligence category for mood and context" style="flex: 1;">
+                                        <select class="dropdown-select" id="length-bars-select" aria-label="Bar Count" data-info-title="Bar Count" data-info-desc="Select the number of bars for generation" style="flex: 0 0 100px;">
+                                            <option value="1">1 Bar</option>
+                                            <option value="2">2 Bars</option>
+                                            <option value="4">4 Bars</option>
+                                            <option value="8" selected>8 Bars</option>
+                                            <option value="16">16 Bars</option>
+                                            <option value="32">32 Bars</option>
+                                            <option value="64">64 Bars</option>
+                                        </select>
+                                        <select class="dropdown-select" id="length-measure-type-select" aria-label="Measure Type" data-info-title="Measure Type" data-info-desc="Select the musical section type" style="flex: 1;">
+                                            <option value="">None</option>
+                                            <option value="intro">Intro</option>
+                                            <option value="verse">Verse</option>
+                                            <option value="chorus">Chorus</option>
+                                            <option value="bridge">Bridge</option>
+                                            <option value="build_up">Build Up</option>
+                                            <option value="drop">Drop</option>
+                                            <option value="breakdown">Breakdown</option>
+                                            <option value="outro">Outro</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="display-line">
+                                    <span class="label">Intelligence:<span class="parameter-indicator"></span></span>
+                                    <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+                                        <select class="dropdown-select" id="intelligence-select" aria-label="Intelligence Category" data-info-title="Intelligence Category" data-info-desc="Select SERGIK DNA intelligence category for mood and context" style="flex: 1;">
                                             <option value="">Select Intelligence Category</option>
                                             <option value="groovy">Groovy</option>
                                             <option value="chill">Chill</option>
@@ -226,6 +348,17 @@
                                             <option value="workout">Workout</option>
                                         </select>
                                         <button class="btn-icon-small" id="intelligence-advanced-toggle" data-info-title="Advanced Intelligence Options" data-info-desc="Open advanced intelligence and sub-category features" style="padding: 4px 6px; font-size: 12px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; cursor: pointer; color: var(--text-secondary);">⚙️</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Smart Suggestions Panel -->
+                                <div class="suggestions-panel expandable-panel collapsed" id="parameter-suggestions" style="margin-top: 8px;">
+                                    <div class="panel-header">
+                                        <span class="suggestions-title">💡 Smart Suggestions</span>
+                                        <button class="btn-icon-small" id="close-suggestions" style="padding: 2px 4px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; line-height: 1;">×</button>
+                                    </div>
+                                    <div class="panel-content suggestions-content collapsed" id="suggestions-content">
+                                        <!-- Populated dynamically -->
                                     </div>
                                 </div>
                                 
@@ -323,9 +456,9 @@
                                     </div>
                                 </div>
                                 <div class="display-line">
-                                    <span class="label">Key:</span>
+                                    <span class="label">Key:<span class="parameter-indicator"></span></span>
                                     <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
-                                        <select class="dropdown-select purple" id="key-select" data-info-title="Musical Key" data-info-desc="Select key in Camelot wheel notation (e.g., 10B = D major)" style="flex: 1;">
+                                        <select class="dropdown-select purple" id="key-select" aria-label="Musical Key" data-info-title="Musical Key" data-info-desc="Select key in Camelot wheel notation (e.g., 10B = D major)" style="flex: 1;">
                                             <option value="7A">7A (D minor)</option>
                                             <option value="8A">8A (A minor)</option>
                                             <option value="9A">9A (E minor)</option>
@@ -436,8 +569,8 @@
                                 </div>
                                 
                                 <div class="display-line">
-                                    <span class="label">Scale:</span>
-                                    <select class="dropdown-select" id="scale-select" data-info-title="Musical Scale" data-info-desc="Select scale type (Major, Minor, Dorian, etc.)">
+                                    <span class="label">Scale:<span class="parameter-indicator"></span></span>
+                                    <select class="dropdown-select" id="scale-select" aria-label="Musical Scale" data-info-title="Musical Scale" data-info-desc="Select scale type (Major, Minor, Dorian, etc.)">
                                         <option value="major" selected>Major (Ionian)</option>
                                         <option value="minor">Natural Minor (Aeolian)</option>
                                         <option value="dorian">Dorian</option>
@@ -452,73 +585,21 @@
                                         <option value="blues">Blues</option>
                                     </select>
                                 </div>
-                                <div class="display-line">
-                                    <span class="label">Target:</span>
-                                    <select class="dropdown-select" id="track-select" data-info-title="Target Track" data-info-desc="Select which Ableton Live track to place generated content">
-                                        <option value="new">New Track (Auto)</option>
-                                        <option value="0">Track 1 - Drums</option>
-                                        <option value="1">Track 2 - Bass</option>
-                                        <option value="2">Track 3 - Chords</option>
-                                    </select>
+                                
+                                <!-- Parameter History Panel -->
+                                <div class="parameter-history expandable-panel collapsed" id="parameter-history" style="margin-top: 10px;">
+                                    <div class="panel-header">
+                                        <span class="history-title">📜 Recent Parameters</span>
+                                        <button class="panel-toggle" id="toggle-history">
+                                            <span class="expand-icon">▼</span>
+                                        </button>
+                                    </div>
+                                    <div class="panel-content history-content collapsed">
+                                        <div class="history-list" id="history-list">
+                                            <!-- Populated dynamically -->
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="display-line">
-                                    <span class="label">Slot:</span>
-                                    <select class="dropdown-select" id="slot-select" data-info-title="Clip Slot" data-info-desc="Select clip slot (1-8) or 'Next Empty' to auto-place">
-                                        <option value="" disabled selected>Select slot...</option>
-                                        <option value="0">Slot 1</option>
-                                        <option value="1">Slot 2</option>
-                                        <option value="2">Slot 3</option>
-                                        <option value="next">Next Empty Slot</option>
-                        </select>
-                                </div>
-                    </div>
-
-                            <!-- Tabbed Input Interface -->
-                            <div class="input-tabs">
-                                <button class="tab-btn active" data-tab="file" data-info-title="File Input" data-info-desc="Upload audio file from your computer">
-                                    <span class="icon">📁</span>
-                                    <span>File</span>
-                                </button>
-                                <button class="tab-btn" data-tab="url" data-info-title="URL Input" data-info-desc="Analyze audio from YouTube, SoundCloud, or direct URL">
-                                    <span class="icon">🔗</span>
-                                    <span>URL</span>
-                                </button>
-                                <button class="tab-btn" data-tab="mic" data-info-title="Microphone Input" data-info-desc="Record voice commands using your microphone">
-                                    <span class="icon">🎤</span>
-                                    <span>Mic</span>
-                                </button>
-                                <button class="tab-btn" data-tab="command" data-info-title="Command Input" data-info-desc="Type natural language commands">
-                                    <span class="icon">⌨️</span>
-                                    <span>Command</span>
-                                </button>
-                    </div>
-
-                            <!-- Tab Contents -->
-                            <div class="tab-content active" id="tab-file">
-                                <div class="drop-zone" id="drop-zone" data-info-title="File Drop Zone" data-info-desc="Drag & drop audio files here or click to browse. Supports WAV, MP3, FLAC, AIF">
-                                    <span class="icon">📁</span>
-                                    <p>Drag & drop audio file here</p>
-                                    <p style="color: var(--accent-cyan);">WAV, MP3, FLAC, AIF</p>
-                                    <input type="file" id="file-input" accept=".wav,.mp3,.flac,.aif,.aiff,.m4a">
-                                </div>
-                    </div>
-                            
-                            <div class="tab-content" id="tab-url">
-                                <div class="url-input-wrapper">
-                                    <input type="text" class="url-input" id="url-input" placeholder="Paste YouTube, SoundCloud, or audio URL..." data-info-title="URL Input" data-info-desc="Paste a URL to analyze audio from YouTube, SoundCloud, or direct audio links">
-                                    <button class="btn btn-cyan" id="btn-analyze-url" data-info-title="Analyze URL" data-info-desc="Download and analyze audio from the provided URL">Analyze</button>
-                                </div>
-                            </div>
-                            
-                            <div class="tab-content" id="tab-mic">
-                                <div class="mic-container">
-                                    <button class="mic-btn" id="mic-btn" data-info-title="Microphone Button" data-info-desc="Hold to record voice commands. Release to process">🎤</button>
-                                    <span class="mic-status">Push to talk</span>
-                                </div>
-                            </div>
-                            
-                            <div class="tab-content" id="tab-command">
-                                <textarea class="prompt-input" id="command-input" placeholder='Type command: "Create a tech house chord progression in D minor"' data-info-title="Command Input" data-info-desc="Type natural language commands to control Ableton Live"></textarea>
                     </div>
 
                             <!-- Transport Controls -->
@@ -543,12 +624,106 @@
                                 <button class="btn btn-cyan" id="btn-analyze" data-info-title="Quick Analyze" data-info-desc="Quickly analyze the current file or selection">Analyze</button>
                                 <button class="btn btn-orange" id="btn-preview" data-info-title="Preview" data-info-desc="Preview the selected media or generated content">Preview</button>
                             </div>
+                            
+                            <!-- Media Preview Panel -->
+                            <div class="media-preview-panel expandable-panel collapsed" id="media-preview-panel" style="margin-top: 15px;">
+                                <div class="panel-header">
+                                    <div class="panel-title">🎵 Preview</div>
+                                    <button class="panel-toggle">
+                                        <span class="expand-icon">▼</span>
+                                    </button>
+                                </div>
+                                <div class="panel-content preview-content collapsed">
+                                    <div class="preview-controls" style="display: flex; gap: 6px; margin-bottom: 8px;">
+                                        <button class="btn btn-small" id="create-preview-play" data-info-title="Preview Play" data-info-desc="Play preview">▶</button>
+                                        <button class="btn btn-small" id="create-preview-pause" data-info-title="Preview Pause" data-info-desc="Pause preview">⏸</button>
+                                        <button class="btn btn-small" id="create-preview-stop" data-info-title="Preview Stop" data-info-desc="Stop preview">⏹</button>
+                                        <span class="preview-time" id="preview-time" style="flex: 1; text-align: right; font-size: 10px; color: var(--text-secondary);">0:00</span>
+                                    </div>
+                                    <div class="waveform-preview" id="waveform-preview">
+                                        <canvas id="create-waveform-canvas" data-context-menu="canvas" style="height: 90px; width: 100%; background: var(--bg-dark); border-radius: 2px;"></canvas>
+                                    </div>
+                                    <div class="piano-roll-preview collapsed" id="piano-roll-preview">
+                                        <canvas id="create-piano-roll-canvas" data-context-menu="canvas" style="height: 160px; width: 100%; background: var(--bg-dark); border-radius: 2px;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Generated Files List Panel -->
+                            <div class="generated-files-panel expandable-panel collapsed" id="generated-files-panel" style="margin-top: 15px;">
+                                <div class="panel-header">
+                                    <div class="panel-title">📁 Generated Files</div>
+                                    <button class="panel-toggle">
+                                        <span class="expand-icon">▼</span>
+                                    </button>
+                                </div>
+                                <div class="panel-content generated-files-content collapsed">
+                                    <div class="generated-files-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color);">
+                                        <span style="font-size: 11px; color: var(--text-secondary);">Recent generations</span>
+                                        <button class="btn btn-icon-small" id="clear-generated-files" style="padding: 2px 6px; font-size: 10px;" data-info-title="Clear List" data-info-desc="Clear the generated files list">Clear</button>
+                                    </div>
+                                    <div class="generated-files-list" id="generated-files-list" style="max-height: 200px; overflow-y: auto;">
+                                        <!-- Files will be populated here -->
+                                        <div class="generated-files-empty" style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 11px;">
+                                            No files generated yet
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         </div>
                     </div>
 
                 <!-- Analyze Tab Section -->
                 <div class="tab-section" id="tab-section-analyze">
+                    <!-- Tabbed Input Interface -->
+                    <div class="input-tabs">
+                        <button class="tab-btn active" data-tab="file" data-info-title="File Input" data-info-desc="Upload audio file from your computer">
+                            <span class="icon">📁</span>
+                            <span>File</span>
+                        </button>
+                        <button class="tab-btn" data-tab="url" data-info-title="URL Input" data-info-desc="Analyze audio from YouTube, SoundCloud, or direct URL">
+                            <span class="icon">🔗</span>
+                            <span>URL</span>
+                        </button>
+                        <button class="tab-btn" data-tab="mic" data-info-title="Microphone Input" data-info-desc="Record voice commands using your microphone">
+                            <span class="icon">🎤</span>
+                            <span>Mic</span>
+                        </button>
+                        <button class="tab-btn" data-tab="command" data-info-title="Command Input" data-info-desc="Type natural language commands">
+                            <span class="icon">⌨️</span>
+                            <span>Command</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div class="tab-content active" id="tab-file">
+                        <div class="drop-zone" id="drop-zone" data-info-title="File Drop Zone" data-info-desc="Drag & drop audio files here or click to browse. Supports WAV, MP3, FLAC, AIF">
+                            <span class="icon">📁</span>
+                            <p>Drag & drop audio file here</p>
+                            <p style="color: var(--accent-cyan);">WAV, MP3, FLAC, AIF</p>
+                            <input type="file" id="file-input" aria-label="Audio file input" accept=".wav,.mp3,.flac,.aif,.aiff,.m4a">
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="tab-url">
+                        <div class="url-input-wrapper">
+                            <input type="text" class="url-input" id="url-input" placeholder="Paste YouTube, SoundCloud, or audio URL..." data-info-title="URL Input" data-info-desc="Paste a URL to analyze audio from YouTube, SoundCloud, or direct audio links">
+                            <button class="btn btn-cyan" id="btn-analyze-url" data-info-title="Analyze URL" data-info-desc="Download and analyze audio from the provided URL">Analyze</button>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="tab-mic">
+                        <div class="mic-container">
+                            <button class="mic-btn" id="mic-btn" data-info-title="Microphone Button" data-info-desc="Hold to record voice commands. Release to process">🎤</button>
+                            <span class="mic-status">Push to talk</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="tab-command">
+                        <textarea class="prompt-input" id="command-input" placeholder='Type command: "Create a tech house chord progression in D minor"' data-info-title="Command Input" data-info-desc="Type natural language commands to control Ableton Live"></textarea>
+                    </div>
+
                     <div class="device-grid" style="grid-template-columns: 1fr 250px;">
                         <!-- Analysis Results Panel -->
                         <div class="results-panel">
@@ -640,8 +815,6 @@
                         <div class="panel">
                             <div class="panel-title">🔍 Analysis</div>
                             <div class="button-grid">
-                                <button class="btn btn-cyan" id="btn-analyze-file" data-info-title="Analyze File" data-info-desc="Upload and analyze an audio file">Analyze File</button>
-                                <button class="btn btn-orange" id="btn-analyze-url" data-info-title="Analyze URL" data-info-desc="Download and analyze audio from URL">Analyze URL</button>
                                 <button class="btn btn-purple" id="btn-dna-match" data-info-title="DNA Match" data-info-desc="Find tracks matching SERGIK DNA profile">DNA Match</button>
                                 <button class="btn btn-yellow" id="btn-export-analysis" data-info-title="Export Analysis" data-info-desc="Export analysis results as JSON">Export</button>
             </div>
@@ -721,7 +894,7 @@
                             </div>
                         </div>
                         
-                        <!-- Center: Editor -->
+                        <!-- Center: Enhanced Editor -->
                         <div class="panel editor-preview-panel">
                             <div class="editor-toolbar">
                                 <div class="toolbar-group">
@@ -740,7 +913,407 @@
                                 </div>
                             </div>
                             
-                            <div class="editor-content active" id="editor-waveform">
+                            <div class="clip-editor-container">
+                                <!-- Left Sidebar: Clip Properties -->
+                                <div class="clip-editor-sidebar">
+                                    <!-- Clip Header Section -->
+                                    <div class="clip-section-header">
+                                        <div class="clip-title-row">
+                                            <input type="checkbox" id="clip-enabled" checked>
+                                            <span class="clip-type-badge" id="clip-type-badge">Audio</span>
+                                            <span class="clip-title">Clip</span>
+                                        </div>
+                                        
+                                        <div class="clip-position-row">
+                                            <div class="position-field">
+                                                <label>Start:</label>
+                                                <input type="text" id="clip-start" value="1.1.1" class="time-input">
+                                                <button class="set-btn" id="set-start">Set</button>
+                                            </div>
+                                            <div class="position-field">
+                                                <label>End:</label>
+                                                <input type="text" id="clip-end" value="9.1.1" class="time-input">
+                                                <button class="set-btn" id="set-end">Set</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="clip-actions-row">
+                                            <button class="clip-action-btn" id="duplicate-clip">Duplicate</button>
+                                            <label class="clip-toggle-label">
+                                                <input type="checkbox" id="clip-loop" checked>
+                                                <span>Loop</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="clip-position-row">
+                                            <div class="position-field">
+                                                <label>Position:</label>
+                                                <input type="text" id="clip-position" value="1.1.1" class="time-input">
+                                                <button class="set-btn" id="set-position">Set</button>
+                                            </div>
+                                            <div class="position-field">
+                                                <label>Length:</label>
+                                                <input type="text" id="clip-length" value="8.0.0" class="time-input">
+                                                <button class="set-btn" id="set-length">Set</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Signature & Groove Section -->
+                                    <div class="clip-section collapsible" data-section="signature">
+                                        <div class="section-header">
+                                            <span class="section-title">Signature & Groove</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="property-row">
+                                                <label>Signature:</label>
+                                                <span class="signature-display">4 / 4</span>
+                                            </div>
+                                            <div class="property-row">
+                                                <label>Groove:</label>
+                                                <select id="groove-select">
+                                                    <option value="none">None</option>
+                                                    <option value="swing-16">Swing 16</option>
+                                                    <option value="swing-8">Swing 8</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Scale Section -->
+                                    <div class="clip-section collapsible" data-section="scale">
+                                        <div class="section-header">
+                                            <span class="section-title">Scale</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="scale-controls">
+                                                <button class="scale-toggle-btn" id="scale-toggle">b#</button>
+                                                <select id="scale-root" class="note-select">
+                                                    <option value="C">C</option>
+                                                    <option value="C#">C#</option>
+                                                    <option value="D">D</option>
+                                                    <option value="D#">D#</option>
+                                                    <option value="E">E</option>
+                                                    <option value="F">F</option>
+                                                    <option value="F#">F#</option>
+                                                    <option value="G">G</option>
+                                                    <option value="G#">G#</option>
+                                                    <option value="A">A</option>
+                                                    <option value="A#">A#</option>
+                                                    <option value="B">B</option>
+                                                </select>
+                                                <select id="scale-type" class="scale-select">
+                                                    <option value="major">Major</option>
+                                                    <option value="minor">Minor</option>
+                                                    <option value="dorian">Dorian</option>
+                                                    <option value="phrygian">Phrygian</option>
+                                                    <option value="lydian">Lydian</option>
+                                                    <option value="mixolydian">Mixolydian</option>
+                                                    <option value="locrian">Locrian</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Launch Section (Collapsed) -->
+                                    <div class="clip-section collapsible collapsed" data-section="launch">
+                                        <div class="section-header">
+                                            <span class="section-title">Launch</span>
+                                            <span class="section-toggle">▶</span>
+                                        </div>
+                                        <div class="section-content" style="display: none;">
+                                            <div class="property-row">
+                                                <label>Launch Mode:</label>
+                                                <select id="launch-mode">
+                                                    <option value="trigger">Trigger</option>
+                                                    <option value="gate">Gate</option>
+                                                    <option value="toggle">Toggle</option>
+                                                    <option value="repeat">Repeat</option>
+                                                </select>
+                                            </div>
+                                            <div class="property-row">
+                                                <label>Launch Quantization:</label>
+                                                <select id="launch-quantization">
+                                                    <option value="none">None</option>
+                                                    <option value="8">8 bars</option>
+                                                    <option value="4">4 bars</option>
+                                                    <option value="2">2 bars</option>
+                                                    <option value="1">1 bar</option>
+                                                    <option value="1/2">1/2</option>
+                                                    <option value="1/4">1/4</option>
+                                                    <option value="1/8">1/8</option>
+                                                </select>
+                                            </div>
+                                            <div class="property-row">
+                                                <label>Follow Action:</label>
+                                                <select id="follow-action">
+                                                    <option value="none">None</option>
+                                                    <option value="next">Next</option>
+                                                    <option value="previous">Previous</option>
+                                                    <option value="first">First</option>
+                                                    <option value="random">Random</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pitch & Time Section -->
+                                    <div class="clip-section collapsible" data-section="pitch-time">
+                                        <div class="section-header">
+                                            <span class="section-title">Pitch & Time</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="pitch-controls">
+                                                <button class="root-note-btn active" id="root-note-C1" data-note="C1">C1</button>
+                                                <button class="pitch-action-btn" id="fit-to-scale">Fit to Scale</button>
+                                                <button class="pitch-action-btn" id="invert-pitch">Invert</button>
+                                            </div>
+                                            
+                                            <div class="interval-controls">
+                                                <input type="number" id="interval-input" value="0" min="-12" max="12" class="interval-input">
+                                                <button class="interval-btn" id="add-interval">Add Interval</button>
+                                            </div>
+                                            
+                                            <div class="stretch-controls">
+                                                <div class="knob-container">
+                                                    <div class="knob" id="stretch-knob" data-param="stretch" data-min="0.25" data-max="4" data-value="1" data-default="1">
+                                                        <div class="knob-value">x1.0</div>
+                                                    </div>
+                                                    <label>Stretch</label>
+                                                </div>
+                                                <div class="stretch-buttons">
+                                                    <button class="stretch-btn" id="stretch-x2">x2</button>
+                                                    <button class="stretch-btn" id="stretch-div2">/2</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="grid-controls">
+                                                <select id="time-grid" class="grid-select">
+                                                    <option value="1/4">1/4</option>
+                                                    <option value="1/8" selected>1/8</option>
+                                                    <option value="1/16">1/16</option>
+                                                    <option value="1/32">1/32</option>
+                                                </select>
+                                                <button class="set-btn" id="set-clip-length">Set Length</button>
+                                            </div>
+                                            
+                                            <div class="humanize-controls">
+                                                <input type="number" id="humanize-amount" value="10" min="0" max="100" class="percent-input">
+                                                <span>%</span>
+                                                <button class="action-btn" id="humanize-btn">Humanize</button>
+                                            </div>
+                                            
+                                            <div class="transform-actions">
+                                                <button class="action-btn" id="reverse-clip">Reverse</button>
+                                                <button class="action-btn" id="legato-notes">Legato</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Transform Section (Collapsed) -->
+                                    <div class="clip-section collapsible collapsed" data-section="transform">
+                                        <div class="section-header">
+                                            <span class="section-title">Transform</span>
+                                            <span class="section-toggle">▶</span>
+                                        </div>
+                                        <div class="section-content" style="display: none;">
+                                            <!-- Transform tools placeholder -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Generate Section (Collapsed) -->
+                                    <div class="clip-section collapsible collapsed" data-section="generate">
+                                        <div class="section-header">
+                                            <span class="section-title">Generate</span>
+                                            <span class="section-toggle">▶</span>
+                                        </div>
+                                        <div class="section-content" style="display: none;">
+                                            <!-- Generate tools placeholder -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Warp Section (Audio only) -->
+                                    <div class="clip-section collapsible audio-only" data-section="warp">
+                                        <div class="section-header">
+                                            <span class="section-title">Warp</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <label class="toggle-label">
+                                                <input type="checkbox" id="warp-toggle" checked>
+                                                <span>Warp</span>
+                                            </label>
+                                            <button class="follow-btn" id="warp-follow">Follow</button>
+                                            
+                                            <div class="knob-container">
+                                                <div class="knob" id="gain-knob" data-param="gain" data-min="-12" data-max="12" data-value="0" data-default="0">
+                                                    <div class="knob-value">0.0 dB</div>
+                                                </div>
+                                                <label>Gain</label>
+                                            </div>
+                                            
+                                            <select id="warp-mode" class="warp-select">
+                                                <option value="beats" selected>Beats</option>
+                                                <option value="tones">Tones</option>
+                                                <option value="texture">Texture</option>
+                                                <option value="repitch">Repitch</option>
+                                                <option value="complex">Complex</option>
+                                                <option value="complex-pro">Complex Pro</option>
+                                            </select>
+                                            
+                                            <select id="warp-preserve" class="warp-select">
+                                                <option value="transients">Transients</option>
+                                                <option value="tones">Tones</option>
+                                            </select>
+                                            
+                                            <div class="property-row">
+                                                <label>Transients:</label>
+                                                <input type="range" id="transients-slider" min="0" max="200" value="100" class="param-slider">
+                                                <span class="param-value" id="transients-value">100</span>
+                                            </div>
+                                            
+                                            <div class="bpm-controls">
+                                                <div class="bpm-display">
+                                                    <label>BPM:</label>
+                                                    <input type="number" id="clip-bpm" value="120.00" step="0.01" class="bpm-input">
+                                                    <div class="bpm-actions">
+                                                        <button class="bpm-btn" id="bpm-div2">/2</button>
+                                                        <button class="bpm-btn" id="bpm-x2">x2</button>
+                                                    </div>
+                                                </div>
+                                                <div class="bpm-original">
+                                                    <span>70</span>
+                                                    <span>-1.7 dB</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="pitch-controls-row">
+                                                <div class="pitch-field">
+                                                    <label>st:</label>
+                                                    <input type="number" id="pitch-semitones" value="0" min="-48" max="48" class="pitch-input">
+                                                </div>
+                                                <div class="pitch-field">
+                                                    <label>Fine:</label>
+                                                    <input type="number" id="pitch-fine" value="0" min="-50" max="50" class="pitch-input">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="audio-actions">
+                                                <button class="action-btn" id="reverse-audio">Reverse</button>
+                                                <button class="action-btn" id="edit-audio">Edit</button>
+                                                <button class="mode-btn" id="ram-mode">RAM</button>
+                                                <button class="mode-btn" id="hiq-mode">HiQ</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Quantize Section (Audio only) -->
+                                    <div class="clip-section collapsible audio-only" data-section="quantize">
+                                        <div class="section-header">
+                                            <span class="section-title">Quantize</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="grid-buttons">
+                                                <button class="grid-btn" data-grid="1/4">1/4</button>
+                                                <button class="grid-btn active" data-grid="1/8">1/8</button>
+                                                <button class="grid-btn" data-grid="1/16">1/16</button>
+                                                <button class="grid-btn" data-grid="1/32">1/32</button>
+                                            </div>
+                                            
+                                            <label class="toggle-label">
+                                                <input type="checkbox" id="triplets-toggle">
+                                                <span>Triplets</span>
+                                            </label>
+                                            
+                                            <div class="knob-container">
+                                                <div class="knob" id="quantize-amount-knob" data-param="quantize" data-min="0" data-max="100" data-value="100" data-default="100">
+                                                    <div class="knob-value">100%</div>
+                                                </div>
+                                                <label>Amount</label>
+                                            </div>
+                                            
+                                            <button class="apply-btn" id="apply-quantize">Apply</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Main Editor Area -->
+                                <div class="clip-editor-main">
+                                    <!-- Editor Tabs -->
+                                    <div class="editor-tabs">
+                                        <button class="editor-tab active" data-tab="sample">Sample</button>
+                                        <button class="editor-tab" data-tab="envelopes">Envelopes</button>
+                                    </div>
+                                    
+                                    <!-- Timeline Ruler -->
+                                    <div class="timeline-ruler" id="timeline-ruler">
+                                        <div class="ruler-grid"></div>
+                                        <div class="ruler-markers"></div>
+                                        <div class="grid-resolution">
+                                            <select id="grid-resolution">
+                                                <option value="1/4">1/4</option>
+                                                <option value="1/8" selected>1/8</option>
+                                                <option value="1/16">1/16</option>
+                                                <option value="1/32">1/32</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Waveform Editor (Audio) -->
+                                    <div class="waveform-editor" id="waveform-editor">
+                                        <canvas id="waveform-canvas"></canvas>
+                                        <div class="waveform-overlay">
+                                            <div class="loop-region" id="loop-region"></div>
+                                            <div class="warp-markers" id="warp-markers"></div>
+                                            <div class="selection-region" id="selection-region"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Piano Roll Editor (MIDI) -->
+                                    <div class="piano-roll-editor" id="piano-roll-editor" style="display: none;">
+                                        <div class="piano-keys-panel" id="piano-keys"></div>
+                                        <div class="piano-roll-grid" id="piano-roll-grid">
+                                            <canvas id="piano-roll-canvas"></canvas>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Velocity Lane (MIDI) -->
+                                    <div class="velocity-lane-editor" id="velocity-lane-editor" style="display: none;">
+                                        <div class="lane-header">
+                                            <span class="lane-title">Velocity</span>
+                                            <button class="lane-action-btn" id="randomize-velocity">Randomize</button>
+                                            <div class="velocity-params">
+                                                <input type="number" id="velocity-ramp" value="100" min="0" max="127" class="param-input">
+                                                <input type="number" id="velocity-range" value="100" min="0" max="127" class="param-input">
+                                                <span class="param-label">127</span>
+                                                <span class="param-label">0</span>
+                                            </div>
+                                            <input type="number" id="velocity-deviation" value="0" min="0" max="127" class="deviation-input">
+                                            <label>Deviation:</label>
+                                        </div>
+                                        <canvas id="velocity-canvas"></canvas>
+                                    </div>
+                                    
+                                    <!-- Editor Info Bar -->
+                                    <div class="editor-info-bar">
+                                        <span>Len: <strong id="waveform-length">0:00</strong></span>
+                                        <span>Sel: <strong id="waveform-selection-time">0:00</strong></span>
+                                        <span>BPM: <strong id="waveform-bpm">120</strong></span>
+                                        <span>SR: <strong id="waveform-sr">44100</strong> Hz</span>
+                                        <label class="clip-color-label">
+                                            <span>Color:</span>
+                                            <input type="color" id="clip-color" value="#00d4aa" class="clip-color-picker">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Old editor content removed - using enhanced editor above -->
+                            <div class="editor-content active" id="editor-waveform" style="display: none;">
                                 <div class="waveform-compact">
                                     <div class="clip-header">
                                         <div class="clip-controls-row">
@@ -748,7 +1321,7 @@
                                                 <input type="checkbox" id="warp-toggle" class="clip-toggle">
                                                 <span>Warp</span>
                                             </label>
-                                            <select class="clip-control-select" id="warp-mode" data-info-title="Warp Mode" data-info-desc="Select warping algorithm (Beats, Tones, Complex, etc.)">
+                                            <select class="clip-control-select" id="warp-mode" aria-label="Warp Mode" data-info-title="Warp Mode" data-info-desc="Select warping algorithm (Beats, Tones, Complex, etc.)">
                                                 <option value="beats">Beats</option>
                                                 <option value="tones">Tones</option>
                                                 <option value="texture">Texture</option>
@@ -784,7 +1357,7 @@
                                     <div class="properties-group">
                                         <div class="property-item">
                                             <label>Launch Mode:</label>
-                                            <select id="launch-mode" data-info-title="Launch Mode" data-info-desc="How the clip launches (Trigger, Gate, Toggle, Repeat)">
+                                            <select id="launch-mode" aria-label="Launch Mode" data-info-title="Launch Mode" data-info-desc="How the clip launches (Trigger, Gate, Toggle, Repeat)">
                                                 <option value="trigger">Trigger</option>
                                                 <option value="gate">Gate</option>
                                                 <option value="toggle">Toggle</option>
@@ -793,7 +1366,7 @@
                                         </div>
                                         <div class="property-item">
                                             <label>Launch Quantization:</label>
-                                            <select id="launch-quantization" data-info-title="Launch Quantization" data-info-desc="Quantize clip launch to bar or beat">
+                                            <select id="launch-quantization" aria-label="Launch Quantization" data-info-title="Launch Quantization" data-info-desc="Quantize clip launch to bar or beat">
                                                 <option value="none">None</option>
                                                 <option value="8">8 bars</option>
                                                 <option value="4">4 bars</option>
@@ -806,7 +1379,7 @@
                                         </div>
                                         <div class="property-item">
                                             <label>Follow Action:</label>
-                                            <select id="follow-action" data-info-title="Follow Action" data-info-desc="Action after clip finishes (Next, Previous, First, Random)">
+                                            <select id="follow-action" aria-label="Follow Action" data-info-title="Follow Action" data-info-desc="Action after clip finishes (Next, Previous, First, Random)">
                                                 <option value="none">None</option>
                                                 <option value="next">Next</option>
                                                 <option value="previous">Previous</option>
@@ -834,7 +1407,7 @@
                                                 <input type="checkbox" id="scale-highlight" class="piano-toggle">
                                                 <span>Scale</span>
                                             </label>
-                                            <select class="piano-control-select" id="scale-selector" data-info-title="Scale Selector" data-info-desc="Select scale to highlight in piano roll">
+                                            <select class="piano-control-select" id="scale-selector" aria-label="Scale Selector" data-info-title="Scale Selector" data-info-desc="Select scale to highlight in piano roll">
                                                 <option value="major">Major</option>
                                                 <option value="minor">Minor</option>
                                                 <option value="dorian">Dorian</option>
@@ -860,7 +1433,7 @@
                             
                             <div class="editor-content" id="editor-timeline">
                                 <div class="timeline-compact">
-                                    <div class="timeline-ruler-compact" id="timeline-ruler"></div>
+                                    <canvas class="timeline-ruler-compact" id="timeline-ruler"></canvas>
                                     <div class="timeline-tracks-compact" id="timeline-tracks">
                                         <div class="timeline-track" data-track="0">
                                             <div class="track-header-compact">
@@ -871,7 +1444,7 @@
                                                     <button class="track-btn-compact" data-action="arm" data-info-title="Arm Track" data-info-desc="Arm track for recording">R</button>
                                                 </div>
                                                 <div class="track-fader-compact">
-                                                    <input type="range" class="track-volume" id="track-volume-0" min="0" max="100" value="75" style="writing-mode: vertical-lr; direction: rtl;">
+                                                    <input type="range" class="track-volume" id="track-volume-0" aria-label="Track volume" min="0" max="100" value="75" style="writing-mode: vertical-lr; direction: rtl;">
                                                 </div>
                                             </div>
                                             <div class="track-lane-compact"></div>
@@ -919,6 +1492,265 @@
                                     <div class="info-item" data-info-title="Clip Length" data-info-desc="Length of the selected clip in bars"><span>Length:</span> <strong id="clip-info-length">4 bars</strong></div>
                                 </div>
                             </div>
+                            
+                            <!-- Creative Tools Panel -->
+                            <div class="creative-tools-panel" id="creative-tools-panel">
+                                <div class="panel-title">🎛️ Creative Tools</div>
+                                
+                                <!-- Effects Section -->
+                                <div class="creative-section collapsible-section" data-section="effects">
+                                    <div class="section-header">
+                                        <span class="section-title">Effects</span>
+                                        <button class="section-toggle" data-section="effects">▼</button>
+                                    </div>
+                                    <div class="section-content" id="effects-content">
+                                        <div class="effect-control-group">
+                                            <label class="effect-toggle">
+                                                <input type="checkbox" id="effect-reverb-enabled" class="effect-checkbox">
+                                                <span>Reverb</span>
+                                            </label>
+                                            <div class="effect-params" id="reverb-params">
+                                                <div class="effect-param">
+                                                    <label>Room Size</label>
+                                                    <input type="range" id="effect-reverb-room-size" min="0" max="1" step="0.01" value="0.5">
+                                                    <span class="param-value" id="reverb-room-size-value">0.50</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="effect-control-group">
+                                            <label class="effect-toggle">
+                                                <input type="checkbox" id="effect-delay-enabled" class="effect-checkbox">
+                                                <span>Delay</span>
+                                            </label>
+                                            <div class="effect-params" id="delay-params">
+                                                <div class="effect-param">
+                                                    <label>Time (s)</label>
+                                                    <input type="number" id="effect-delay-time" min="0" max="1" step="0.01" value="0.3">
+                                                </div>
+                                                <div class="effect-param">
+                                                    <label>Feedback</label>
+                                                    <input type="range" id="effect-delay-feedback" min="0" max="0.95" step="0.01" value="0.3">
+                                                    <span class="param-value" id="delay-feedback-value">0.30</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="effect-control-group">
+                                            <label class="effect-toggle">
+                                                <input type="checkbox" id="effect-eq-enabled" class="effect-checkbox">
+                                                <span>EQ</span>
+                                            </label>
+                                            <div class="effect-params" id="eq-params">
+                                                <div class="effect-param">
+                                                    <label>Low (dB)</label>
+                                                    <input type="number" id="effect-eq-low" min="-40" max="40" step="1" value="0">
+                                                </div>
+                                                <div class="effect-param">
+                                                    <label>Mid (dB)</label>
+                                                    <input type="number" id="effect-eq-mid" min="-40" max="40" step="1" value="0">
+                                                </div>
+                                                <div class="effect-param">
+                                                    <label>High (dB)</label>
+                                                    <input type="number" id="effect-eq-high" min="-40" max="40" step="1" value="0">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="effect-control-group">
+                                            <label class="effect-toggle">
+                                                <input type="checkbox" id="effect-compressor-enabled" class="effect-checkbox">
+                                                <span>Compressor</span>
+                                            </label>
+                                            <div class="effect-params" id="compressor-params">
+                                                <div class="effect-param">
+                                                    <label>Threshold (dB)</label>
+                                                    <input type="number" id="effect-compressor-threshold" min="-100" max="0" step="1" value="-24">
+                                                </div>
+                                                <div class="effect-param">
+                                                    <label>Ratio</label>
+                                                    <input type="number" id="effect-compressor-ratio" min="1" max="20" step="1" value="12">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="effect-control-group">
+                                            <label class="effect-toggle">
+                                                <input type="checkbox" id="effect-distortion-enabled" class="effect-checkbox">
+                                                <span>Distortion</span>
+                                            </label>
+                                            <div class="effect-params" id="distortion-params">
+                                                <div class="effect-param">
+                                                    <label>Amount (%)</label>
+                                                    <input type="range" id="effect-distortion-amount" min="0" max="100" step="1" value="50">
+                                                    <span class="param-value" id="distortion-amount-value">50%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="effect-control-group">
+                                            <label class="effect-toggle">
+                                                <input type="checkbox" id="effect-filter-enabled" class="effect-checkbox">
+                                                <span>Filter</span>
+                                            </label>
+                                            <div class="effect-params" id="filter-params">
+                                                <div class="effect-param">
+                                                    <label>Frequency (Hz)</label>
+                                                    <input type="number" id="effect-filter-frequency" min="10" max="22050" step="10" value="1000">
+                                                </div>
+                                                <div class="effect-param">
+                                                    <label>Q</label>
+                                                    <input type="number" id="effect-filter-q" min="0.0001" max="1000" step="0.1" value="1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="effect-control-group">
+                                            <label class="effect-toggle">
+                                                <input type="checkbox" id="effect-chorus-enabled" class="effect-checkbox">
+                                                <span>Chorus</span>
+                                            </label>
+                                            <div class="effect-params" id="chorus-params">
+                                                <div class="effect-param">
+                                                    <label>Rate (Hz)</label>
+                                                    <input type="number" id="effect-chorus-rate" min="0.1" max="20" step="0.1" value="1.5">
+                                                </div>
+                                                <div class="effect-param">
+                                                    <label>Depth</label>
+                                                    <input type="range" id="effect-chorus-depth" min="0" max="1" step="0.01" value="0.7">
+                                                    <span class="param-value" id="chorus-depth-value">0.70</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Synthesizer Section (for MIDI files) -->
+                                <div class="creative-section collapsible-section" data-section="synthesizer" style="display: none;" id="synthesizer-section">
+                                    <div class="section-header">
+                                        <span class="section-title">Synthesizer</span>
+                                        <button class="section-toggle" data-section="synthesizer">▼</button>
+                                    </div>
+                                    <div class="section-content" id="synthesizer-content">
+                                        <div class="synth-control-group">
+                                            <div class="synth-param">
+                                                <label>Max Voices</label>
+                                                <input type="number" id="synth-max-voices" min="1" max="32" step="1" value="8">
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Waveform</label>
+                                                <select id="synth-waveform">
+                                                    <option value="sine" selected>Sine</option>
+                                                    <option value="square">Square</option>
+                                                    <option value="sawtooth">Sawtooth</option>
+                                                    <option value="triangle">Triangle</option>
+                                                </select>
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Filter Type</label>
+                                                <select id="synth-filter-type">
+                                                    <option value="lowpass" selected>Lowpass</option>
+                                                    <option value="highpass">Highpass</option>
+                                                    <option value="bandpass">Bandpass</option>
+                                                    <option value="notch">Notch</option>
+                                                    <option value="allpass">Allpass</option>
+                                                </select>
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Filter Freq (Hz)</label>
+                                                <input type="number" id="synth-filter-freq" min="10" max="22050" step="10" value="2000">
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Filter Q</label>
+                                                <input type="number" id="synth-filter-q" min="0.0001" max="1000" step="0.1" value="1">
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Attack (s)</label>
+                                                <input type="number" id="synth-attack" min="0" max="2" step="0.01" value="0.01">
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Decay (s)</label>
+                                                <input type="number" id="synth-decay" min="0" max="2" step="0.01" value="0.1">
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Sustain</label>
+                                                <input type="range" id="synth-sustain" min="0" max="1" step="0.01" value="0.7">
+                                                <span class="param-value" id="synth-sustain-value">0.70</span>
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Release (s)</label>
+                                                <input type="number" id="synth-release" min="0" max="5" step="0.01" value="0.3">
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>LFO Rate (Hz)</label>
+                                                <input type="number" id="synth-lfo-rate" min="0" max="20" step="0.1" value="0">
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>LFO Amount</label>
+                                                <input type="range" id="synth-lfo-amount" min="0" max="1" step="0.01" value="0">
+                                                <span class="param-value" id="synth-lfo-amount-value">0.00</span>
+                                            </div>
+                                            <div class="synth-param">
+                                                <label>Volume</label>
+                                                <input type="range" id="synth-volume" min="0" max="1" step="0.01" value="0.3">
+                                                <span class="param-value" id="synth-volume-value">30%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Analyzer Section -->
+                                <div class="creative-section collapsible-section" data-section="analyzer">
+                                    <div class="section-header">
+                                        <span class="section-title">Analyzer</span>
+                                        <button class="section-toggle" data-section="analyzer">▼</button>
+                                    </div>
+                                    <div class="section-content" id="analyzer-content">
+                                        <div class="analyzer-visualization">
+                                            <canvas id="analyzer-canvas" style="width: 100%; height: 120px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px;"></canvas>
+                                        </div>
+                                        <div class="analyzer-controls">
+                                            <div class="analyzer-param">
+                                                <label>FFT Size</label>
+                                                <select id="analyzer-fft-size">
+                                                    <option value="256">256</option>
+                                                    <option value="512">512</option>
+                                                    <option value="1024">1024</option>
+                                                    <option value="2048" selected>2048</option>
+                                                    <option value="4096">4096</option>
+                                                    <option value="8192">8192</option>
+                                                    <option value="16384">16384</option>
+                                                </select>
+                                            </div>
+                                            <div class="analyzer-param">
+                                                <label>Smoothing</label>
+                                                <input type="range" id="analyzer-smoothing" min="0" max="1" step="0.01" value="0.8">
+                                                <span class="param-value" id="analyzer-smoothing-value">0.80</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Presets Section -->
+                                <div class="creative-section collapsible-section" data-section="presets">
+                                    <div class="section-header">
+                                        <span class="section-title">Presets</span>
+                                        <button class="section-toggle" data-section="presets">▼</button>
+                                    </div>
+                                    <div class="section-content" id="presets-content">
+                                        <div class="preset-controls">
+                                            <input type="text" id="preset-name-input" placeholder="Preset name..." style="width: 100%; padding: 6px; margin-bottom: 8px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; color: var(--text-primary); font-size: 11px;">
+                                            <div class="preset-buttons">
+                                                <button class="btn btn-small" id="preset-save">Save</button>
+                                                <button class="btn btn-small" id="preset-reset">Reset</button>
+                                            </div>
+                                            <select id="preset-select" style="width: 100%; padding: 6px; margin-top: 8px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; color: var(--text-primary); font-size: 11px;">
+                                                <option value="">Load Preset...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -947,8 +1779,25 @@
                                     </div>
                                 </div>
                                 <div class="chat-input-area">
-                                    <input type="text" class="chat-input" id="chat-input" placeholder="Ask me anything..." data-info-title="AI Chat Input" data-info-desc="Chat with AI assistant for music production help">
-                                    <button class="chat-send" id="chat-send" data-info-title="Send Message" data-info-desc="Send message to AI assistant">Send</button>
+                                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                                        <select id="ai-agent-select" class="chat-agent-select" data-info-title="Select AI Agent" data-info-desc="Choose which AI agent to chat with">
+                                            <option value="SergikCore">SergikCore (Orchestrator)</option>
+                                            <option value="DevAssistant">DevAssistant (Code Help)</option>
+                                            <option value="ControllerDev">ControllerDev (Controller Dev)</option>
+                                            <option value="VSTCraft">VSTCraft (Music Generation)</option>
+                                            <option value="AbleAgent">AbleAgent (Ableton Live)</option>
+                                            <option value="GrooveSense">GrooveSense (Audio Analysis)</option>
+                                            <option value="Memoria">Memoria (Knowledge Base)</option>
+                                        </select>
+                                        <span id="ai-team-status" class="ai-team-status-indicator" data-info-title="AI Team Status" data-info-desc="Connection status to SERGIK AI Team server" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 10px; border-radius: 3px; background: var(--bg-dark);">
+                                            <span class="status-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #666;"></span>
+                                            <span>Checking...</span>
+                                        </span>
+                                    </div>
+                                    <div class="chat-input-row">
+                                        <input type="text" class="chat-input" id="chat-input" placeholder="Ask me anything..." data-info-title="AI Chat Input" data-info-desc="Chat with AI assistant for music production help">
+                                        <button class="chat-send" id="chat-send" data-info-title="Send Message" data-info-desc="Send message to AI assistant">Send</button>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -1046,18 +1895,69 @@
         <div class="settings-modal-content">
             <div class="settings-header">
                 <h2>Settings</h2>
-                <button class="settings-close" id="settings-close" aria-label="Close settings">×</button>
+                <div class="settings-header-actions">
+                    <div class="settings-status-indicator" id="settings-status-indicator" title="Settings status">
+                        <span class="status-icon" id="settings-status-icon">●</span>
+                        <span class="status-text" id="settings-status-text">Saved</span>
+                    </div>
+                    <button class="settings-close" id="settings-close" aria-label="Close settings">×</button>
+                </div>
+            </div>
+            <div class="settings-toolbar">
+                <div class="settings-search-container">
+                    <input type="text" 
+                           id="settings-search-input" 
+                           class="settings-search-input" 
+                           placeholder="Search settings...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="settings-presets-container">
+                    <select id="settings-presets-select" class="settings-presets-select" aria-label="Settings Presets">
+                        <option value="">Presets...</option>
+                        <option value="development">Development</option>
+                        <option value="production">Production</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="performance">Performance</option>
+                    </select>
+                </div>
             </div>
             <div class="settings-body">
                 <div class="settings-sidebar">
-                    <button class="settings-nav-btn active" data-section="api">API</button>
-                    <button class="settings-nav-btn" data-section="appearance">Appearance</button>
-                    <button class="settings-nav-btn" data-section="behavior">Behavior</button>
-                    <button class="settings-nav-btn" data-section="keyboard">Keyboard</button>
-                    <button class="settings-nav-btn" data-section="notifications">Notifications</button>
-                    <button class="settings-nav-btn" data-section="storage">Storage</button>
-                    <button class="settings-nav-btn" data-section="developer">Developer</button>
-                    <button class="settings-nav-btn" data-section="advanced">Advanced</button>
+                    <button class="settings-nav-btn active" data-section="api">
+                        <span>API</span>
+                        <button class="section-reset-btn" data-section="api" title="Reset API settings to defaults">↺</button>
+                    </button>
+                    <button class="settings-nav-btn" data-section="appearance">
+                        <span>Appearance</span>
+                        <button class="section-reset-btn" data-section="appearance" title="Reset Appearance settings to defaults">↺</button>
+                    </button>
+                    <button class="settings-nav-btn" data-section="behavior">
+                        <span>Behavior</span>
+                        <button class="section-reset-btn" data-section="behavior" title="Reset Behavior settings to defaults">↺</button>
+                    </button>
+                    <button class="settings-nav-btn" data-section="keyboard">
+                        <span>Keyboard</span>
+                        <button class="section-reset-btn" data-section="keyboard" title="Reset Keyboard settings to defaults">↺</button>
+                    </button>
+                    <button class="settings-nav-btn" data-section="notifications">
+                        <span>Notifications</span>
+                        <button class="section-reset-btn" data-section="notifications" title="Reset Notifications settings to defaults">↺</button>
+                    </button>
+                    <button class="settings-nav-btn" data-section="audio">
+                        <span>Audio</span>
+                        <button class="section-reset-btn" data-section="audio" title="Reset Audio settings to defaults">↺</button>
+                    </button>
+                    <button class="settings-nav-btn" data-section="storage">
+                        <span>Storage</span>
+                    </button>
+                    <button class="settings-nav-btn" data-section="developer">
+                        <span>Developer</span>
+                        <button class="section-reset-btn" data-section="developer" title="Reset Developer settings to defaults">↺</button>
+                    </button>
+                    <button class="settings-nav-btn" data-section="advanced">
+                        <span>Advanced</span>
+                        <button class="section-reset-btn" data-section="advanced" title="Reset Advanced settings to defaults">↺</button>
+                    </button>
                 </div>
                 <div class="settings-content">
                     <!-- API Section -->
@@ -1106,13 +2006,13 @@
                             <h4>Retry Settings</h4>
                             <div class="settings-field">
                                 <label for="settings-retry-count">Retry Count</label>
-                                <input type="number" id="settings-retry-count" value="3" min="0" max="10">
-                                <span class="field-hint">Number of retry attempts for failed requests</span>
+                                <input type="number" id="settings-retry-count" value="3" min="0" max="10" data-setting-path="api.retryCount" title="Number of retry attempts for failed requests. Range: 0-10">
+                                <span class="field-hint">Number of retry attempts for failed requests (0-10)</span>
                             </div>
                             <div class="settings-field">
                                 <label for="settings-retry-delay">Retry Delay (ms)</label>
-                                <input type="number" id="settings-retry-delay" value="1000" min="100" max="10000" step="100">
-                                <span class="field-hint">Initial delay between retries</span>
+                                <input type="number" id="settings-retry-delay" value="1000" min="100" max="10000" step="100" data-setting-path="api.retryDelay" title="Initial delay between retries in milliseconds. Range: 100-10000ms">
+                                <span class="field-hint">Initial delay between retries (100-10000ms)</span>
                             </div>
                             <div class="settings-field">
                                 <label>
@@ -1235,13 +2135,13 @@
                             </div>
                             <div class="settings-field">
                                 <label for="settings-max-connections">Max Connections</label>
-                                <input type="number" id="settings-max-connections" value="10" min="1" max="50" step="1">
-                                <span class="field-hint">Maximum concurrent connections</span>
+                                <input type="number" id="settings-max-connections" value="10" min="1" max="50" step="1" data-setting-path="api.maxConnections" title="Maximum concurrent connections. Range: 1-50">
+                                <span class="field-hint">Maximum concurrent connections (1-50)</span>
                             </div>
                             <div class="settings-field">
                                 <label for="settings-connection-timeout">Connection Timeout (ms)</label>
-                                <input type="number" id="settings-connection-timeout" value="5000" min="1000" max="30000" step="1000">
-                                <span class="field-hint">Timeout for establishing connections</span>
+                                <input type="number" id="settings-connection-timeout" value="5000" min="1000" max="30000" step="1000" data-setting-path="api.connectionTimeout" title="Timeout for establishing connections. Range: 1000-30000ms">
+                                <span class="field-hint">Timeout for establishing connections (1000-30000ms)</span>
                             </div>
                             <div class="settings-field">
                                 <label>
@@ -1310,7 +2210,8 @@
                         </div>
                         <div class="settings-field">
                             <label for="settings-default-tempo">Default Tempo</label>
-                            <input type="number" id="settings-default-tempo" value="124" min="60" max="200">
+                            <input type="number" id="settings-default-tempo" value="124" min="60" max="200" data-setting-path="behavior.defaultTempo" title="Default BPM for new projects. Range: 60-200 BPM">
+                            <span class="field-hint">Default BPM for new projects (60-200)</span>
                         </div>
                     </div>
                     
@@ -1339,7 +2240,8 @@
                         </div>
                         <div class="settings-field">
                             <label for="settings-notification-duration">Default Duration (ms)</label>
-                            <input type="number" id="settings-notification-duration" value="3000" min="1000" max="10000" step="500">
+                            <input type="number" id="settings-notification-duration" value="3000" min="1000" max="10000" step="500" data-setting-path="notifications.duration" title="How long notifications are displayed. Range: 1000-10000ms">
+                            <span class="field-hint">How long notifications are displayed (1000-10000ms)</span>
                         </div>
                     </div>
                     
@@ -1398,12 +2300,36 @@
                             </select>
                         </div>
                         <div class="settings-field">
+                            <label for="settings-ai-team-url">SERGIK AI Team URL</label>
+                            <input type="text" id="settings-ai-team-url" value="http://127.0.0.1:8001" placeholder="http://127.0.0.1:8001" style="width: 100%; padding: 6px; background: #252526; border: 1px solid #3c3c3c; border-radius: 3px; color: #cccccc;">
+                        </div>
+                        <div class="settings-field">
                             <button class="btn btn-cyan" id="console-clear">Clear Console</button>
                             <button class="btn btn-gray" id="console-export">Export Logs</button>
                             <button class="btn btn-orange" id="console-copy">Copy All</button>
                         </div>
                         <div class="settings-field" style="margin-top: 20px;">
                             <label>Console Output</label>
+                            <!-- Phase 5: Tab Navigation -->
+                            <div class="console-tabs" style="display: flex; gap: 4px; margin-bottom: 8px;">
+                                <button class="console-tab active" data-tab="console" style="padding: 6px 12px; background: #007acc; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Console</button>
+                                <button class="console-tab" data-tab="network" style="padding: 6px 12px; background: #3c3c3c; color: #cccccc; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Network</button>
+                                <button class="console-tab" data-tab="performance" style="padding: 6px 12px; background: #3c3c3c; color: #cccccc; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Performance</button>
+                            </div>
+                            <!-- Search and Filter Bar -->
+                            <div class="console-toolbar" style="margin-bottom: 8px; display: flex; gap: 8px; align-items: center;">
+                                <input type="text" 
+                                       class="console-search" 
+                                       id="console-search" 
+                                       placeholder="Filter logs..." 
+                                       style="flex: 1; padding: 6px 10px; background: #252526; border: 1px solid #3c3c3c; border-radius: 3px; color: #cccccc; font-size: 12px;">
+                                <div class="console-filter-buttons" style="display: flex; gap: 4px;">
+                                    <button class="console-filter-btn" data-filter="all" style="padding: 4px 8px; background: #007acc; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">All</button>
+                                    <button class="console-filter-btn" data-filter="error" style="padding: 4px 8px; background: #3c3c3c; color: #cccccc; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Errors</button>
+                                    <button class="console-filter-btn" data-filter="warn" style="padding: 4px 8px; background: #3c3c3c; color: #cccccc; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Warnings</button>
+                                    <button class="console-filter-btn" data-filter="info" style="padding: 4px 8px; background: #3c3c3c; color: #cccccc; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Info</button>
+                                </div>
+                            </div>
                             <div id="developer-console" style="
                                 background: #0a0a0a;
                                 border: 1px solid var(--border-color);
@@ -1419,6 +2345,262 @@
                                 <div style="color: #666; font-style: italic;">Console ready. Logs will appear here...</div>
                             </div>
                         </div>
+                        
+                        <!-- Dev Assistant Section -->
+                        <div class="settings-field" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #3c3c3c;">
+                            <h4 style="margin-bottom: 12px; color: #cccccc;">Dev Assistant</h4>
+                            <div class="dev-assistant-container">
+                                <div class="dev-assistant-input-group" style="margin-bottom: 12px; display: flex; gap: 8px;">
+                                    <select id="dev-assistant-agent" aria-label="Dev Assistant Agent" style="padding: 6px 10px; background: #252526; border: 1px solid #3c3c3c; border-radius: 3px; color: #cccccc; font-size: 12px; min-width: 150px;">
+                                        <option value="DevAssistant">DevAssistant</option>
+                                        <option value="ControllerDev">ControllerDev</option>
+                                        <option value="SergikCore">SergikCore</option>
+                                        <option value="VSTCraft">VSTCraft</option>
+                                        <option value="AbleAgent">AbleAgent</option>
+                                        <option value="GrooveSense">GrooveSense</option>
+                                        <option value="MaxNode">MaxNode</option>
+                                        <option value="Memoria">Memoria</option>
+                                    </select>
+                                    <input type="text" 
+                                           id="dev-assistant-query" 
+                                           placeholder="Ask for development help..." 
+                                           style="flex: 1; padding: 6px 10px; background: #252526; border: 1px solid #3c3c3c; border-radius: 3px; color: #cccccc; font-size: 12px;">
+                                    <button id="dev-assistant-send" class="btn btn-cyan" style="padding: 6px 16px; white-space: nowrap;">Send</button>
+                                </div>
+                                <div class="dev-assistant-quick-actions" style="margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <button class="btn btn-gray dev-assistant-quick-btn" data-action="auto-help" style="padding: 6px 12px; font-size: 11px;">Auto Help</button>
+                                    <button class="btn btn-gray dev-assistant-quick-btn" data-action="code-review" style="padding: 6px 12px; font-size: 11px;">Code Review</button>
+                                    <button class="btn btn-gray dev-assistant-quick-btn" data-action="best-practices" style="padding: 6px 12px; font-size: 11px;">Best Practices</button>
+                                </div>
+                                <div id="dev-assistant-response" style="
+                                    background: #0a0a0a;
+                                    border: 1px solid #3c3c3c;
+                                    border-radius: 4px;
+                                    padding: 12px;
+                                    min-height: 150px;
+                                    max-height: 300px;
+                                    overflow-y: auto;
+                                    font-family: 'JetBrains Mono', monospace;
+                                    font-size: 11px;
+                                    line-height: 1.5;
+                                    color: #cccccc;
+                                    white-space: pre-wrap;
+                                    word-wrap: break-word;
+                                ">
+                                    <div style="color: #666; font-style: italic;">Dev Assistant ready. Ask a question or use quick actions...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Section -->
+                    <div class="settings-section" id="settings-audio">
+                        <h3>Audio Settings</h3>
+                        
+                        <!-- Playback Settings -->
+                        <div class="settings-group">
+                            <h4>Playback</h4>
+                            <div class="settings-field">
+                                <label for="settings-audio-master-volume">Master Volume</label>
+                                <input type="range" id="settings-audio-master-volume" min="0" max="1" step="0.01" value="1.0">
+                                <span class="field-value" id="settings-audio-master-volume-value">100%</span>
+                                <span class="field-hint">Master output volume (0.0 to 1.0)</span>
+                            </div>
+                            <div class="settings-field">
+                                <label class="settings-checkbox">
+                                    <input type="checkbox" id="settings-audio-default-loop">
+                                    <span>Default Loop</span>
+                                </label>
+                                <span class="field-hint">Loop audio playback by default</span>
+                            </div>
+                            <div class="settings-field">
+                                <label class="settings-checkbox">
+                                    <input type="checkbox" id="settings-audio-auto-play">
+                                    <span>Auto Play</span>
+                                </label>
+                                <span class="field-hint">Automatically play audio when loaded</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-crossfade-duration">Crossfade Duration (s)</label>
+                                <input type="number" id="settings-audio-crossfade-duration" min="0" max="5" step="0.1" value="0.0">
+                                <span class="field-hint">Crossfade duration when switching tracks</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Device Configuration -->
+                        <div class="settings-group">
+                            <h4>Device Configuration</h4>
+                            <div class="settings-field">
+                                <label for="settings-audio-device-driver">Driver Type</label>
+                                <select id="settings-audio-device-driver">
+                                    <option value="CoreAudio" selected>CoreAudio</option>
+                                    <option value="ASIO">ASIO</option>
+                                    <option value="DirectSound">DirectSound</option>
+                                    <option value="WASAPI">WASAPI</option>
+                                </select>
+                                <span class="field-hint">Audio driver type</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-device-input">Audio Input Device</label>
+                                <select id="settings-audio-device-input">
+                                    <option value="No Device" selected>No Device</option>
+                                </select>
+                                <span class="field-hint">Selected audio input device</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-device-output">Audio Output Device</label>
+                                <select id="settings-audio-device-output">
+                                    <option value="Default" selected>Default</option>
+                                </select>
+                                <span class="field-hint">Selected audio output device</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>Channel Configuration</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" id="settings-audio-input-config" class="btn btn-secondary">Input Config</button>
+                                    <button type="button" id="settings-audio-output-config" class="btn btn-secondary">Output Config</button>
+                                </div>
+                                <span class="field-hint">Configure input and output channels</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Sample Rate Settings -->
+                        <div class="settings-group">
+                            <h4>Sample Rate</h4>
+                            <div class="settings-field">
+                                <label for="settings-audio-sample-rate-inout">In/Out Sample Rate</label>
+                                <select id="settings-audio-sample-rate-inout">
+                                    <option value="44100" selected>44100 Hz</option>
+                                    <option value="48000">48000 Hz</option>
+                                    <option value="88200">88200 Hz</option>
+                                    <option value="96000">96000 Hz</option>
+                                </select>
+                                <span class="field-hint">Audio sample rate in Hz</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-pitch-conversion">Default SR & Pitch Conversion</label>
+                                <select id="settings-audio-pitch-conversion">
+                                    <option value="Normal" selected>Normal</option>
+                                    <option value="Repitch">Repitch</option>
+                                    <option value="Complex">Complex</option>
+                                    <option value="Complex Pro">Complex Pro</option>
+                                </select>
+                                <span class="field-hint">Sample rate and pitch conversion mode</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Latency Settings -->
+                        <div class="settings-group">
+                            <h4>Latency</h4>
+                            <div class="settings-info-box" style="background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+                                <span style="color: #ffc107;">⚠</span>
+                                <span id="settings-audio-latency-warning" style="margin-left: 8px;">Your CPU can usually handle more tracks and effects if the buffer size is increased, or the sample rate is reduced. However, this may negatively affect latency and audio quality, respectively.</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-latency-buffer-size">Buffer Size</label>
+                                <select id="settings-audio-latency-buffer-size">
+                                    <option value="32">32 Samples</option>
+                                    <option value="64">64 Samples</option>
+                                    <option value="128" selected>128 Samples</option>
+                                    <option value="256">256 Samples</option>
+                                    <option value="512">512 Samples</option>
+                                    <option value="1024">1024 Samples</option>
+                                    <option value="2048">2048 Samples</option>
+                                    <option value="4096">4096 Samples</option>
+                                    <option value="8192">8192 Samples</option>
+                                    <option value="16384">16384 Samples</option>
+                                </select>
+                                <span class="field-hint">Lower = less latency, higher = more stable</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>Input Latency</label>
+                                <span id="settings-audio-latency-input" class="field-value" style="font-weight: normal;">0.00 ms</span>
+                                <span class="field-hint">Calculated input latency</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>Output Latency</label>
+                                <span id="settings-audio-latency-output" class="field-value" style="font-weight: normal;">0.00 ms</span>
+                                <span class="field-hint">Calculated output latency</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-latency-driver-compensation">Driver Error Compensation</label>
+                                <input type="number" id="settings-audio-latency-driver-compensation" min="-100" max="100" step="0.01" value="0.00">
+                                <span class="field-hint">Compensation for driver latency errors (ms)</span>
+                            </div>
+                            <div class="settings-field">
+                                <label>Overall Latency</label>
+                                <span id="settings-audio-latency-overall" class="field-value" style="font-weight: normal;">0.00 ms</span>
+                                <span class="field-hint">Total system latency</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Test & Monitoring -->
+                        <div class="settings-group">
+                            <h4>Test & Monitoring</h4>
+                            <div class="settings-field">
+                                <label class="settings-checkbox">
+                                    <input type="checkbox" id="settings-audio-test-tone-enabled">
+                                    <span>Test Tone</span>
+                                </label>
+                                <span class="field-hint">Enable test tone for audio monitoring</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-test-tone-volume">Tone Volume</label>
+                                <input type="number" id="settings-audio-test-tone-volume" min="-60" max="0" step="1" value="-36">
+                                <span class="field-value" id="settings-audio-test-tone-volume-value">-36 dB</span>
+                                <span class="field-hint">Test tone volume in decibels</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-test-tone-frequency">Tone Frequency</label>
+                                <input type="number" id="settings-audio-test-tone-frequency" min="20" max="20000" step="1" value="440">
+                                <span class="field-hint">Test tone frequency in Hz</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-cpu-simulator">CPU Usage Simulator</label>
+                                <input type="range" id="settings-audio-cpu-simulator" min="0" max="100" step="1" value="50">
+                                <span class="field-value" id="settings-audio-cpu-simulator-value">50%</span>
+                                <span class="field-hint">Simulate CPU load for testing</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Audio Context Settings (Legacy) -->
+                        <div class="settings-group">
+                            <h4>Audio Context</h4>
+                            <div class="settings-field">
+                                <label for="settings-audio-sample-rate">Sample Rate</label>
+                                <select id="settings-audio-sample-rate">
+                                    <option value="44100" selected>44100 Hz</option>
+                                    <option value="48000">48000 Hz</option>
+                                    <option value="88200">88200 Hz</option>
+                                    <option value="96000">96000 Hz</option>
+                                </select>
+                                <span class="field-hint">Audio sample rate in Hz</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-buffer-size">Buffer Size</label>
+                                <select id="settings-audio-buffer-size">
+                                    <option value="256">256 samples</option>
+                                    <option value="512">512 samples</option>
+                                    <option value="1024">1024 samples</option>
+                                    <option value="2048" selected>2048 samples</option>
+                                    <option value="4096">4096 samples</option>
+                                    <option value="8192">8192 samples</option>
+                                    <option value="16384">16384 samples</option>
+                                </select>
+                                <span class="field-hint">Lower = less latency, higher = more stable</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-audio-latency-hint">Latency Hint</label>
+                                <select id="settings-audio-latency-hint">
+                                    <option value="interactive" selected>Interactive</option>
+                                    <option value="balanced">Balanced</option>
+                                    <option value="playback">Playback</option>
+                                </select>
+                                <span class="field-hint">Audio context latency preference</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Note: Effects, Synthesizer, and Analyzer settings are available in the Library tab as creative tools -->
                     </div>
                     
                     <!-- Advanced Section -->
@@ -1450,17 +2632,30 @@
     </div>
 
     <!-- Developer Console - Load FIRST to intercept everything -->
+    <script src="js/visual-feedback.js"></script>
     <script src="js/developer-console.js"></script>
     
+    <!-- Audio Engine Modules -->
+    <script src="js/audio-engine.js"></script>
+    <script src="js/library-audio-manager.js"></script>
+    <script src="js/audio-effects.js"></script>
+    <script src="js/audio-synthesizer.js"></script>
+    <script src="js/audio-analyzer.js"></script>
+    
     <!-- Feature Modules -->
+    <script src="js/context-menu.js"></script>
     <script src="js/keyboard-shortcuts.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/loading-states.js"></script>
     <script src="js/error-handler.js"></script>
+    <script src="js/settings-enhancements.js"></script>
     <script src="js/settings-manager.js"></script>
     <script src="js/help-system.js"></script>
     <script src="js/undo-redo.js"></script>
     <script src="js/search-enhancements.js"></script>
+    <script src="js/create-tab-enhancements.js"></script>
+    <script src="js/enhanced-clip-editor.js"></script>
+    <script src="js/library-workflow-optimizer.js"></script>
     
     <!-- Main Renderer -->
     <script src="renderer.js"></script>

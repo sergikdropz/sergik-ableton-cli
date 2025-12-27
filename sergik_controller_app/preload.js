@@ -60,6 +60,12 @@ contextBridge.exposeInMainWorld('sergikAPI', {
   },
   checkGptHealth: () => ipcRenderer.invoke('check-gpt-health'),
   
+  // Server Management
+  startServer: () => ipcRenderer.invoke('start-server'),
+  stopServer: () => ipcRenderer.invoke('stop-server'),
+  restartServer: () => ipcRenderer.invoke('restart-server'),
+  checkServerStatus: () => ipcRenderer.invoke('check-server-status'),
+  
   // Voice Control
   processVoice: (audioBuffer) => ipcRenderer.invoke('process-voice', audioBuffer),
   setRecording: (recording) => ipcRenderer.invoke('set-recording', recording),
@@ -153,5 +159,16 @@ contextBridge.exposeInMainWorld('sergikAPI', {
   deleteApiKey: (service) => ipcRenderer.invoke('delete-api-key', service),
   listApiKeys: () => ipcRenderer.invoke('list-api-keys'),
   getApiKeysInfo: () => ipcRenderer.invoke('get-api-keys-info'),
+  
+  // SERGIK AI Team
+  checkAITeamHealth: () => ipcRenderer.invoke('ai-team-health'),
+  sendAITeamMessage: (agent, content, sender) => ipcRenderer.invoke('ai-team-message', agent, content, sender),
+  listAITeamAgents: () => ipcRenderer.invoke('ai-team-list-agents'),
+  
+  // Clip Properties
+  setClipProperty: (params) => ipcRenderer.invoke('set-clip-property', params),
+  setClipBPM: (bpm) => ipcRenderer.invoke('set-clip-bpm', bpm),
+  addWarpMarker: (marker) => ipcRenderer.invoke('add-warp-marker', marker),
+  transposeNotes: (params) => ipcRenderer.invoke('transpose-notes', params),
 });
 

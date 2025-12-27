@@ -10,93 +10,99 @@ let mediaRecorder = null;
 let audioChunks = [];
 let currentTab = 'create';
 
-// DOM Elements
-const elements = {
-    // Device status
-    statusLed: document.getElementById('status-led'),
-    statusText: document.getElementById('status-text'),
-    statusLedDisplay: document.getElementById('status-led-display'),
-    statusTextDisplay: document.getElementById('status-text-display'),
-    
-    // Main tabs
-    mainTabBtns: document.querySelectorAll('.main-tab-btn'),
-    tabSections: document.querySelectorAll('.tab-section'),
-    
-    // Generation
-    toggleAudio: document.getElementById('toggle-audio'),
-    toggleMidi: document.getElementById('toggle-midi'),
-    generateButtons: document.querySelectorAll('.btn-generate'),
-    
-    // Track controls
-    btnCreateTrack: document.getElementById('btn-create-track'),
-    btnDeleteTrack: document.getElementById('btn-delete-track'),
-    btnArmTrack: document.getElementById('btn-arm-track'),
-    btnMuteTrack: document.getElementById('btn-mute-track'),
-    btnSoloTrack: document.getElementById('btn-solo-track'),
-    btnRenameTrack: document.getElementById('btn-rename-track'),
-    
-    // Display controls
-    ideaInput: document.getElementById('idea-input'),
-    genreSelect: document.getElementById('genre-select'),
-    subgenreSelect: document.getElementById('subgenre-select'),
-    subgenreLine: document.getElementById('subgenre-line'),
-    tempoSelect: document.getElementById('tempo-select'),
-    tempoFollowToggle: document.getElementById('tempo-follow-toggle'),
-    tempoToggleLabel: document.getElementById('tempo-toggle-label'),
-    energySelect: document.getElementById('energy-select'),
-    keySelect: document.getElementById('key-select'),
-    trackSelect: document.getElementById('track-select'),
-    slotSelect: document.getElementById('slot-select'),
-    
-    // Input tabs
-    inputTabBtns: document.querySelectorAll('.tab-btn'),
-    tabContents: document.querySelectorAll('.tab-content'),
-    
-    // File input
-    dropZone: document.getElementById('drop-zone'),
-    fileInput: document.getElementById('file-input'),
-    
-    // URL input
-    urlInput: document.getElementById('url-input'),
-    btnAnalyzeUrl: document.getElementById('btn-analyze-url'),
-    
-    // Mic
-    micBtn: document.getElementById('mic-btn'),
-    
-    // Command
-    commandInput: document.getElementById('command-input'),
-    
-    // Transport
-    btnRewind: document.getElementById('btn-rewind'),
-    btnStop: document.getElementById('btn-stop'),
-    btnPlay: document.getElementById('btn-play'),
-    btnRecord: document.getElementById('btn-record'),
-    btnForward: document.getElementById('btn-forward'),
-    
-    // Status
-    actionList: document.getElementById('action-list'),
-    
-    // Quick actions
-    btnAnalyze: document.getElementById('btn-analyze'),
-    btnPreview: document.getElementById('btn-preview'),
-    
-    // Analysis
-    dnaScore: document.getElementById('dna-score'),
-    dnaFill: document.getElementById('dna-fill'),
-    genreBars: document.getElementById('genre-bars'),
-    viewToggleBtns: document.querySelectorAll('.toggle-btn'),
-    viewContents: document.querySelectorAll('.view-content'),
-    
-    // AI
-    aiMessages: document.getElementById('ai-messages'),
-    aiInput: document.getElementById('ai-input'),
-    btnSendAi: document.getElementById('btn-send-ai'),
-};
+// DOM Elements - Initialize after DOM is ready
+let elements = {};
+
+function initializeElements() {
+    elements = {
+        // Device status
+        statusLed: document.getElementById('status-led'),
+        statusText: document.getElementById('status-text'),
+        statusLedDisplay: document.getElementById('status-led-display'),
+        statusTextDisplay: document.getElementById('status-text-display'),
+        btnRefreshConnection: document.getElementById('btn-refresh-connection'),
+        
+        // Main tabs
+        mainTabBtns: document.querySelectorAll('.main-tab-btn'),
+        tabSections: document.querySelectorAll('.tab-section'),
+        
+        // Generation
+        toggleAudio: document.getElementById('toggle-audio'),
+        toggleMidi: document.getElementById('toggle-midi'),
+        generateButtons: document.querySelectorAll('.btn-generate'),
+        
+        // Display controls
+        ideaInput: document.getElementById('idea-input'),
+        genreSelect: document.getElementById('genre-select'),
+        subgenreSelect: document.getElementById('subgenre-select'),
+        subgenreLine: document.getElementById('subgenre-line'),
+        tempoSelect: document.getElementById('tempo-select'),
+        tempoFollowToggle: document.getElementById('tempo-follow-toggle'),
+        tempoToggleLabel: document.getElementById('tempo-toggle-label'),
+        energySelect: document.getElementById('energy-select'),
+        lengthBarsSelect: document.getElementById('length-bars-select'),
+        lengthMeasureTypeSelect: document.getElementById('length-measure-type-select'),
+        keySelect: document.getElementById('key-select'),
+        trackSelect: document.getElementById('track-select'),
+        slotSelect: document.getElementById('slot-select'),
+        
+        // Input tabs
+        inputTabBtns: document.querySelectorAll('.tab-btn'),
+        tabContents: document.querySelectorAll('.tab-content'),
+        
+        // File input
+        dropZone: document.getElementById('drop-zone'),
+        fileInput: document.getElementById('file-input'),
+        
+        // URL input
+        urlInput: document.getElementById('url-input'),
+        btnAnalyzeUrl: document.getElementById('btn-analyze-url'),
+        
+        // Mic
+        micBtn: document.getElementById('mic-btn'),
+        
+        // Command
+        commandInput: document.getElementById('command-input'),
+        
+        // Transport
+        btnRewind: document.getElementById('btn-rewind'),
+        btnStop: document.getElementById('btn-stop'),
+        btnPlay: document.getElementById('btn-play'),
+        btnRecord: document.getElementById('btn-record'),
+        btnForward: document.getElementById('btn-forward'),
+        
+        // Status
+        actionList: document.getElementById('action-list'),
+        
+        // Quick actions
+        btnAnalyze: document.getElementById('btn-analyze'),
+        btnPreview: document.getElementById('btn-preview'),
+        
+        // Analysis
+        dnaScore: document.getElementById('dna-score'),
+        dnaFill: document.getElementById('dna-fill'),
+        genreBars: document.getElementById('genre-bars'),
+        viewToggleBtns: document.querySelectorAll('.toggle-btn'),
+        viewContents: document.querySelectorAll('.view-content'),
+        
+        // AI
+        aiMessages: document.getElementById('ai-messages'),
+        aiInput: document.getElementById('ai-input'),
+        btnSendAi: document.getElementById('btn-send-ai'),
+    };
+}
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeElements();
+        initializeApp();
+    });
+} else {
+    // DOM already loaded
+    initializeElements();
     initializeApp();
-});
+}
 
 // Initialize notification system
 let notificationSystem = null;
@@ -130,6 +136,53 @@ async function initializeApp() {
         window.undoManager = new window.UndoManager(50);
     }
     
+    // Initialize audio engine, synthesizer, and analyzer
+    if (window.audioEngine) {
+        try {
+            await window.audioEngine.initialize();
+            const audioContext = window.audioEngine.getAudioContext();
+            
+            if (audioContext) {
+                // Get audio settings
+                const audioSettings = window.settingsManager?.settings?.audio || {};
+                
+                // Initialize synthesizer with settings
+                if (window.Synthesizer) {
+                    const synthOptions = {
+                        maxVoices: audioSettings.synthMaxVoices || 8,
+                        waveform: audioSettings.synthWaveform || 'sine',
+                        filterType: audioSettings.synthFilterType || 'lowpass',
+                        filterFreq: audioSettings.synthFilterFreq || 2000,
+                        filterQ: audioSettings.synthFilterQ || 1,
+                        attack: audioSettings.synthAttack || 0.01,
+                        decay: audioSettings.synthDecay || 0.1,
+                        sustain: audioSettings.synthSustain || 0.7,
+                        release: audioSettings.synthRelease || 0.3,
+                        lfoRate: audioSettings.synthLfoRate || 0,
+                        lfoAmount: audioSettings.synthLfoAmount || 0,
+                        volume: audioSettings.synthVolume || 0.3
+                    };
+                    window.audioSynthesizer = new window.Synthesizer(audioContext, synthOptions);
+                }
+                
+                // Initialize analyzer with settings
+                if (window.AudioAnalyzer) {
+                    const analyzerOptions = {
+                        fftSize: audioSettings.analyzerFftSize || 2048,
+                        smoothingTimeConstant: audioSettings.analyzerSmoothing || 0.8,
+                        minDecibels: audioSettings.analyzerMinDecibels || -100,
+                        maxDecibels: audioSettings.analyzerMaxDecibels || -30
+                    };
+                    window.audioAnalyzer = new window.AudioAnalyzer(audioContext, analyzerOptions);
+                    window.audioEngine.connectAnalyzer(window.audioAnalyzer);
+                    window.audioAnalyzer.start();
+                }
+            }
+        } catch (error) {
+            console.error('[Renderer] Failed to initialize audio components:', error);
+        }
+    }
+    
     // Test IPC communication first
     console.log('[Renderer] Testing IPC communication...');
     if (window.sergikAPI) {
@@ -151,6 +204,9 @@ async function initializeApp() {
     
     // Set up idea analyzer for auto-fill
     setupIdeaAnalyzer();
+    
+    // Initialize context menus
+    setupContextMenus();
     
     // Load initial data
     await loadInitialData();
@@ -499,51 +555,57 @@ function updateTrackAndSlotOptions(tracks) {
 function setupEventListeners() {
     // Main tab switching
     elements.mainTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
             const tabId = btn.dataset.mainTab;
+            if (window.visualFeedback) {
+                window.visualFeedback.addTabFeedback(btn, true);
+                window.visualFeedback.addRipple(btn, e);
+            }
             switchTab(tabId);
         });
     });
     
     // Generation buttons
     elements.generateButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async (e) => {
             const type = btn.dataset.type;
-            handleGenerate(type);
+            if (window.visualFeedback) {
+                window.visualFeedback.addRipple(btn, e);
+                window.visualFeedback.addButtonFeedback(btn, 'generating...', 'loading');
+            }
+            try {
+                await handleGenerate(type);
+                if (window.visualFeedback) {
+                    window.visualFeedback.addButtonFeedback(btn, 'generated!', 'success');
+                }
+            } catch (error) {
+                if (window.visualFeedback) {
+                    window.visualFeedback.addButtonFeedback(btn, 'error!', 'error');
+                }
+            }
         });
     });
     
-    // Track controls
-    elements.btnCreateTrack?.addEventListener('click', async () => {
-        const trackName = prompt('Enter track name:');
-        if (trackName && window.sergikAPI) {
-            const result = await window.sergikAPI.createTrack({ name: trackName });
-            if (result.success) {
-                addAction(`Track created: ${trackName}`, 'success');
-            } else {
-                addAction(`Failed to create track: ${result.error}`, 'error');
-            }
-        }
-    });
-    elements.btnDeleteTrack?.addEventListener('click', async () => {
-        const trackIndex = prompt('Enter track index to delete:');
-        if (trackIndex !== null && window.sergikAPI) {
-            const result = await window.sergikAPI.deleteTrack(parseInt(trackIndex));
-            if (result.success) {
-                addAction(`Track ${trackIndex} deleted`, 'success');
-            } else {
-                addAction(`Failed to delete track: ${result.error}`, 'error');
-            }
-        }
-    });
-    elements.btnArmTrack?.addEventListener('click', () => executeCommand('arm track'));
-    elements.btnMuteTrack?.addEventListener('click', () => executeCommand('mute track'));
-    elements.btnSoloTrack?.addEventListener('click', () => executeCommand('solo track'));
-    elements.btnRenameTrack?.addEventListener('click', () => executeCommand('rename track'));
-    
     // Genre selector
     elements.genreSelect?.addEventListener('change', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addSelectFeedback(elements.genreSelect);
+        }
         handleGenreChange(e.target.value);
+    });
+    
+    // Add focus/blur feedback to all selects
+    document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('focus', () => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addInputFeedback(select, 'focus');
+            }
+        });
+        select.addEventListener('blur', () => {
+            if (window.visualFeedback) {
+                window.visualFeedback.removeInputFeedback(select);
+            }
+        });
     });
     
     // Intelligence selector
@@ -552,6 +614,9 @@ function setupEventListeners() {
     const intelligenceSubSelect = document.getElementById('intelligence-sub-select');
     
     intelligenceSelect?.addEventListener('change', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addSelectFeedback(intelligenceSelect);
+        }
         const value = e.target.value;
         if (value && intelligenceSubLine && intelligenceSubSelect) {
             intelligenceSubLine.style.display = '';
@@ -590,22 +655,41 @@ function setupEventListeners() {
     
     // Tempo follow toggle
     elements.tempoFollowToggle?.addEventListener('change', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addCheckboxFeedback(elements.tempoFollowToggle, e.target.checked);
+        }
         const label = elements.tempoToggleLabel;
         if (label) {
             label.textContent = e.target.checked ? 'Follow Live' : 'Auto Update';
         }
     });
     
+    // Add feedback to all checkboxes/toggles
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addCheckboxFeedback(checkbox, e.target.checked);
+            }
+        });
+    });
+    
     // Input tabs
     elements.inputTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addTabFeedback(btn, true);
+                window.visualFeedback.addRipple(btn, e);
+            }
             const tabId = btn.dataset.tab;
             switchInputTab(tabId);
         });
     });
     
     // File drop zone
-    elements.dropZone?.addEventListener('click', async () => {
+    elements.dropZone?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addPulse(elements.dropZone, 'rgba(0, 122, 204, 0.2)', 300);
+        }
         // Use file dialog in Electron
         if (window.sergikAPI) {
             const fileResult = await window.sergikAPI.selectFileForAnalysis();
@@ -691,48 +775,145 @@ function setupEventListeners() {
     });
     
     // URL analyze
-    elements.btnAnalyzeUrl?.addEventListener('click', () => {
+    elements.btnAnalyzeUrl?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnAnalyzeUrl, e);
+            window.visualFeedback.addButtonFeedback(elements.btnAnalyzeUrl, 'analyzing...', 'loading');
+        }
         const url = elements.urlInput?.value.trim();
         if (url) {
-            handleUrlAnalyze(url);
+            try {
+                await handleUrlAnalyze(url);
+                if (window.visualFeedback) {
+                    window.visualFeedback.addButtonFeedback(elements.btnAnalyzeUrl, 'analyzed!', 'success');
+                }
+            } catch (error) {
+                if (window.visualFeedback) {
+                    window.visualFeedback.addButtonFeedback(elements.btnAnalyzeUrl, 'error!', 'error');
+                }
+            }
+        } else {
+            if (window.visualFeedback) {
+                window.visualFeedback.removeButtonFeedback(elements.btnAnalyzeUrl);
+            }
         }
     });
     
-    elements.urlInput?.addEventListener('keypress', (e) => {
+    elements.urlInput?.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
+            if (window.visualFeedback) {
+                window.visualFeedback.addInputFeedback(elements.urlInput, 'typing');
+            }
             const url = elements.urlInput?.value.trim();
             if (url) {
-                handleUrlAnalyze(url);
+                try {
+                    await handleUrlAnalyze(url);
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(elements.urlInput, 'success');
+                    }
+                } catch (error) {
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(elements.urlInput, 'error');
+                    }
+                }
             }
+        }
+    });
+    
+    // Add focus/blur feedback to URL input
+    elements.urlInput?.addEventListener('focus', () => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addInputFeedback(elements.urlInput, 'focus');
+        }
+    });
+    elements.urlInput?.addEventListener('blur', () => {
+        if (window.visualFeedback) {
+            window.visualFeedback.removeInputFeedback(elements.urlInput);
         }
     });
     
     // Mic button
-    elements.micBtn?.addEventListener('mousedown', startRecording);
-    elements.micBtn?.addEventListener('mouseup', stopRecording);
-    elements.micBtn?.addEventListener('mouseleave', stopRecording);
+    elements.micBtn?.addEventListener('mousedown', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addPulse(elements.micBtn, 'rgba(220, 53, 69, 0.3)', 0);
+            elements.micBtn.style.transform = 'scale(1.1)';
+        }
+        startRecording();
+    });
+    elements.micBtn?.addEventListener('mouseup', () => {
+        if (window.visualFeedback) {
+            elements.micBtn.style.transform = '';
+            window.visualFeedback.addPulse(elements.micBtn, 'rgba(40, 167, 69, 0.3)', 300);
+        }
+        stopRecording();
+    });
+    elements.micBtn?.addEventListener('mouseleave', () => {
+        if (window.visualFeedback) {
+            elements.micBtn.style.transform = '';
+        }
+        stopRecording();
+    });
     elements.micBtn?.addEventListener('touchstart', (e) => {
         e.preventDefault();
+        if (window.visualFeedback) {
+            window.visualFeedback.addPulse(elements.micBtn, 'rgba(220, 53, 69, 0.3)', 0);
+            elements.micBtn.style.transform = 'scale(1.1)';
+        }
         startRecording();
     });
     elements.micBtn?.addEventListener('touchend', (e) => {
         e.preventDefault();
+        if (window.visualFeedback) {
+            elements.micBtn.style.transform = '';
+            window.visualFeedback.addPulse(elements.micBtn, 'rgba(40, 167, 69, 0.3)', 300);
+        }
         stopRecording();
     });
     
     // Command input
-    elements.commandInput?.addEventListener('keypress', (e) => {
+    elements.commandInput?.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const command = elements.commandInput?.value.trim();
             if (command) {
-                handleCommand(command);
+                if (window.visualFeedback) {
+                    window.visualFeedback.addInputFeedback(elements.commandInput, 'typing');
+                }
+                try {
+                    await handleCommand(command);
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(elements.commandInput, 'success');
+                        setTimeout(() => {
+                            window.visualFeedback.removeInputFeedback(elements.commandInput);
+                        }, 1000);
+                    }
+                } catch (error) {
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(elements.commandInput, 'error');
+                    }
+                }
             }
         }
     });
     
+    // Add focus/blur feedback to command input
+    elements.commandInput?.addEventListener('focus', () => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addInputFeedback(elements.commandInput, 'focus');
+        }
+    });
+    elements.commandInput?.addEventListener('blur', () => {
+        if (window.visualFeedback) {
+            window.visualFeedback.removeInputFeedback(elements.commandInput);
+        }
+    });
+    
     // Transport controls
-    elements.btnRewind?.addEventListener('click', async () => {
+    elements.btnRewind?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnRewind, e);
+            window.visualFeedback.addButtonFeedback(elements.btnRewind, null, 'click');
+        }
         if (window.sergikAPI) {
             const result = await window.sergikAPI.transportAction('rewind');
             if (result.success) {
@@ -740,7 +921,11 @@ function setupEventListeners() {
             }
         }
     });
-    elements.btnStop?.addEventListener('click', async () => {
+    elements.btnStop?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnStop, e);
+            window.visualFeedback.addButtonFeedback(elements.btnStop, null, 'click');
+        }
         if (window.sergikAPI) {
             const result = await window.sergikAPI.transportAction('stop');
             if (result.success) {
@@ -748,7 +933,11 @@ function setupEventListeners() {
             }
         }
     });
-    elements.btnPlay?.addEventListener('click', async () => {
+    elements.btnPlay?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnPlay, e);
+            window.visualFeedback.addButtonFeedback(elements.btnPlay, null, 'click');
+        }
         if (window.sergikAPI) {
             const result = await window.sergikAPI.transportAction('play');
             if (result.success) {
@@ -756,7 +945,11 @@ function setupEventListeners() {
             }
         }
     });
-    elements.btnRecord?.addEventListener('click', async () => {
+    elements.btnRecord?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnRecord, e);
+            window.visualFeedback.addButtonFeedback(elements.btnRecord, null, 'click');
+        }
         if (window.sergikAPI) {
             const result = await window.sergikAPI.transportAction('record');
             if (result.success) {
@@ -764,7 +957,11 @@ function setupEventListeners() {
             }
         }
     });
-    elements.btnForward?.addEventListener('click', async () => {
+    elements.btnForward?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnForward, e);
+            window.visualFeedback.addButtonFeedback(elements.btnForward, null, 'click');
+        }
         if (window.sergikAPI) {
             const result = await window.sergikAPI.transportAction('forward');
             if (result.success) {
@@ -774,12 +971,38 @@ function setupEventListeners() {
     });
     
     // Quick actions
-    elements.btnAnalyze?.addEventListener('click', async () => {
+    elements.btnAnalyze?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnAnalyze, e);
+            window.visualFeedback.addButtonFeedback(elements.btnAnalyze, 'analyzing...', 'loading');
+        }
+        try {
         await handleAnalyze();
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(elements.btnAnalyze, 'analyzed!', 'success');
+            }
+        } catch (error) {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(elements.btnAnalyze, 'error!', 'error');
+            }
+        }
     });
     
-    elements.btnPreview?.addEventListener('click', async () => {
+    elements.btnPreview?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnPreview, e);
+            window.visualFeedback.addButtonFeedback(elements.btnPreview, 'previewing...', 'loading');
+        }
+        try {
         await handlePreview();
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(elements.btnPreview, 'previewing!', 'success');
+            }
+        } catch (error) {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(elements.btnPreview, 'error!', 'error');
+            }
+        }
     });
     
     // Implement analyze function
@@ -921,46 +1144,85 @@ function setupEventListeners() {
     
     // Analysis view toggles
     elements.viewToggleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addTabFeedback(btn, true);
+                window.visualFeedback.addRipple(btn, e);
+            }
             const view = btn.dataset.view;
             switchAnalysisView(view);
         });
     });
     
-    // Update commit button state based on slot selection
-    elements.slotSelect?.addEventListener('change', (e) => {
+    // Slot selection removed - commit button always enabled with default 'next' slot
         const commitBtn = document.getElementById('commit-btn');
         const indicator = document.getElementById('placement-indicator');
         if (commitBtn && indicator) {
-            if (e.target.value && e.target.value !== '') {
                 commitBtn.disabled = false;
-                indicator.textContent = `Slot ${parseInt(e.target.value) + 1}`;
+        indicator.textContent = 'Next Empty Slot';
                 indicator.classList.remove('waiting');
                 indicator.classList.add('ready');
-            } else {
-                commitBtn.disabled = true;
-                indicator.textContent = 'Select slot...';
-                indicator.classList.remove('ready');
-                indicator.classList.add('waiting');
+    }
+    
+    // AI chat
+    elements.btnSendAi?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(elements.btnSendAi, e);
+            window.visualFeedback.addButtonFeedback(elements.btnSendAi, 'sending...', 'loading');
+        }
+        const message = elements.aiInput?.value.trim();
+        if (message) {
+            try {
+                await handleAiMessage(message);
+                if (window.visualFeedback) {
+                    window.visualFeedback.addButtonFeedback(elements.btnSendAi, 'sent!', 'success');
+                }
+            } catch (error) {
+                if (window.visualFeedback) {
+                    window.visualFeedback.addButtonFeedback(elements.btnSendAi, 'error!', 'error');
+                }
+            }
+        } else {
+            if (window.visualFeedback) {
+                window.visualFeedback.removeButtonFeedback(elements.btnSendAi);
             }
         }
     });
     
-    // AI chat
-    elements.btnSendAi?.addEventListener('click', () => {
-        const message = elements.aiInput?.value.trim();
-        if (message) {
-            handleAiMessage(message);
-        }
-    });
-    
-    elements.aiInput?.addEventListener('keypress', (e) => {
+    elements.aiInput?.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const message = elements.aiInput?.value.trim();
             if (message) {
-                handleAiMessage(message);
+                if (window.visualFeedback) {
+                    window.visualFeedback.addInputFeedback(elements.aiInput, 'typing');
+                }
+                try {
+                    await handleAiMessage(message);
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(elements.aiInput, 'success');
+                        setTimeout(() => {
+                            window.visualFeedback.removeInputFeedback(elements.aiInput);
+                        }, 1000);
+                    }
+                } catch (error) {
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(elements.aiInput, 'error');
+                    }
+                }
             }
+        }
+    });
+    
+    // Add focus/blur feedback to AI input
+    elements.aiInput?.addEventListener('focus', () => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addInputFeedback(elements.aiInput, 'focus');
+        }
+    });
+    elements.aiInput?.addEventListener('blur', () => {
+        if (window.visualFeedback) {
+            window.visualFeedback.removeInputFeedback(elements.aiInput);
         }
     });
     
@@ -976,11 +1238,412 @@ function setupEventListeners() {
     // Settings button
     setupSettingsButton();
     
+    // Refresh connection button
+    setupRefreshConnectionButton();
+    
     // Advanced key panel
     setupAdvancedKeyPanel();
     
     // Advanced intelligence panel (will be initialized after INTELLIGENCE_CATEGORIES is defined)
     // Called at end of file after constant definition
+    
+    // Add visual feedback to all remaining buttons that don't have explicit handlers
+    // This ensures comprehensive coverage
+    setTimeout(() => {
+        document.querySelectorAll('button:not([data-wired-feedback])').forEach(btn => {
+            // Skip buttons that already have feedback or are in special containers
+            if (btn.closest('.settings-modal') || btn.closest('#developer-console')) {
+                return;
+            }
+            
+            // Only add click feedback to buttons that don't have async handlers
+            if (!btn.dataset.hasFeedback) {
+                btn.addEventListener('click', function(e) {
+                    if (window.visualFeedback && !this.disabled) {
+                        window.visualFeedback.addRipple(this, e);
+                        window.visualFeedback.addButtonFeedback(this, null, 'click');
+                    }
+                }, { once: false });
+                btn.dataset.hasFeedback = 'true';
+            }
+        });
+        
+        // Add focus/blur feedback to all text inputs and textareas
+        document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(input => {
+            if (!input.dataset.hasFeedback) {
+                input.addEventListener('focus', () => {
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(input, 'focus');
+                    }
+                });
+                input.addEventListener('blur', () => {
+                    if (window.visualFeedback) {
+                        window.visualFeedback.removeInputFeedback(input);
+                    }
+                });
+                input.dataset.hasFeedback = 'true';
+            }
+        });
+    }, 500);
+}
+
+// ============================================================================
+// Context Menu System
+// ============================================================================
+
+function setupContextMenus() {
+    if (!window.contextMenu) {
+        console.warn('[Renderer] Context menu system not available');
+        return;
+    }
+    
+    // Media Item Context Menu (Library Tab)
+    window.contextMenu.registerMenuItems('media-item', [
+        {
+            label: 'Preview',
+            icon: '👁',
+            action: (target) => {
+                const mediaId = target.dataset.mediaId;
+                if (mediaId) {
+                    loadMediaIntoEditor(mediaId);
+                }
+            }
+        },
+        {
+            label: 'Load into Editor',
+            icon: '📝',
+            action: (target) => {
+                const mediaId = target.dataset.mediaId;
+                if (mediaId) {
+                    loadMediaIntoEditor(mediaId);
+                }
+            }
+        },
+        'separator',
+        {
+            label: 'Copy Name',
+            icon: '📋',
+            action: (target) => {
+                const name = target.querySelector('.browser-item-name')?.textContent || target.textContent;
+                navigator.clipboard.writeText(name).then(() => {
+                    addAction('Copied to clipboard', 'success');
+                }).catch(() => {
+                    addAction('Failed to copy', 'error');
+                });
+            }
+        },
+        {
+            label: 'Copy Path',
+            icon: '📁',
+            action: (target) => {
+                const path = target.dataset.mediaPath || target.dataset.mediaId;
+                if (path) {
+                    navigator.clipboard.writeText(path).then(() => {
+                        addAction('Path copied to clipboard', 'success');
+                    }).catch(() => {
+                        addAction('Failed to copy path', 'error');
+                    });
+                }
+            }
+        },
+        'separator',
+        {
+            label: 'Delete',
+            icon: '🗑',
+            danger: true,
+            action: async (target) => {
+                const mediaId = target.dataset.mediaId;
+                if (mediaId && confirm('Delete this media item?')) {
+                    // Implement delete functionality
+                    addAction('Delete functionality to be implemented', 'info');
+                }
+            }
+        }
+    ]);
+    
+    // Generated File Context Menu (Create Tab)
+    window.contextMenu.registerMenuItems('generated-file', [
+        {
+            label: 'Preview',
+            icon: '👁',
+            action: (target) => {
+                const fileId = target.dataset.fileId;
+                if (window.createTabEnhancements && fileId) {
+                    window.createTabEnhancements.selectGeneratedFile(fileId);
+                }
+            }
+        },
+        {
+            label: 'Load into Editor',
+            icon: '📝',
+            action: (target) => {
+                const fileId = target.dataset.fileId;
+                if (window.createTabEnhancements && fileId) {
+                    const file = window.createTabEnhancements.generatedFiles?.find(f => f.id === fileId);
+                    if (file && file.path) {
+                        loadMediaIntoEditor(file.path);
+                    }
+                }
+            }
+        },
+        'separator',
+        {
+            label: 'Copy Name',
+            icon: '📋',
+            action: (target) => {
+                const name = target.querySelector('.generated-file-name')?.textContent;
+                if (name) {
+                    navigator.clipboard.writeText(name).then(() => {
+                        addAction('Copied to clipboard', 'success');
+                    }).catch(() => {
+                        addAction('Failed to copy', 'error');
+                    });
+                }
+            }
+        },
+        {
+            label: 'Copy Path',
+            icon: '📁',
+            action: (target) => {
+                const fileId = target.dataset.fileId;
+                if (window.createTabEnhancements && fileId) {
+                    const file = window.createTabEnhancements.generatedFiles?.find(f => f.id === fileId);
+                    if (file && file.path) {
+                        navigator.clipboard.writeText(file.path).then(() => {
+                            addAction('Path copied to clipboard', 'success');
+                        }).catch(() => {
+                            addAction('Failed to copy path', 'error');
+                        });
+                    }
+                }
+            }
+        },
+        'separator',
+        {
+            label: 'Remove from List',
+            icon: '✕',
+            action: (target) => {
+                const fileId = target.dataset.fileId;
+                if (window.createTabEnhancements && fileId) {
+                    window.createTabEnhancements.removeGeneratedFile(fileId);
+                }
+            }
+        }
+    ]);
+    
+    // Generation Button Context Menu
+    window.contextMenu.registerMenuItems('generate-button', [
+        {
+            label: 'Generate',
+            icon: '⚡',
+            action: (target) => {
+                const type = target.dataset.type;
+                if (type) {
+                    handleGenerate(type);
+                }
+            }
+        },
+        {
+            label: 'Add to Batch Queue',
+            icon: '➕',
+            action: (target) => {
+                const type = target.dataset.type;
+                if (window.createTabEnhancements && type) {
+                    window.createTabEnhancements.addToBatchQueue(type);
+                }
+            },
+            visible: (target) => {
+                // Only show if batch mode is available
+                return window.createTabEnhancements !== undefined;
+            }
+        },
+        'separator',
+        {
+            label: 'Generate with Preset...',
+            icon: '💾',
+            action: (target) => {
+                // Show preset selector
+                addAction('Preset selector to be implemented', 'info');
+            }
+        }
+    ]);
+    
+    // Canvas Context Menu (Waveform/Piano Roll)
+    window.contextMenu.registerMenuItems('canvas', [
+        {
+            label: 'Zoom In',
+            icon: '🔍',
+            shortcut: 'Ctrl++',
+            action: () => {
+                // Implement zoom in
+                addAction('Zoom in', 'info');
+            }
+        },
+        {
+            label: 'Zoom Out',
+            icon: '🔍',
+            shortcut: 'Ctrl+-',
+            action: () => {
+                // Implement zoom out
+                addAction('Zoom out', 'info');
+            }
+        },
+        {
+            label: 'Reset Zoom',
+            icon: '↺',
+            action: () => {
+                // Implement reset zoom
+                addAction('Reset zoom', 'info');
+            }
+        },
+        'separator',
+        {
+            label: 'Copy Image',
+            icon: '📋',
+            action: async (target) => {
+                if (target instanceof HTMLCanvasElement) {
+                    try {
+                        target.toBlob((blob) => {
+                            if (blob && navigator.clipboard && navigator.clipboard.write) {
+                                navigator.clipboard.write([
+                                    new ClipboardItem({ 'image/png': blob })
+                                ]).then(() => {
+                                    addAction('Canvas copied to clipboard', 'success');
+                                }).catch(() => {
+                                    addAction('Failed to copy canvas', 'error');
+                                });
+                            } else {
+                                addAction('Clipboard API not available', 'error');
+                            }
+                        });
+                    } catch (error) {
+                        console.error('[Renderer] Failed to copy canvas:', error);
+                        addAction('Failed to copy canvas', 'error');
+                    }
+                }
+            }
+        },
+        {
+            label: 'Save Image...',
+            icon: '💾',
+            action: (target) => {
+                if (target instanceof HTMLCanvasElement) {
+                    try {
+                        const link = document.createElement('a');
+                        link.download = `canvas-${Date.now()}.png`;
+                        link.href = target.toDataURL();
+                        link.click();
+                        addAction('Canvas saved', 'success');
+                    } catch (error) {
+                        console.error('[Renderer] Failed to save canvas:', error);
+                        addAction('Failed to save canvas', 'error');
+                    }
+                }
+            }
+        }
+    ]);
+    
+    // Preset Item Context Menu
+    window.contextMenu.registerMenuItems('preset-item', [
+        {
+            label: 'Load Preset',
+            icon: '📂',
+            action: (target) => {
+                const presetName = target.dataset.presetName;
+                if (window.createTabEnhancements && presetName) {
+                    window.createTabEnhancements.loadPreset(presetName);
+                }
+            }
+        },
+        'separator',
+        {
+            label: 'Rename',
+            icon: '✏',
+            action: (target) => {
+                const presetName = target.dataset.presetName || target.dataset.preset;
+                if (!presetName) return;
+                
+                // Get current preset name for display
+                const currentName = target.textContent?.trim() || 
+                                   target.querySelector('.preset-name')?.textContent?.trim() ||
+                                   presetName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                const newName = prompt('Enter new preset name:', currentName);
+                if (newName && window.createTabEnhancements) {
+                    window.createTabEnhancements.renamePreset(presetName, newName);
+                }
+            }
+        },
+        {
+            label: 'Duplicate',
+            icon: '📋',
+            action: (target) => {
+                const presetName = target.dataset.presetName || target.dataset.preset;
+                if (presetName && window.createTabEnhancements) {
+                    window.createTabEnhancements.duplicatePreset(presetName);
+                }
+            }
+        },
+        {
+            label: 'Delete',
+            icon: '🗑',
+            danger: true,
+            action: (target) => {
+                const presetName = target.dataset.presetName;
+                if (presetName && confirm('Delete this preset?')) {
+                    if (window.createTabEnhancements) {
+                        window.createTabEnhancements.deletePreset(presetName);
+                    }
+                }
+            }
+        }
+    ]);
+    
+    // Batch Queue Item Context Menu
+    window.contextMenu.registerMenuItems('batch-item', [
+        {
+            label: 'Move Up',
+            icon: '↑',
+            action: (target) => {
+                const index = parseInt(target.dataset.index);
+                if (window.createTabEnhancements && index > 0) {
+                    window.createTabEnhancements.moveInBatchQueue(index, -1);
+                }
+            },
+            enabled: (target) => {
+                const index = parseInt(target.dataset.index);
+                return index > 0;
+            }
+        },
+        {
+            label: 'Move Down',
+            icon: '↓',
+            action: (target) => {
+                const index = parseInt(target.dataset.index);
+                if (window.createTabEnhancements) {
+                    window.createTabEnhancements.moveInBatchQueue(index, 1);
+                }
+            },
+            enabled: (target) => {
+                const index = parseInt(target.dataset.index);
+                const total = document.querySelectorAll('.batch-queue-item').length;
+                return index < total - 1;
+            }
+        },
+        'separator',
+        {
+            label: 'Remove',
+            icon: '✕',
+            action: (target) => {
+                const index = parseInt(target.dataset.index);
+                if (window.createTabEnhancements) {
+                    window.createTabEnhancements.removeFromBatchQueue(index);
+                }
+            }
+        }
+    ]);
+    
+    console.log('[Renderer] Context menus registered');
 }
 
 // Handle multiple file uploads
@@ -1031,9 +1694,72 @@ async function handleMultipleFiles(files) {
 
 // Library Tab Setup
 function setupLibraryTab() {
+    // Initialize Library Audio Manager
+    if (!window.libraryAudioManager && window.LibraryAudioManager) {
+        window.libraryAudioManager = new LibraryAudioManager();
+    }
+    
+    // Initialize Library Workflow Optimizer
+    try {
+        if (window.LibraryWorkflowOptimizer) {
+            window.libraryWorkflowOptimizer = new window.LibraryWorkflowOptimizer();
+            console.log('[Library Tab] LibraryWorkflowOptimizer initialized');
+        }
+    } catch (err) {
+        console.warn('[Library Tab] LibraryWorkflowOptimizer initialization failed:', err);
+    }
+    
+    // Initialize editor states if not exists (minimal stub)
+    if (!window.editorStates) {
+        window.editorStates = {
+            waveform: {
+                data: null,
+                clipProperties: {
+                    gain: 0,
+                    bpm: 120,
+                    warp: { enabled: true, mode: 'beats', markers: [] }
+                },
+                selection: { start: 0, end: 0 },
+                saveState: function() {
+                    try {
+                        localStorage.setItem('editorState_waveform', 
+                            JSON.stringify({ clipProperties: this.clipProperties, selection: this.selection }));
+                    } catch (e) { 
+                        console.warn('[EditorState] Save failed:', e); 
+                    }
+                }
+            },
+            'piano-roll': {
+                data: { notes: [] },
+                saveState: function() {
+                    try {
+                        localStorage.setItem('editorState_pianoRoll', 
+                            JSON.stringify({ notes: this.data.notes }));
+                    } catch (e) { 
+                        console.warn('[EditorState] Save failed:', e); 
+                    }
+                }
+            }
+        };
+    }
+    
+    // Initialize Enhanced Clip Editor
+    try {
+        if (window.EnhancedClipEditor) {
+            window.enhancedClipEditor = new window.EnhancedClipEditor();
+            console.log('[Library Tab] EnhancedClipEditor initialized');
+        }
+    } catch (err) {
+        console.warn('[Library Tab] EnhancedClipEditor initialization failed:', err);
+    }
+    
     // Filter chips
     document.querySelectorAll('.filter-chip').forEach(chip => {
-        chip.addEventListener('click', function() {
+        chip.addEventListener('click', function(e) {
+            if (window.visualFeedback) {
+                window.visualFeedback.addRipple(chip, e);
+                window.visualFeedback.addButtonFeedback(chip, null, 'click');
+            }
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             this.classList.add('active');
             const filter = this.dataset.filter;
@@ -1046,10 +1772,26 @@ function setupLibraryTab() {
     const searchClear = document.getElementById('search-clear');
     
     if (searchInput) {
+        // Add focus/blur feedback
+        searchInput.addEventListener('focus', () => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addInputFeedback(searchInput, 'focus');
+            }
+        });
+        searchInput.addEventListener('blur', () => {
+            if (window.visualFeedback) {
+                window.visualFeedback.removeInputFeedback(searchInput);
+            }
+        });
+        
         let searchTimeout;
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value;
             searchClear.style.display = query.trim() ? 'block' : 'none';
+            
+            if (window.visualFeedback && query.trim()) {
+                window.visualFeedback.addInputFeedback(searchInput, 'typing');
+            }
             
             // Debounce search
             clearTimeout(searchTimeout);
@@ -1067,11 +1809,21 @@ function setupLibraryTab() {
             if (e.key === 'Enter') {
                 const query = e.target.value.trim();
                 if (query) {
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(searchInput, 'typing');
+                    }
                     performLibrarySearch(query).then(() => {
+                        if (window.visualFeedback) {
+                            window.visualFeedback.addInputFeedback(searchInput, 'success');
+                        }
                         // Load first result
                         const firstItem = document.querySelector('.browser-item');
                         if (firstItem) {
                             firstItem.click();
+                        }
+                    }).catch(() => {
+                        if (window.visualFeedback) {
+                            window.visualFeedback.addInputFeedback(searchInput, 'error');
                         }
                     });
                 }
@@ -1080,7 +1832,11 @@ function setupLibraryTab() {
     }
     
     if (searchClear) {
-        searchClear.addEventListener('click', () => {
+        searchClear.addEventListener('click', (e) => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addRipple(searchClear, e);
+                window.visualFeedback.addButtonFeedback(searchClear, null, 'click');
+            }
             if (searchInput) {
                 searchInput.value = '';
                 searchInput.focus();
@@ -1100,6 +1856,9 @@ function setupLibraryTab() {
     document.querySelectorAll('.group-toggle').forEach(toggle => {
         toggle.addEventListener('click', function(e) {
             e.stopPropagation();
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(toggle, null, 'click');
+            }
             const group = this.closest('.media-group');
             if (group) {
                 group.classList.toggle('collapsed');
@@ -1109,70 +1868,216 @@ function setupLibraryTab() {
     });
     
     // Media navigation
-    document.getElementById('prev-media')?.addEventListener('click', () => navigateMedia(-1));
-    document.getElementById('next-media')?.addEventListener('click', () => navigateMedia(1));
-    document.getElementById('random-media')?.addEventListener('click', () => navigateMedia('random'));
+    document.getElementById('prev-media')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('prev-media'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('prev-media'), null, 'click');
+        }
+        navigateMedia(-1);
+    });
+    document.getElementById('next-media')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('next-media'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('next-media'), null, 'click');
+        }
+        navigateMedia(1);
+    });
+    document.getElementById('random-media')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('random-media'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('random-media'), null, 'click');
+        }
+        navigateMedia('random');
+    });
     
     // Editor toolbar
     document.querySelectorAll('.toolbar-btn[data-tool]').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            if (window.visualFeedback) {
+                window.visualFeedback.addRipple(btn, e);
+                window.visualFeedback.addButtonFeedback(btn, null, 'click');
+            }
             const tool = this.dataset.tool;
             switchEditorTool(tool);
         });
     });
     
     // Action buttons
-    document.getElementById('action-insert')?.addEventListener('click', () => handleMediaAction('insert'));
-    document.getElementById('action-replace')?.addEventListener('click', () => handleMediaAction('replace'));
-    document.getElementById('action-commit')?.addEventListener('click', () => handleMediaAction('commit'));
-    document.getElementById('action-duplicate')?.addEventListener('click', () => handleMediaAction('duplicate'));
-    
-    // Preview controls
-    document.getElementById('preview-play')?.addEventListener('click', () => handlePreview('play'));
-    document.getElementById('preview-stop')?.addEventListener('click', () => handlePreview('stop'));
-    document.getElementById('preview-loop')?.addEventListener('click', () => handlePreview('loop'));
-    
-    // Browser items
-    document.querySelectorAll('.browser-item').forEach(item => {
-        item.addEventListener('click', function() {
-            document.querySelectorAll('.browser-item').forEach(i => i.classList.remove('selected'));
-            this.classList.add('selected');
-            loadMediaIntoEditor(this.dataset.mediaId);
+    document.getElementById('action-insert')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('action-insert'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('action-insert'), 'inserting...', 'loading');
+        }
+        handleMediaAction('insert').then(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-insert'), 'inserted!', 'success');
+            }
+        }).catch(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-insert'), 'error!', 'error');
+            }
         });
     });
+    document.getElementById('action-replace')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('action-replace'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('action-replace'), 'replacing...', 'loading');
+        }
+        handleMediaAction('replace').then(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-replace'), 'replaced!', 'success');
+            }
+        }).catch(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-replace'), 'error!', 'error');
+            }
+        });
+    });
+    document.getElementById('action-commit')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('action-commit'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('action-commit'), 'committing...', 'loading');
+        }
+        handleMediaAction('commit').then(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-commit'), 'committed!', 'success');
+            }
+        }).catch(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-commit'), 'error!', 'error');
+            }
+        });
+    });
+    document.getElementById('action-duplicate')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('action-duplicate'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('action-duplicate'), 'duplicating...', 'loading');
+        }
+        handleMediaAction('duplicate').then(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-duplicate'), 'duplicated!', 'success');
+            }
+        }).catch(() => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('action-duplicate'), 'error!', 'error');
+            }
+        });
+    });
+    
+    // Preview controls
+    document.getElementById('preview-play')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('preview-play'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('preview-play'), null, 'click');
+        }
+        handlePreview('play');
+    });
+    document.getElementById('preview-stop')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('preview-stop'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('preview-stop'), null, 'click');
+        }
+        handlePreview('stop');
+    });
+    document.getElementById('preview-loop')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('preview-loop'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('preview-loop'), null, 'click');
+        }
+        handlePreview('loop');
+    });
+    
+    // Browser items - handled by LibraryWorkflowOptimizer (lazy loading)
+    // Event listeners are attached by workflow optimizer after media items are rendered
 }
 
 // AI Tab Setup
 function setupAITab() {
+    // Initialize AI Team integration
+    initializeAITeam();
+    
     // Chat input
     const chatInput = document.getElementById('chat-input');
     const chatSend = document.getElementById('chat-send');
     
     if (chatInput && chatSend) {
-        chatSend.addEventListener('click', () => {
-            const message = chatInput.value.trim();
-            if (message) {
-                handleChatMessage(message);
+        // Add focus/blur feedback
+        chatInput.addEventListener('focus', () => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addInputFeedback(chatInput, 'focus');
+            }
+        });
+        chatInput.addEventListener('blur', () => {
+            if (window.visualFeedback) {
+                window.visualFeedback.removeInputFeedback(chatInput);
             }
         });
         
-        chatInput.addEventListener('keypress', (e) => {
+        chatSend.addEventListener('click', async (e) => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addRipple(chatSend, e);
+                window.visualFeedback.addButtonFeedback(chatSend, 'sending...', 'loading');
+            }
+            const message = chatInput.value.trim();
+            if (message) {
+                try {
+                    await handleChatMessage(message);
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addButtonFeedback(chatSend, 'sent!', 'success');
+                    }
+                } catch (error) {
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addButtonFeedback(chatSend, 'error!', 'error');
+                    }
+                }
+            } else {
+                if (window.visualFeedback) {
+                    window.visualFeedback.removeButtonFeedback(chatSend);
+                }
+            }
+        });
+        
+        chatInput.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 const message = chatInput.value.trim();
                 if (message) {
-                    handleChatMessage(message);
+                    if (window.visualFeedback) {
+                        window.visualFeedback.addInputFeedback(chatInput, 'typing');
+                    }
+                    try {
+                        await handleChatMessage(message);
+                        if (window.visualFeedback) {
+                            window.visualFeedback.addInputFeedback(chatInput, 'success');
+                            setTimeout(() => {
+                                window.visualFeedback.removeInputFeedback(chatInput);
+                            }, 1000);
+                        }
+                    } catch (error) {
+                        if (window.visualFeedback) {
+                            window.visualFeedback.addInputFeedback(chatInput, 'error');
+                        }
+                    }
                 }
             }
         });
     }
     
     // Clear chat
-    document.getElementById('ai-clear')?.addEventListener('click', () => {
+    document.getElementById('ai-clear')?.addEventListener('click', (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('ai-clear'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('ai-clear'), 'clearing...', 'loading');
+        }
         const messages = document.getElementById('chat-messages');
         if (messages) {
             messages.innerHTML = '';
             addChatMessage('ai', 'Hello! I\'m your AI assistant. How can I help you create music today?');
+        }
+        if (window.visualFeedback) {
+            setTimeout(() => {
+                window.visualFeedback.addButtonFeedback(document.getElementById('ai-clear'), 'cleared!', 'success');
+            }, 100);
         }
     });
     
@@ -1205,7 +2110,11 @@ function setupAITab() {
 function setupSettingsButton() {
     const settingsBtn = document.getElementById('btn-settings');
     if (settingsBtn) {
-        settingsBtn.addEventListener('click', () => {
+        settingsBtn.addEventListener('click', (e) => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addRipple(settingsBtn, e);
+                window.visualFeedback.addButtonFeedback(settingsBtn, null, 'click');
+            }
             if (window.showSettingsPanel) {
                 window.showSettingsPanel();
             }
@@ -1213,34 +2122,102 @@ function setupSettingsButton() {
     }
 }
 
+// Refresh connection button handler
+function setupRefreshConnectionButton() {
+    const refreshBtn = elements.btnRefreshConnection;
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async (e) => {
+            if (window.visualFeedback) {
+                window.visualFeedback.addRipple(refreshBtn, e);
+            }
+            
+            // Add spinning animation
+            refreshBtn.style.transform = 'rotate(360deg)';
+            refreshBtn.style.transition = 'transform 0.5s ease-in-out';
+            
+            // Update status to show connecting
+            updateConnectionStatus(false, 'CONNECTING...');
+            
+            try {
+                // First check server status
+                let serverStatus = null;
+                if (window.sergikAPI && window.sergikAPI.checkServerStatus) {
+                    serverStatus = await window.sergikAPI.checkServerStatus();
+                }
+                
+                // If server is not responding, try to start/restart it
+                if (!serverStatus || !serverStatus.serverResponding) {
+                    updateConnectionStatus(false, 'STARTING SERVER...');
+                    
+                    // Try to restart the server
+                    if (window.sergikAPI && window.sergikAPI.restartServer) {
+                        const restartResult = await window.sergikAPI.restartServer();
+                        if (restartResult.success) {
+                            // Wait a bit for server to start
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                        } else {
+                            // If restart failed, try starting
+                            if (window.sergikAPI && window.sergikAPI.startServer) {
+                                const startResult = await window.sergikAPI.startServer();
+                                if (startResult.success) {
+                                    await new Promise(resolve => setTimeout(resolve, 2000));
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Now check connection
+                await checkConnection();
+            } catch (error) {
+                console.error('[Renderer] Connection refresh failed:', error);
+                updateConnectionStatus(false, 'CONNECTION FAILED');
+            }
+            
+            // Reset animation after a delay
+            setTimeout(() => {
+                refreshBtn.style.transform = 'rotate(0deg)';
+            }, 500);
+        });
+    }
+}
+
 // Analyze Tab Setup
 function setupAnalyzeTab() {
-    // Analysis buttons
-    document.getElementById('btn-analyze-file')?.addEventListener('click', () => {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.wav,.mp3,.flac,.aif';
-        fileInput.onchange = (e) => {
-            if (e.target.files.length > 0) {
-                analyzeFile(e.target.files[0]);
-            }
-        };
-        fileInput.click();
-    });
+    // Analysis buttons (redundant buttons removed - functionality now in input interface)
     
-    document.getElementById('btn-analyze-url')?.addEventListener('click', () => {
-        const url = prompt('Enter URL to analyze:');
-        if (url) {
-            analyzeUrl(url);
+    document.getElementById('btn-dna-match')?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('btn-dna-match'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('btn-dna-match'), 'matching...', 'loading');
+        }
+        try {
+        await handleDNAMatch();
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('btn-dna-match'), 'matched!', 'success');
+            }
+        } catch (error) {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('btn-dna-match'), 'error!', 'error');
+            }
         }
     });
     
-    document.getElementById('btn-dna-match')?.addEventListener('click', async () => {
-        await handleDNAMatch();
-    });
-    
-    document.getElementById('btn-export-analysis')?.addEventListener('click', async () => {
+    document.getElementById('btn-export-analysis')?.addEventListener('click', async (e) => {
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(document.getElementById('btn-export-analysis'), e);
+            window.visualFeedback.addButtonFeedback(document.getElementById('btn-export-analysis'), 'exporting...', 'loading');
+        }
+        try {
         await handleExport();
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('btn-export-analysis'), 'exported!', 'success');
+            }
+        } catch (error) {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(document.getElementById('btn-export-analysis'), 'error!', 'error');
+            }
+        }
     });
     
     // Implement DNA match function
@@ -1374,8 +2351,22 @@ function setupAnalyzeTab() {
     }
     
     // Commit button
-    document.getElementById('commit-btn')?.addEventListener('click', () => {
-        commitToTrack();
+    document.getElementById('commit-btn')?.addEventListener('click', async (e) => {
+        const commitBtn = document.getElementById('commit-btn');
+        if (window.visualFeedback) {
+            window.visualFeedback.addRipple(commitBtn, e);
+            window.visualFeedback.addButtonFeedback(commitBtn, 'committing...', 'loading');
+        }
+        try {
+            await commitToTrack();
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(commitBtn, 'committed!', 'success');
+            }
+        } catch (error) {
+            if (window.visualFeedback) {
+                window.visualFeedback.addButtonFeedback(commitBtn, 'error!', 'error');
+            }
+        }
     });
 }
 
@@ -1401,6 +2392,11 @@ async function performLibrarySearch(query) {
     }
     
     addAction(`Searching: ${query}...`, 'info');
+    
+    // Save to recent searches
+    if (window.libraryWorkflowOptimizer) {
+        window.libraryWorkflowOptimizer.saveRecentSearch(query);
+    }
     
     try {
         if (window.sergikAPI) {
@@ -1448,6 +2444,7 @@ function updateMediaList(items) {
         itemDiv.dataset.mediaId = item.id || item.path || `item-${index}`;
         itemDiv.dataset.mediaType = item.type || (item.path?.endsWith('.mid') ? 'midi' : 'audio');
         itemDiv.dataset.mediaPath = item.path || '';
+        itemDiv.setAttribute('data-context-menu', 'media-item');
         
         const itemName = item.name || item.filename || item.path?.split(/[/\\]/).pop() || 'Unknown';
         const duration = item.duration || 0;
@@ -1462,16 +2459,18 @@ function updateMediaList(items) {
             <span class="item-time">${formatDuration(duration)}</span>
         `;
         
-        itemDiv.addEventListener('click', function() {
-            document.querySelectorAll('.browser-item').forEach(i => i.classList.remove('selected'));
-            this.classList.add('selected');
-            loadMediaIntoEditor(this.dataset.mediaId);
-        });
+        // Click handlers are now managed by LibraryWorkflowOptimizer
+        // Single click = select, double click = load
         
         mediaList.appendChild(itemDiv);
     });
     
     updateMediaCount();
+    
+    // Dispatch event for workflow optimizer to attach listeners
+    document.dispatchEvent(new CustomEvent('mediaItemsRendered', { 
+        detail: { items: items } 
+    }));
 }
 
 function updateMediaCount() {
@@ -1569,9 +2568,97 @@ function switchEditorView(view) {
 async function loadMediaIntoEditor(mediaId) {
     addAction(`Loading ${mediaId} into editor...`, 'info');
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:2196',message:'loadMediaIntoEditor entry',data:{mediaId,mediaIdType:typeof mediaId,isFilePath:mediaId?.includes('/')||mediaId?.includes('\\')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
+    
+    // Check if mediaId is a file path (contains / or \)
+    const isFilePath = mediaId && (mediaId.includes('/') || mediaId.includes('\\'));
+    
     try {
         if (window.sergikAPI) {
+            if (isFilePath) {
+                // For file paths, try to find the media ID by searching for the filename
+                const filename = mediaId.split(/[/\\]/).pop();
+                const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+                
+                addAction(`Searching for media ID: ${filename}...`, 'info');
+                
+                // Try to search for the file by name
+                const searchResult = await window.sergikAPI.browserSearch(`name:${nameWithoutExt}`);
+                
+                if (searchResult.success && searchResult.data && searchResult.data.items) {
+                    // Find exact match by path
+                    const exactMatch = searchResult.data.items.find(item => 
+                        item.path === mediaId || item.path?.endsWith(filename)
+                    );
+                    
+                    if (exactMatch && exactMatch.id) {
+                        // Use the found media ID
+                        mediaId = exactMatch.id;
+                        addAction(`Found media ID: ${mediaId}`, 'success');
+                    } else if (searchResult.data.items.length > 0) {
+                        // Use first match if no exact match
+                        mediaId = searchResult.data.items[0].id;
+                        addAction(`Using first match: ${mediaId}`, 'info');
+                    } else {
+                        // If search fails, try loading by path directly (some APIs support this)
+                        addAction(`File not found in browser. Loading by path...`, 'info');
+                        const pathResult = await window.sergikAPI.browserLoad({ 
+                            item_id: mediaId,
+                            path: mediaId  // Some APIs accept path as fallback
+                        });
+                        
+                        if (pathResult && pathResult.success) {
+                            addAction(`Media loaded by path`, 'success');
+                            if (pathResult.data) {
+                                updateEditorWithMedia(pathResult.data);
+                            }
+                            return;
+                        } else {
+                            // Last resort: load into audio engine for preview only
+                            addAction(`Cannot load into Ableton browser. File available for preview only.`, 'warning');
+                            if (window.libraryAudioManager) {
+                                const mediaType = mediaId.endsWith('.mid') ? 'midi' : 'audio';
+                                window.libraryAudioManager.selectMediaItem(mediaId, mediaType);
+                            }
+                            return;
+                        }
+                    }
+                } else {
+                    // Search failed, try direct path load
+                    addAction(`Search failed. Trying direct path load...`, 'info');
+                    const pathResult = await window.sergikAPI.browserLoad({ 
+                        item_id: mediaId,
+                        path: mediaId
+                    });
+                    
+                    if (pathResult && pathResult.success) {
+                        addAction(`Media loaded by path`, 'success');
+                        if (pathResult.data) {
+                            updateEditorWithMedia(pathResult.data);
+                        }
+                        return;
+                    } else {
+                        // Fallback to audio engine preview
+                        addAction(`Cannot load into Ableton browser. File available for preview only.`, 'warning');
+                        if (window.libraryAudioManager) {
+                            const mediaType = mediaId.endsWith('.mid') ? 'midi' : 'audio';
+                            window.libraryAudioManager.selectMediaItem(mediaId, mediaType);
+                        }
+                        return;
+                    }
+                }
+            }
+            
+            // Load using media ID
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:2201',message:'Calling browserLoad',data:{item_id:mediaId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+            // #endregion
             const result = await window.sergikAPI.browserLoad({ item_id: mediaId });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:2202',message:'browserLoad result',data:{success:result?.success,error:result?.error,statusCode:result?.statusCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+            // #endregion
         if (result.success) {
                 addAction(`Media loaded: ${mediaId}`, 'success');
                 // Update editor with media info
@@ -1582,6 +2669,16 @@ async function loadMediaIntoEditor(mediaId) {
         }
     } catch (error) {
         addAction(`Load failed: ${error.message}`, 'error');
+        // Fallback: try to load into audio engine for preview
+        if (isFilePath && window.libraryAudioManager) {
+            try {
+                const mediaType = mediaId.endsWith('.mid') ? 'midi' : 'audio';
+                await window.libraryAudioManager.selectMediaItem(mediaId, mediaType);
+                addAction(`Loaded for preview only`, 'info');
+            } catch (previewError) {
+                console.warn('[loadMediaIntoEditor] Preview fallback failed:', previewError);
+            }
+        }
     }
 }
 
@@ -1593,8 +2690,15 @@ async function handleMediaAction(action) {
     }
     
     const mediaId = selectedItem.dataset.mediaId;
-    const trackIndex = parseInt(elements.trackSelect?.value) || 0;
-    const slotIndex = parseInt(elements.slotSelect?.value);
+    
+    // Get track/slot from workflow optimizer if available
+    let trackIndex = 0;
+    let slotIndex = undefined;
+    if (window.libraryWorkflowOptimizer) {
+        const target = window.libraryWorkflowOptimizer.getSelectedTrackSlot();
+        trackIndex = target.trackIndex;
+        slotIndex = target.slotIndex;
+    }
     
     try {
         if (action === 'insert') {
@@ -1639,20 +2743,238 @@ async function handleMediaAction(action) {
     }
 }
 
-function handlePreview(action) {
+// Audio Engine Integration
+let currentPreviewMedia = null;
+let audioAnalyzer = null;
+
+async function handlePreview(action) {
     const btn = document.getElementById(`preview-${action}`);
-    if (btn) {
-        btn.classList.toggle('active', action === 'play' || action === 'loop');
+    if (!btn) return;
+    
+    // Get selected media item
+    const selectedMedia = document.querySelector('.browser-item.selected');
+    if (!selectedMedia && action !== 'stop') {
+        addAction('No media selected for preview', 'warning');
+        return;
     }
-    addAction(`Preview ${action}`, 'info');
+    
+    const mediaPath = selectedMedia?.dataset.mediaPath;
+    const mediaType = selectedMedia?.dataset.mediaType;
+    
+    // Only handle audio files for now
+    if (mediaType !== 'audio' && mediaType !== 'midi' && action !== 'stop') {
+        addAction('Preview only available for audio files', 'info');
+        return;
+    }
+    
+    try {
+        // Initialize audio engine if needed
+        if (!window.audioEngine) {
+            addAction('Audio engine not available', 'error');
+            return;
+        }
+        
+        await window.audioEngine.resume();
+        
+        switch (action) {
+            case 'play':
+                if (mediaPath && mediaPath !== currentPreviewMedia) {
+                    // Load new audio file
+                    await window.audioEngine.loadAudioFile(mediaPath);
+                    currentPreviewMedia = mediaPath;
+                    
+                    // Create analyzer for visualization
+                    if (!audioAnalyzer && window.AudioAnalyzer) {
+                        const audioContext = window.audioEngine.getAudioContext();
+                        audioAnalyzer = new window.AudioAnalyzer(audioContext);
+                        audioAnalyzer.onUpdate = (data) => {
+                            // Update waveform visualization if canvas exists
+                            const waveformCanvas = document.getElementById('waveform-canvas');
+                            if (waveformCanvas) {
+                                audioAnalyzer.drawWaveform(waveformCanvas);
+                            }
+                        };
+                    }
+                }
+                
+                // Play audio
+                await window.audioEngine.playAudio();
+                btn.classList.add('active');
+                
+                // Setup analyzer for visualization
+                if (window.AudioAnalyzer) {
+                    // Stop existing analyzer if any
+                    if (audioAnalyzer) {
+                        audioAnalyzer.stop();
+                        audioAnalyzer.disconnect();
+                    }
+                    
+                    const audioContext = window.audioEngine.getAudioContext();
+                    audioAnalyzer = new window.AudioAnalyzer(audioContext);
+                    
+                    // Connect analyzer in parallel to master gain
+                    // Web Audio API supports multiple connections from a node
+                    const masterGain = window.audioEngine.getMasterGain();
+                    masterGain.connect(audioAnalyzer.getNode());
+                    
+                    // Update visualization
+                    audioAnalyzer.onUpdate = (data) => {
+                        // Update waveform canvas in Library tab
+                        const waveformCanvas = document.getElementById('waveform-canvas');
+                        if (waveformCanvas) {
+                            audioAnalyzer.drawWaveform(waveformCanvas);
+                        }
+                    };
+                    
+                    audioAnalyzer.start();
+                }
+                
+                addAction('Playing preview...', 'info');
+                break;
+                
+            case 'stop':
+                window.audioEngine.stopAudio();
+                currentPreviewMedia = null;
+                btn.classList.remove('active');
+                
+                // Stop analyzer
+                if (audioAnalyzer) {
+                    audioAnalyzer.stop();
+                }
+                
+                addAction('Preview stopped', 'info');
+                break;
+                
+            case 'loop':
+                const loopEnabled = !window.audioEngine.loop;
+                window.audioEngine.setLoop(loopEnabled);
+                btn.classList.toggle('active', loopEnabled);
+                addAction(`Loop ${loopEnabled ? 'enabled' : 'disabled'}`, 'info');
+                break;
+        }
+    } catch (error) {
+        console.error('[Renderer] Preview error:', error);
+        addAction(`Preview error: ${error.message}`, 'error');
+        btn.classList.remove('active');
+    }
+}
+
+// AI Team Integration
+let aiTeamAgents = [];
+let aiTeamConnected = false;
+
+async function initializeAITeam() {
+    // Check AI Team health on startup
+    await checkAITeamHealth();
+    
+    // Load available agents
+    await loadAITeamAgents();
+}
+
+async function checkAITeamHealth() {
+    const statusIndicator = document.getElementById('ai-team-status');
+    if (!statusIndicator) return;
+    
+    // Set checking state
+    statusIndicator.className = 'ai-team-status-indicator checking';
+    statusIndicator.querySelector('span:last-child').textContent = 'Checking...';
+    
+    try {
+        if (window.sergikAPI && window.sergikAPI.checkAITeamHealth) {
+            const result = await window.sergikAPI.checkAITeamHealth();
+            
+            if (result.success) {
+                aiTeamConnected = true;
+                statusIndicator.className = 'ai-team-status-indicator connected';
+                statusIndicator.querySelector('span:last-child').textContent = 'Connected';
+            } else {
+                aiTeamConnected = false;
+                statusIndicator.className = 'ai-team-status-indicator disconnected';
+                statusIndicator.querySelector('span:last-child').textContent = 'Disconnected';
+            }
+        } else {
+            aiTeamConnected = false;
+            statusIndicator.className = 'ai-team-status-indicator disconnected';
+            statusIndicator.querySelector('span:last-child').textContent = 'Unavailable';
+        }
+    } catch (error) {
+        aiTeamConnected = false;
+        statusIndicator.className = 'ai-team-status-indicator disconnected';
+        statusIndicator.querySelector('span:last-child').textContent = 'Error';
+        console.error('[Renderer] AI Team health check failed:', error);
+    }
+}
+
+async function loadAITeamAgents() {
+    try {
+        if (window.sergikAPI && window.sergikAPI.listAITeamAgents) {
+            const result = await window.sergikAPI.listAITeamAgents();
+            
+            if (result.success && result.agents && result.agents.length > 0) {
+                aiTeamAgents = result.agents;
+                updateAgentSelector();
+            } else {
+                // Use default agents if API fails
+                aiTeamAgents = ['SergikCore', 'DevAssistant', 'ControllerDev', 'VSTCraft', 'AbleAgent', 'GrooveSense', 'Memoria'];
+                updateAgentSelector();
+            }
+        } else {
+            // Use default agents if API not available
+            aiTeamAgents = ['SergikCore', 'DevAssistant', 'ControllerDev', 'VSTCraft', 'AbleAgent', 'GrooveSense', 'Memoria'];
+            updateAgentSelector();
+        }
+    } catch (error) {
+        console.error('[Renderer] Failed to load AI Team agents:', error);
+        // Use default agents on error
+        aiTeamAgents = ['SergikCore', 'DevAssistant', 'ControllerDev', 'VSTCraft', 'AbleAgent', 'GrooveSense', 'Memoria'];
+        updateAgentSelector();
+    }
+}
+
+function updateAgentSelector() {
+    const agentSelect = document.getElementById('ai-agent-select');
+    if (!agentSelect) return;
+    
+    // Clear existing options except the first one (if it exists)
+    const currentValue = agentSelect.value;
+    agentSelect.innerHTML = '';
+    
+    // Agent display names
+    const agentNames = {
+        'SergikCore': 'SergikCore (Orchestrator)',
+        'DevAssistant': 'DevAssistant (Code Help)',
+        'ControllerDev': 'ControllerDev (Controller Dev)',
+        'VSTCraft': 'VSTCraft (Music Generation)',
+        'AbleAgent': 'AbleAgent (Ableton Live)',
+        'GrooveSense': 'GrooveSense (Audio Analysis)',
+        'Memoria': 'Memoria (Knowledge Base)',
+        'AuralBrain': 'AuralBrain (Training)',
+        'MaxNode': 'MaxNode (Max for Live)'
+    };
+    
+    aiTeamAgents.forEach(agent => {
+        const option = document.createElement('option');
+        option.value = agent;
+        option.textContent = agentNames[agent] || agent;
+        agentSelect.appendChild(option);
+    });
+    
+    // Restore previous selection if it still exists
+    if (currentValue && aiTeamAgents.includes(currentValue)) {
+        agentSelect.value = currentValue;
+    }
 }
 
 // AI Tab Functions
-function handleChatMessage(message) {
+async function handleChatMessage(message) {
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
+    const agentSelect = document.getElementById('ai-agent-select');
     
     if (!chatMessages) return;
+    
+    // Get selected agent
+    const selectedAgent = agentSelect ? agentSelect.value : 'SergikCore';
     
     // Add user message
     addChatMessage('user', message);
@@ -1661,10 +2983,73 @@ function handleChatMessage(message) {
         chatInput.value = '';
     }
     
-    // Simulate AI response
+    // Show typing indicator
+    const typingIndicator = addTypingIndicator();
+    
+    try {
+        // Check if AI Team is connected
+        if (!aiTeamConnected) {
+            // Re-check connection
+            await checkAITeamHealth();
+        }
+        
+        if (window.sergikAPI && window.sergikAPI.sendAITeamMessage && aiTeamConnected) {
+            // Send message to AI Team
+            const result = await window.sergikAPI.sendAITeamMessage(selectedAgent, message);
+            
+            // Remove typing indicator
+            removeTypingIndicator(typingIndicator);
+            
+            if (result.success) {
+                // Add AI response
+                addChatMessage('ai', result.reply || 'No response from agent.');
+            } else {
+                // Show error message
+                addChatMessage('ai', `Error: ${result.error || 'Failed to get response from AI Team'}`);
+            }
+        } else {
+            // Fallback: simulate response if AI Team not available
+            removeTypingIndicator(typingIndicator);
     setTimeout(() => {
-        addChatMessage('ai', `I understand you want to "${message}". Let me help you with that.`);
+                addChatMessage('ai', `I understand you want to "${message}". The AI Team server is not connected. Please ensure the SERGIK AI Team server is running on port 8001.`);
     }, 500);
+        }
+    } catch (error) {
+        removeTypingIndicator(typingIndicator);
+        console.error('[Renderer] Error sending message to AI Team:', error);
+        addChatMessage('ai', `Error: ${error.message || 'Failed to communicate with AI Team'}`);
+    }
+}
+
+function addTypingIndicator() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return null;
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message ai typing-indicator';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="message-text">Typing...</div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    return typingDiv;
+}
+
+function removeTypingIndicator(indicator) {
+    if (indicator && indicator.parentNode) {
+        indicator.parentNode.removeChild(indicator);
+    } else {
+        const existing = document.getElementById('typing-indicator');
+        if (existing) {
+            existing.parentNode.removeChild(existing);
+        }
+    }
 }
 
 function addChatMessage(role, text) {
@@ -1731,14 +3116,10 @@ async function analyzeUrl(url) {
 }
 
 async function commitToTrack() {
-    const slot = elements.slotSelect?.value;
-    if (!slot || slot === '') {
-        addAction('Please select a slot first', 'error');
-        return;
-    }
-    
-    const trackIndex = parseInt(elements.trackSelect?.value) || 0;
-    const slotIndex = slot === 'next' ? undefined : parseInt(slot);
+    // Use default values since dropdowns are removed
+    const slot = 'next';  // Default to next empty slot
+    const trackIndex = 0;  // Default to first track
+    const slotIndex = undefined;  // undefined means next empty
     
     addAction(`Committing to track ${trackIndex} at slot ${slot}...`, 'info');
     
@@ -1951,7 +3332,18 @@ function updateConnectionStatus(connected, text) {
 }
 
 // Generation
-async function handleGenerate(type) {
+// Make handleGenerate available globally for batch mode
+window.handleGenerate = handleGenerate;
+
+// Helper function to get sub-category label
+function getSubCategoryLabel(type, subCategoryId) {
+    if (!subCategoryId || !window.createTabEnhancements) return '';
+    const subCat = window.createTabEnhancements.getSubCategories(type)
+        .find(s => s.id === subCategoryId);
+    return subCat ? subCat.label : subCategoryId;
+}
+
+async function handleGenerate(type, subCategory = null) {
     // Check offline
     if (window.errorHandler && window.errorHandler.checkOffline()) {
         return;
@@ -1959,12 +3351,15 @@ async function handleGenerate(type) {
     
     const params = {
         type: type,
+        subCategory: subCategory, // Add sub-category to params
         genre: elements.genreSelect?.value || 'house',
         tempo: parseInt(elements.tempoSelect?.value) || 124,
         energy: parseInt(elements.energySelect?.value) || 6,
+        bars: parseInt(elements.lengthBarsSelect?.value) || 8,
+        measureType: elements.lengthMeasureTypeSelect?.value || '',
         key: elements.keySelect?.value || '10B',
-        track: elements.trackSelect?.value || 'new',
-        slot: elements.slotSelect?.value || 'next',
+        track: 'new',  // Always use 'new' as default (auto-create track)
+        slot: 'next',  // Always use 'next' as default (next empty slot)
         idea: elements.ideaInput?.value || '',
         audio: elements.toggleAudio?.checked || false,
         midi: elements.toggleMidi?.checked || false,
@@ -1991,7 +3386,10 @@ async function handleGenerate(type) {
 }
 
 async function performGeneration(type, params) {
-    addAction(`Generating ${type}...`, 'info');
+    // Get sub-category label for logging
+    const subCatLabel = params.subCategory ? getSubCategoryLabel(type, params.subCategory) : '';
+    const actionLabel = subCatLabel ? `${type} - ${subCatLabel}` : type;
+    addAction(`Generating ${actionLabel}...`, 'info');
     updateStatus('Processing', 'yellow');
     
     let generatedData = null;
@@ -2002,22 +3400,49 @@ async function performGeneration(type, params) {
             throw new Error('API not available');
         }
         
-        // Map type to API call
+        // Map type to API call with subCategory
         let result;
         switch (type) {
             case 'kicks':
             case 'claps':
             case 'hats':
             case 'percussion':
-                result = await window.sergikAPI.generateDrums({ genre: params.genre, bars: 8, tempo: params.tempo });
+                const drumParams = {
+                    genre: params.genre, 
+                    bars: params.bars, 
+                    tempo: params.tempo,
+                    subCategory: params.subCategory,  // Add subCategory
+                    output_format: params.audio ? 'audio' : 'midi'  // Request audio format if audio toggle is on
+                };
+                // Only include measureType if it's not empty
+                if (params.measureType) {
+                    drumParams.measureType = params.measureType;
+                }
+                result = await window.sergikAPI.generateDrums(drumParams);
                 break;
             case 'bass':
-                result = await window.sergikAPI.generateBass({ key: params.key, bars: 8, style: params.genre, tempo: params.tempo });
+                const bassParams = {
+                    key: params.key, 
+                    bars: params.bars, 
+                    style: params.genre, 
+                    tempo: params.tempo,
+                    subCategory: params.subCategory  // Add subCategory
+                };
+                // Only include measureType if it's not empty
+                if (params.measureType) {
+                    bassParams.measureType = params.measureType;
+                }
+                result = await window.sergikAPI.generateBass(bassParams);
                 break;
             case 'synths':
             case 'vocals':
             case 'fx':
-                result = await window.sergikAPI.gptGenerate(`Generate ${type} for ${params.genre} at ${params.tempo} BPM`);
+                // Include subCategory, measure type, and bar count in GPT prompt
+                const measureTypeText = params.measureType ? ` for a ${params.measureType} section` : '';
+                const prompt = subCatLabel ? 
+                    `Generate ${subCatLabel} ${type} for ${params.genre} at ${params.tempo} BPM${measureTypeText} (${params.bars} bars)` :
+                    `Generate ${type} for ${params.genre} at ${params.tempo} BPM${measureTypeText} (${params.bars} bars)`;
+                result = await window.sergikAPI.gptGenerate(prompt);
                 break;
             default:
                 result = { success: false, error: 'Unknown generation type' };
@@ -2027,37 +3452,140 @@ async function performGeneration(type, params) {
         if (result.success && result.data) {
             generatedData = result.data;
             
-            // Save to library automatically
+            // Check if audio format was generated
+            const isAudioFormat = result.data.format === 'audio' || result.data.audio_path;
+            const shouldSaveAudio = params.audio || isAudioFormat;
+            
+            // Save to library automatically with enhanced metadata integration
             try {
-                const filename = `${type}_${params.genre || 'default'}_${Date.now()}.mid`;
-                saveResult = await window.sergikAPI.saveMidiToLibrary(
-                    result.data,
-                    filename
-                );
+                let audioArrayBuffer = null;
+                
+                if (shouldSaveAudio && result.data.audio_path) {
+                    // Handle audio file generation
+                    const audioPath = result.data.audio_path;
+                    
+                    // Read audio file from server path
+                    try {
+                        // Fetch audio file from server
+                        const apiBaseUrl = window.sergikAPI?.apiBaseUrl || 'http://127.0.0.1:8000';
+                        const audioResponse = await fetch(`${apiBaseUrl}/files/audio?path=${encodeURIComponent(audioPath)}`);
+                        
+                        if (audioResponse.ok) {
+                            const audioBlob = await audioResponse.blob();
+                            audioArrayBuffer = await audioBlob.arrayBuffer();
+                        } else {
+                            console.warn('[Renderer] Could not fetch audio from server');
+                            saveResult = { success: false, error: 'Could not retrieve audio file from server' };
+                        }
+                    } catch (audioError) {
+                        console.error('[Renderer] Failed to fetch audio file:', audioError);
+                        saveResult = { success: false, error: audioError.message };
+                    }
+                }
+                
+                // Use enhanced bridge if available, otherwise fallback to standard save
+                if (window.generationLibraryBridge && (audioArrayBuffer || !shouldSaveAudio)) {
+                    // Build metadata from generation context
+                    const metadata = window.generationLibraryBridge.buildMetadataFromGeneration(
+                        type,
+                        params,
+                        result
+                    );
+
+                    // Save with metadata integration
+                    const fileData = shouldSaveAudio ? audioArrayBuffer : result.data;
+                    saveResult = await window.generationLibraryBridge.saveGeneratedFileWithMetadata(
+                        fileData,
+                        metadata,
+                        shouldSaveAudio ? 'audio' : 'midi'
+                    );
+                } else {
+                    // Fallback to standard save
+                    if (shouldSaveAudio && audioArrayBuffer) {
+                        const filename = `${type}_${params.genre || 'default'}_${Date.now()}.wav`;
+                        saveResult = await window.sergikAPI.saveAudioToLibrary(
+                            Array.from(new Uint8Array(audioArrayBuffer)),
+                            filename
+                        );
+                    } else {
+                        const filename = `${type}_${params.genre || 'default'}_${Date.now()}.mid`;
+                        saveResult = await window.sergikAPI.saveMidiToLibrary(
+                            result.data,
+                            filename
+                        );
+                    }
+                }
                 
                 if (saveResult.success) {
-                    addAction(`Generated and saved ${type} to library`, 'success');
+                    addAction(`Generated and saved ${actionLabel} to library`, 'success');
                     if (saveResult.filePath) {
                         addAction(`Location: ${saveResult.filePath}`, 'info');
                     }
+                    if (saveResult.mediaId) {
+                        addAction(`Indexed as: ${saveResult.mediaId}`, 'info');
+                    }
+                    
+                    // Add to generated files list
+                    if (window.createTabEnhancements) {
+                        window.createTabEnhancements.addGeneratedFile({
+                            name: saveResult.filePath ? saveResult.filePath.split(/[/\\]/).pop() : `${type}_${params.genre || 'default'}.${shouldSaveAudio ? 'wav' : 'mid'}`,
+                            filePath: saveResult.filePath,
+                            path: saveResult.filePath,
+                            type: shouldSaveAudio ? 'audio' : 'midi',
+                            generationType: type,
+                            timestamp: Date.now(),
+                            metadata: {
+                                genre: params.genre,
+                                tempo: params.tempo,
+                                energy: params.energy,
+                                bars: params.bars,
+                                measureType: params.measureType,
+                                subCategory: params.subCategory
+                            }
+                        });
+                    }
+                    
+                    // Dispatch generation complete event
+                    document.dispatchEvent(new CustomEvent('generationComplete', {
+                        detail: {
+                            type: type,
+                            params: params,
+                            result: result,
+                            saveResult: saveResult
+                        }
+                    }));
                     
                     // Add to undo history
                     if (window.undoManager && window.ActionCreators) {
                         const action = window.ActionCreators.generation(type, params, {
                             data: generatedData,
-                            filename: saveResult.filePath || filename
+                            filename: saveResult.filePath || `${type}_${params.genre || 'default'}_${Date.now()}.${shouldSaveAudio ? 'wav' : 'mid'}`
                         });
                         window.undoManager.addAction(action);
                     }
-        } else {
-                    addAction(`Generated ${type} but failed to save: ${saveResult.error}`, 'warning');
+                } else {
+                    addAction(`Generated ${actionLabel} but failed to save: ${saveResult.error}`, 'warning');
                 }
             } catch (saveError) {
                 console.warn('[Renderer] Failed to save to library:', saveError);
-                addAction(`Generated ${type} (save to library failed)`, 'warning');
+                addAction(`Generated ${actionLabel} (save to library failed)`, 'warning');
             }
             
             updateStatus('Ready', 'green');
+            
+            // Update media preview
+            if (window.createTabEnhancements) {
+                const previewType = params.audio && !params.midi ? 'audio' : 
+                                   params.midi && !params.audio ? 'midi' : 
+                                   params.audio && params.midi ? 'both' : 'midi';
+                window.createTabEnhancements.updateMediaPreview({
+                    audio: params.audio ? generatedData : null,
+                    midi: params.midi ? generatedData : null,
+                    notes: result.data?.notes || [],
+                    waveform: result.data?.waveform || [],
+                    filePath: saveResult?.filePath || null // Include file path for audio preview
+                }, previewType);
+            }
         } else {
             // Handle API error
             if (window.errorHandler) {
@@ -3160,6 +4688,8 @@ function setupIdeaAnalyzer() {
     let popupElement = null;
     let popupTimer = null;
     let currentElement = null;
+    let currentMouseX = 0;
+    let currentMouseY = 0;
     const HOVER_DELAY = 1000; // 1 second
     
     // Detect platform
@@ -3210,50 +4740,55 @@ function setupIdeaAnalyzer() {
         };
     }
     
-    // Calculate popup position
-    function calculatePopupPosition(element) {
-        const rect = element.getBoundingClientRect();
+    // Calculate popup position based on mouse pointer
+    function calculatePopupPosition(mouseX, mouseY) {
         const popup = popupElement;
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const scrollX = window.scrollX || window.pageXOffset;
-        const scrollY = window.scrollY || window.pageYOffset;
         
-        // Default: below element
-        let top = rect.bottom + scrollY + 6;
-        let left = rect.left + scrollX + (rect.width / 2);
+        // Offset from mouse pointer
+        const offsetX = 15;
+        const offsetY = 15;
+        
+        // Default: to the right and below pointer
+        let left = mouseX + offsetX;
+        let top = mouseY + offsetY;
         let position = 'below';
         
         // Check if popup would overflow viewport
         const popupWidth = 250; // max-width
         const popupHeight = 100; // estimated
         
-        // Check bottom overflow
-        if (rect.bottom + popupHeight + 12 > viewportHeight) {
-            // Show above instead
-            top = rect.top + scrollY - popupHeight - 6;
-            position = 'above';
-        }
-        
-        // Check right overflow
-        if (left + popupWidth / 2 > viewportWidth) {
-            left = viewportWidth - popupWidth / 2 - 10;
+        // Check right overflow - show to the left of pointer instead
+        if (left + popupWidth > viewportWidth) {
+            left = mouseX - popupWidth - offsetX;
         }
         
         // Check left overflow
-        if (left - popupWidth / 2 < 0) {
-            left = popupWidth / 2 + 10;
+        if (left < 0) {
+            left = 10;
+        }
+        
+        // Check bottom overflow - show above pointer instead
+        if (top + popupHeight > viewportHeight) {
+            top = mouseY - popupHeight - offsetY;
+            position = 'above';
+        }
+        
+        // Check top overflow
+        if (top < 0) {
+            top = 10;
         }
         
         return { top, left, position };
     }
     
     // Show popup
-    function showInfoPopup(element, info) {
+    function showInfoPopup(element, info, mouseX, mouseY) {
         if (!info) return;
         
         const popup = createInfoPopup();
-        const pos = calculatePopupPosition(element);
+        const pos = calculatePopupPosition(mouseX || currentMouseX, mouseY || currentMouseY);
         
         // Update content
         popup.querySelector('.info-popup-title').textContent = info.title;
@@ -3267,10 +4802,11 @@ function setupIdeaAnalyzer() {
             shortcutEl.style.display = 'none';
         }
         
-        // Position popup
+        // Position popup using fixed positioning
+        popup.style.position = 'fixed';
         popup.style.top = pos.top + 'px';
         popup.style.left = pos.left + 'px';
-        popup.style.transform = 'translateX(-50%)';
+        popup.style.transform = 'none'; // Remove translateX since we're positioning from left
         
         // Update arrow position
         if (pos.position === 'above') {
@@ -3285,6 +4821,24 @@ function setupIdeaAnalyzer() {
         }, 10);
         
         currentElement = element;
+    }
+    
+    // Update popup position on mouse move
+    function updatePopupPosition(mouseX, mouseY) {
+        if (!popupElement || !popupElement.classList.contains('visible')) {
+            return;
+        }
+        
+        const pos = calculatePopupPosition(mouseX, mouseY);
+        popupElement.style.top = pos.top + 'px';
+        popupElement.style.left = pos.left + 'px';
+        
+        // Update arrow position
+        if (pos.position === 'above') {
+            popupElement.classList.add('above');
+        } else {
+            popupElement.classList.remove('above');
+        }
     }
     
     // Hide popup
@@ -3306,6 +4860,12 @@ function setupIdeaAnalyzer() {
         
         if (!info) return;
         
+        // Store mouse position
+        if (e.clientX !== undefined) {
+            currentMouseX = e.clientX;
+            currentMouseY = e.clientY;
+        }
+        
         // Clear any existing timer
         if (popupTimer) {
             clearTimeout(popupTimer);
@@ -3320,7 +4880,7 @@ function setupIdeaAnalyzer() {
         // Set timer to show popup after delay
         popupTimer = setTimeout(() => {
             if (currentElement !== element) {
-                showInfoPopup(element, info);
+                showInfoPopup(element, info, currentMouseX, currentMouseY);
             }
         }, HOVER_DELAY);
     }
@@ -3337,6 +4897,17 @@ function setupIdeaAnalyzer() {
     // Initialize popup system
     function initInfoPopupSystem() {
         console.log('[InfoPopup] Initializing info popup system...');
+        
+        // Track mouse movement for popup positioning
+        document.addEventListener('mousemove', function(e) {
+            currentMouseX = e.clientX;
+            currentMouseY = e.clientY;
+            
+            // Update popup position if visible
+            if (popupElement && popupElement.classList.contains('visible')) {
+                updatePopupPosition(e.clientX, e.clientY);
+            }
+        });
         
         // Use mouseover/mouseout for proper event delegation
         document.addEventListener('mouseover', function(e) {
@@ -3361,7 +4932,7 @@ function setupIdeaAnalyzer() {
             }
             
             if (info && element && element.nodeType === Node.ELEMENT_NODE && typeof element.getAttribute === 'function') {
-                handleMouseEnter({ target: element });
+                handleMouseEnter(e); // Pass the event to get mouse coordinates
             }
         }, true);
         
@@ -4234,6 +5805,23 @@ function updateIntelligenceSubOptions(category) {
 // Initialize advanced intelligence panel after constants are defined
 if (typeof setupAdvancedIntelligencePanel === 'function') {
     setupAdvancedIntelligencePanel();
+}
+
+// Initialize Create Tab Enhancements after elements are initialized
+if (typeof CreateTabEnhancements !== 'undefined' && typeof initializeElements === 'function') {
+    // Wait for elements to be initialized
+    if (Object.keys(elements).length === 0) {
+        // Elements not initialized yet, wait a bit
+        setTimeout(() => {
+            if (typeof CreateTabEnhancements !== 'undefined') {
+                window.createTabEnhancements = new CreateTabEnhancements();
+                console.log('[Renderer] Create Tab Enhancements initialized');
+            }
+        }, 200);
+    } else {
+        window.createTabEnhancements = new CreateTabEnhancements();
+        console.log('[Renderer] Create Tab Enhancements initialized');
+    }
 }
 
 console.log('[Renderer] Script loaded');

@@ -3024,6 +3024,7 @@
             flex-direction: column;
             gap: 6px;
             margin-bottom: 6px;
+            padding-bottom: 4px;
         }
         
         .browser-search {
@@ -3051,6 +3052,20 @@
             position: relative;
             display: flex;
             align-items: center;
+            gap: 6px;
+        }
+        
+        .search-query-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            padding: 0 4px;
+            display: none;
+        }
+        
+        .search-query-display:not(:empty) {
+            display: inline-block;
         }
         
         .search-clear-btn {
@@ -3212,6 +3227,242 @@
         .browser-item.loading {
             opacity: 0.7;
             pointer-events: none;
+        }
+        
+        /* Library Tab Enhancements - CSS */
+        
+        /* Advanced Filters Panel */
+        .advanced-filters-panel {
+            background: var(--bg-panel, #1a1a1a);
+            border-top: 1px solid var(--border-color, #333);
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        
+        .filter-section {
+            margin-bottom: 15px;
+        }
+        
+        .filter-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary, #fff);
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .filter-section input[type="number"],
+        .filter-section select {
+            width: 100%;
+            padding: 6px;
+            background: var(--bg-input, #1f1f1f);
+            border: 1px solid var(--border-color, #444);
+            color: var(--text-primary, #fff);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .filter-section input[type="number"]:focus,
+        .filter-section select:focus {
+            outline: none;
+            border-color: var(--accent-cyan, #00d4aa);
+        }
+        
+        .filter-apply-btn,
+        .filter-clear-btn {
+            flex: 1;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .filter-apply-btn {
+            background: var(--accent-cyan, #00d4aa);
+            border: none;
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .filter-apply-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .filter-clear-btn {
+            background: var(--bg-hover, #333);
+            border: 1px solid var(--border-color, #444);
+            color: var(--text-primary, #fff);
+        }
+        
+        .filter-clear-btn:hover {
+            background: var(--bg-active, #3a3a3a);
+        }
+        
+        .filter-toggle-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: var(--bg-panel, #2a2a2a);
+            border: 1px solid var(--border-color, #444);
+            color: var(--text-primary, #fff);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        
+        .filter-toggle-btn:hover {
+            background: var(--bg-hover, #333);
+        }
+        
+        /* Metadata Badges */
+        .metadata-badges {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        
+        .metadata-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .metadata-badge[data-badge-type="bpm"] {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.4);
+        }
+        
+        .metadata-badge[data-badge-type="key"] {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            border: 1px solid rgba(33, 150, 243, 0.4);
+        }
+        
+        .metadata-badge[data-badge-type="dur"] {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+            border: 1px solid rgba(255, 152, 0, 0.4);
+        }
+        
+        .metadata-badge[data-badge-type="type"] {
+            background: rgba(156, 39, 176, 0.2);
+            color: #9C27B0;
+            border: 1px solid rgba(156, 39, 176, 0.4);
+        }
+        
+        /* Status Indicators */
+        .status-indicators {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+        }
+        
+        .status-icon {
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        
+        .status-icon[data-status-type="loaded"] {
+            color: #4CAF50;
+        }
+        
+        .status-icon[data-status-type="playing"] {
+            color: #F44336;
+        }
+        
+        .status-icon[data-status-type="favorite"] {
+            color: #FFD700;
+        }
+        
+        .favorite-icon {
+            color: #FFD700;
+            margin-left: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .favorite-icon:hover {
+            opacity: 0.8;
+        }
+        
+        /* Hover Preview */
+        .hover-preview {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid var(--border-color, #444);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 10003;
+            max-width: 300px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+        
+        /* Drag & Drop */
+        .drop-zone {
+            transition: all 0.2s;
+        }
+        
+        .drop-zone.drop-target {
+            background: rgba(0, 212, 170, 0.1);
+            border: 2px dashed var(--accent-cyan, #00d4aa);
+            border-radius: 4px;
+        }
+        
+        .browser-item[draggable="true"] {
+            cursor: grab;
+        }
+        
+        .browser-item[draggable="true"]:active {
+            cursor: grabbing;
+        }
+        
+        /* Keyboard Shortcuts Help */
+        #keyboard-shortcuts-help {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        #keyboard-shortcuts-help kbd {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Metadata Row */
+        .metadata-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 4px;
+        }
+        
+        .item-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            width: 100%;
+        }
+        
+        /* Favorites Button */
+        .filter-chip[data-filter="favorites"] {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid #FFD700;
+            color: #FFD700;
+        }
+        
+        .filter-chip[data-filter="favorites"]:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+        
+        .filter-chip[data-filter="favorites"].active {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #FFD700;
         }
         
         .browser-item.loading .item-icon::after {
@@ -4002,6 +4253,934 @@
             background: var(--bg-panel);
             border-radius: 2px;
             border: 1px solid var(--border-color);
+        }
+        
+        /* ============================================================================
+           Enhanced Clip Editor Styles
+           ============================================================================ */
+        
+        /* Clip Editor Container */
+        .clip-editor-container {
+            display: flex;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* Clip Editor Sidebar */
+        .clip-editor-sidebar {
+            width: 280px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            font-size: 9px;
+            flex-shrink: 0;
+        }
+        
+        /* Clip Section Header */
+        .clip-section-header {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .clip-title-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .clip-type-badge {
+            padding: 2px 6px;
+            background: var(--accent-cyan);
+            color: #1a1a1a;
+            border-radius: 2px;
+            font-size: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .clip-position-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+        
+        .position-field {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .position-field label {
+            min-width: 50px;
+            font-size: 8px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .time-input {
+            flex: 1;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .set-btn {
+            padding: 2px 6px;
+            font-size: 7px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .set-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-cyan);
+        }
+        
+        .clip-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        
+        .clip-action-btn {
+            padding: 3px 8px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .clip-action-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-cyan);
+        }
+        
+        .clip-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        
+        /* Collapsible Sections */
+        .clip-section {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .section-header:hover {
+            background: var(--bg-hover);
+        }
+        
+        .section-title {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .section-toggle {
+            font-size: 8px;
+            color: var(--text-secondary);
+        }
+        
+        .section-content {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .clip-section.collapsed .section-content {
+            display: none;
+        }
+        
+        /* Property Rows */
+        .property-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 8px;
+        }
+        
+        .property-row label {
+            min-width: 60px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .signature-display {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+        
+        /* Scale Controls */
+        .scale-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .scale-toggle-btn {
+            padding: 3px 6px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .scale-toggle-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        .note-select,
+        .scale-select {
+            flex: 1;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Pitch Controls */
+        .pitch-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .root-note-btn {
+            padding: 4px 8px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .root-note-btn.active {
+            background: var(--accent-cyan);
+            color: #1a1a1a;
+            border-color: var(--accent-cyan);
+        }
+        
+        .root-note-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        .pitch-action-btn {
+            padding: 3px 6px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .pitch-action-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-cyan);
+        }
+        
+        /* Interval Controls */
+        .interval-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .interval-input {
+            width: 40px;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .interval-btn {
+            flex: 1;
+            padding: 3px 6px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .interval-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        /* Stretch Controls */
+        .stretch-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stretch-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .stretch-btn {
+            padding: 2px 6px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stretch-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        /* Grid Controls */
+        .grid-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .grid-select {
+            flex: 1;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Humanize Controls */
+        .humanize-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .percent-input {
+            width: 40px;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Transform Actions */
+        .transform-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 3px 6px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .action-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-cyan);
+        }
+        
+        /* Knob Component */
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .knob {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #3a3a3a, #1a1a1a);
+            border: 2px solid var(--border-color);
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s ease;
+        }
+        
+        .knob:hover {
+            border-color: var(--accent-cyan);
+        }
+        
+        .knob::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            width: 2px;
+            height: 12px;
+            background: var(--accent-cyan);
+            transform: translateX(-50%) rotate(var(--knob-angle, -135deg));
+            transform-origin: bottom center;
+            transition: transform 0.1s ease;
+        }
+        
+        .knob.dragging::before {
+            transition: none;
+        }
+        
+        .knob-value {
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+        
+        .knob-container label {
+            font-size: 7px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Warp Controls */
+        .warp-select {
+            width: 100%;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        
+        .follow-btn {
+            padding: 3px 8px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .follow-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        .param-slider {
+            flex: 1;
+            height: 4px;
+        }
+        
+        .param-value {
+            min-width: 30px;
+            font-size: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: right;
+        }
+        
+        /* BPM Controls */
+        .bpm-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .bpm-display {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .bpm-display label {
+            font-size: 8px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bpm-input {
+            flex: 1;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bpm-actions {
+            display: flex;
+            gap: 2px;
+        }
+        
+        .bpm-btn {
+            padding: 2px 4px;
+            font-size: 7px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bpm-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        .bpm-original {
+            display: flex;
+            justify-content: space-between;
+            font-size: 7px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Pitch Controls Row */
+        .pitch-controls-row {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .pitch-field {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .pitch-field label {
+            font-size: 8px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .pitch-input {
+            flex: 1;
+            padding: 2px 4px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Audio Actions */
+        .audio-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .mode-btn {
+            padding: 3px 6px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .mode-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .mode-btn.active {
+            background: var(--accent-cyan);
+            color: #1a1a1a;
+            border-color: var(--accent-cyan);
+        }
+        
+        /* Grid Buttons */
+        .grid-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .grid-btn {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .grid-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        .grid-btn.active {
+            background: var(--accent-cyan);
+            color: #1a1a1a;
+            border-color: var(--accent-cyan);
+        }
+        
+        .apply-btn {
+            width: 100%;
+            padding: 4px 8px;
+            font-size: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .apply-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-cyan);
+        }
+        
+        /* Clip Editor Main */
+        .clip-editor-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Editor Tabs */
+        .editor-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .editor-tab {
+            padding: 6px 12px;
+            font-size: 9px;
+            background: var(--bg-panel);
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .editor-tab:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .editor-tab.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+        }
+        
+        /* Timeline Ruler */
+        .timeline-ruler {
+            height: 24px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ruler-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .ruler-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            border-left: 1px solid var(--border-color);
+            font-size: 7px;
+            color: var(--text-secondary);
+            padding-left: 2px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .grid-resolution {
+            position: absolute;
+            top: 0;
+            right: 4px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+        
+        .grid-resolution select {
+            font-size: 7px;
+            padding: 1px 2px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Waveform Editor */
+        .waveform-editor {
+            position: relative;
+            flex: 1;
+            min-height: 200px;
+            background: var(--bg-dark);
+            overflow: hidden;
+        }
+        
+        #waveform-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .waveform-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .loop-region {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(0, 212, 170, 0.1);
+            border-left: 2px solid var(--accent-cyan);
+            border-right: 2px solid var(--accent-cyan);
+        }
+        
+        .warp-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #ff6b6b;
+            cursor: ew-resize;
+            pointer-events: all;
+        }
+        
+        .selection-region {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(255, 107, 107, 0.2);
+            border-left: 2px solid #ff6b6b;
+            border-right: 2px solid #ff6b6b;
+        }
+        
+        /* Piano Roll Editor */
+        .piano-roll-editor {
+            display: flex;
+            flex: 1;
+            min-height: 300px;
+            background: var(--bg-dark);
+            overflow: hidden;
+        }
+        
+        .piano-keys-panel {
+            width: 50px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .piano-key {
+            height: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding-left: 4px;
+            font-size: 7px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .piano-key.black {
+            background: #1a1a1a;
+            height: 12px;
+            margin-top: -6px;
+            z-index: 1;
+            color: white;
+            padding-left: 3px;
+        }
+        
+        .piano-roll-grid {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+        }
+        
+        #piano-roll-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* Velocity Lane Editor */
+        .velocity-lane-editor {
+            height: 80px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .lane-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 8px;
+        }
+        
+        .lane-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .lane-action-btn {
+            padding: 2px 6px;
+            font-size: 7px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .lane-action-btn:hover {
+            background: var(--bg-hover);
+        }
+        
+        .velocity-params {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .param-input {
+            width: 40px;
+            padding: 1px 2px;
+            font-size: 7px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .param-label {
+            font-size: 7px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .deviation-input {
+            width: 40px;
+            padding: 1px 2px;
+            font-size: 7px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        #velocity-canvas {
+            width: 100%;
+            height: calc(100% - 24px);
+            display: block;
+        }
+        
+        /* Audio/MIDI Only Sections */
+        .audio-only {
+            display: block;
+        }
+        
+        .midi-only {
+            display: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .clip-editor-sidebar {
+                width: 240px;
+            }
         }
         
         .preview-controls {
@@ -5088,7 +6267,8 @@
                         <div class="panel browser-panel">
                             <div class="browser-header">
                                 <div class="search-container">
-                                    <input type="text" class="browser-search" id="media-search" placeholder="Search... (BPM:120, key:C, name:kick)" autocomplete="off" data-info-title="Media Search" data-info-desc="Search media library. Use BPM:120, key:C, name:kick syntax. Press Enter to load first result." data-info-shortcut="Enter">
+                                    <input type="text" class="browser-search" id="media-search" placeholder="Search..." autocomplete="off" data-info-title="Media Search" data-info-desc="Search media library. Use BPM:120, key:C, name:kick syntax. Press Enter to load first result." data-info-shortcut="Enter">
+                                    <span class="search-query-display" id="search-query-display"></span>
                                     <button class="search-clear-btn" id="search-clear" style="display: none;" data-info-title="Clear Search" data-info-desc="Clear search query" data-info-shortcut="Esc">×</button>
                                 </div>
                                 <div class="filter-bar">
@@ -5114,11 +6294,11 @@
                         </div>
                         
                                 <!-- Variables Group -->
-                                <div class="media-group" data-group="variables">
+                                <div class="media-group collapsed" data-group="variables">
                                     <div class="group-header">
                                         <span class="group-title">Variables</span>
                                         <span class="group-count">(0)</span>
-                                        <button class="group-toggle">▼</button>
+                                        <button class="group-toggle">▶</button>
                                 </div>
                                     <div class="group-items">
                                         <!-- Variable items will be rendered here -->
@@ -5155,7 +6335,7 @@
                             </div>
                         </div>
                         
-                        <!-- Center: Editor -->
+                        <!-- Center: Enhanced Editor -->
                         <div class="panel editor-preview-panel">
                             <div class="editor-toolbar">
                                 <div class="toolbar-group">
@@ -5174,172 +6354,402 @@
                                 </div>
                             </div>
                             
-                            <div class="editor-content active" id="editor-waveform">
-                                <div class="waveform-compact">
-                                    <!-- Clip Header with Controls -->
-                                    <div class="clip-header">
-                                        <div class="clip-controls-row">
-                                            <label class="clip-control-label" data-info-title="Warp Toggle" data-info-desc="Enable/disable warping for audio clip" data-info-shortcut="">
-                                                <input type="checkbox" id="warp-toggle" class="clip-toggle">
+                            <div class="clip-editor-container">
+                                <!-- Left Sidebar: Clip Properties -->
+                                <div class="clip-editor-sidebar">
+                                    <!-- Clip Header Section -->
+                                    <div class="clip-section-header">
+                                        <div class="clip-title-row">
+                                            <input type="checkbox" id="clip-enabled" checked>
+                                            <span class="clip-type-badge" id="clip-type-badge">Audio</span>
+                                            <span class="clip-title">Clip</span>
+                                        </div>
+                                        
+                                        <div class="clip-position-row">
+                                            <div class="position-field">
+                                                <label>Start:</label>
+                                                <input type="text" id="clip-start" value="1.1.1" class="time-input">
+                                                <button class="set-btn" id="set-start">Set</button>
+                                            </div>
+                                            <div class="position-field">
+                                                <label>End:</label>
+                                                <input type="text" id="clip-end" value="9.1.1" class="time-input">
+                                                <button class="set-btn" id="set-end">Set</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="clip-actions-row">
+                                            <button class="clip-action-btn" id="duplicate-clip">Duplicate</button>
+                                            <label class="clip-toggle-label">
+                                                <input type="checkbox" id="clip-loop" checked>
+                                                <span>Loop</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="clip-position-row">
+                                            <div class="position-field">
+                                                <label>Position:</label>
+                                                <input type="text" id="clip-position" value="1.1.1" class="time-input">
+                                                <button class="set-btn" id="set-position">Set</button>
+                                            </div>
+                                            <div class="position-field">
+                                                <label>Length:</label>
+                                                <input type="text" id="clip-length" value="8.0.0" class="time-input">
+                                                <button class="set-btn" id="set-length">Set</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Signature & Groove Section -->
+                                    <div class="clip-section collapsible" data-section="signature">
+                                        <div class="section-header">
+                                            <span class="section-title">Signature & Groove</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="property-row">
+                                                <label>Signature:</label>
+                                                <span class="signature-display">4 / 4</span>
+                                            </div>
+                                            <div class="property-row">
+                                                <label>Groove:</label>
+                                                <select id="groove-select">
+                                                    <option value="none">None</option>
+                                                    <option value="swing-16">Swing 16</option>
+                                                    <option value="swing-8">Swing 8</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Scale Section -->
+                                    <div class="clip-section collapsible" data-section="scale">
+                                        <div class="section-header">
+                                            <span class="section-title">Scale</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="scale-controls">
+                                                <button class="scale-toggle-btn" id="scale-toggle">b#</button>
+                                                <select id="scale-root" class="note-select">
+                                                    <option value="C">C</option>
+                                                    <option value="C#">C#</option>
+                                                    <option value="D">D</option>
+                                                    <option value="D#">D#</option>
+                                                    <option value="E">E</option>
+                                                    <option value="F">F</option>
+                                                    <option value="F#">F#</option>
+                                                    <option value="G">G</option>
+                                                    <option value="G#">G#</option>
+                                                    <option value="A">A</option>
+                                                    <option value="A#">A#</option>
+                                                    <option value="B">B</option>
+                                                </select>
+                                                <select id="scale-type" class="scale-select">
+                                                    <option value="major">Major</option>
+                                                    <option value="minor">Minor</option>
+                                                    <option value="dorian">Dorian</option>
+                                                    <option value="phrygian">Phrygian</option>
+                                                    <option value="lydian">Lydian</option>
+                                                    <option value="mixolydian">Mixolydian</option>
+                                                    <option value="locrian">Locrian</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Launch Section (Collapsed) -->
+                                    <div class="clip-section collapsible collapsed" data-section="launch">
+                                        <div class="section-header">
+                                            <span class="section-title">Launch</span>
+                                            <span class="section-toggle">▶</span>
+                                        </div>
+                                        <div class="section-content" style="display: none;">
+                                            <div class="property-row">
+                                                <label>Launch Mode:</label>
+                                                <select id="launch-mode">
+                                                    <option value="trigger">Trigger</option>
+                                                    <option value="gate">Gate</option>
+                                                    <option value="toggle">Toggle</option>
+                                                    <option value="repeat">Repeat</option>
+                                                </select>
+                                            </div>
+                                            <div class="property-row">
+                                                <label>Launch Quantization:</label>
+                                                <select id="launch-quantization">
+                                                    <option value="none">None</option>
+                                                    <option value="8">8 bars</option>
+                                                    <option value="4">4 bars</option>
+                                                    <option value="2">2 bars</option>
+                                                    <option value="1">1 bar</option>
+                                                    <option value="1/2">1/2</option>
+                                                    <option value="1/4">1/4</option>
+                                                    <option value="1/8">1/8</option>
+                                                </select>
+                                            </div>
+                                            <div class="property-row">
+                                                <label>Follow Action:</label>
+                                                <select id="follow-action">
+                                                    <option value="none">None</option>
+                                                    <option value="next">Next</option>
+                                                    <option value="previous">Previous</option>
+                                                    <option value="first">First</option>
+                                                    <option value="random">Random</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pitch & Time Section -->
+                                    <div class="clip-section collapsible" data-section="pitch-time">
+                                        <div class="section-header">
+                                            <span class="section-title">Pitch & Time</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="pitch-controls">
+                                                <button class="root-note-btn active" id="root-note-C1" data-note="C1">C1</button>
+                                                <button class="pitch-action-btn" id="fit-to-scale">Fit to Scale</button>
+                                                <button class="pitch-action-btn" id="invert-pitch">Invert</button>
+                                            </div>
+                                            
+                                            <div class="interval-controls">
+                                                <input type="number" id="interval-input" value="0" min="-12" max="12" class="interval-input">
+                                                <button class="interval-btn" id="add-interval">Add Interval</button>
+                                            </div>
+                                            
+                                            <div class="stretch-controls">
+                                                <div class="knob-container">
+                                                    <div class="knob" id="stretch-knob" data-param="stretch" data-min="0.25" data-max="4" data-value="1" data-default="1">
+                                                        <div class="knob-value">x1.0</div>
+                                                    </div>
+                                                    <label>Stretch</label>
+                                                </div>
+                                                <div class="stretch-buttons">
+                                                    <button class="stretch-btn" id="stretch-x2">x2</button>
+                                                    <button class="stretch-btn" id="stretch-div2">/2</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="grid-controls">
+                                                <select id="time-grid" class="grid-select">
+                                                    <option value="1/4">1/4</option>
+                                                    <option value="1/8" selected>1/8</option>
+                                                    <option value="1/16">1/16</option>
+                                                    <option value="1/32">1/32</option>
+                                                </select>
+                                                <button class="set-btn" id="set-clip-length">Set Length</button>
+                                            </div>
+                                            
+                                            <div class="humanize-controls">
+                                                <input type="number" id="humanize-amount" value="10" min="0" max="100" class="percent-input">
+                                                <span>%</span>
+                                                <button class="action-btn" id="humanize-btn">Humanize</button>
+                                            </div>
+                                            
+                                            <div class="transform-actions">
+                                                <button class="action-btn" id="reverse-clip">Reverse</button>
+                                                <button class="action-btn" id="legato-notes">Legato</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Transform Section (Collapsed) -->
+                                    <div class="clip-section collapsible collapsed" data-section="transform">
+                                        <div class="section-header">
+                                            <span class="section-title">Transform</span>
+                                            <span class="section-toggle">▶</span>
+                                        </div>
+                                        <div class="section-content" style="display: none;">
+                                            <!-- Transform tools placeholder -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Generate Section (Collapsed) -->
+                                    <div class="clip-section collapsible collapsed" data-section="generate">
+                                        <div class="section-header">
+                                            <span class="section-title">Generate</span>
+                                            <span class="section-toggle">▶</span>
+                                        </div>
+                                        <div class="section-content" style="display: none;">
+                                            <!-- Generate tools placeholder -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Warp Section (Audio only) -->
+                                    <div class="clip-section collapsible audio-only" data-section="warp">
+                                        <div class="section-header">
+                                            <span class="section-title">Warp</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <label class="toggle-label">
+                                                <input type="checkbox" id="warp-toggle" checked>
                                                 <span>Warp</span>
                                             </label>
-                                            <select class="clip-control-select" id="warp-mode" data-info-title="Warp Mode" data-info-desc="Select warp algorithm: Beats, Tones, Texture, Repitch, Complex, Complex Pro" data-info-shortcut="">
-                                                <option value="beats">Beats</option>
+                                            <button class="follow-btn" id="warp-follow">Follow</button>
+                                            
+                                            <div class="knob-container">
+                                                <div class="knob" id="gain-knob" data-param="gain" data-min="-12" data-max="12" data-value="0" data-default="0">
+                                                    <div class="knob-value">0.0 dB</div>
+                                                </div>
+                                                <label>Gain</label>
+                                            </div>
+                                            
+                                            <select id="warp-mode" class="warp-select">
+                                                <option value="beats" selected>Beats</option>
                                                 <option value="tones">Tones</option>
                                                 <option value="texture">Texture</option>
                                                 <option value="repitch">Repitch</option>
                                                 <option value="complex">Complex</option>
                                                 <option value="complex-pro">Complex Pro</option>
                                             </select>
-                                            <label class="clip-control-label" data-info-title="Clip Gain" data-info-desc="Adjust clip gain in dB (-12 to +12)" data-info-shortcut="">
-                                                <span>Gain:</span>
-                                                <input type="range" id="clip-gain" min="-12" max="12" value="0" step="0.1" class="clip-gain-slider">
-                                                <span id="clip-gain-value">0.0 dB</span>
-                                            </label>
-                                            <label class="clip-control-label" data-info-title="Transpose" data-info-desc="Transpose clip in semitones (-48 to +48)" data-info-shortcut="">
-                                                <span>Transpose:</span>
-                                                <input type="range" id="clip-transpose" min="-48" max="48" value="0" step="1" class="clip-transpose-slider">
-                                                <span id="clip-transpose-value">0 st</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <canvas id="waveform-canvas" style="height: 90px;"></canvas>
-                                    <!-- Loop Brace Visualization -->
-                                    <div class="loop-brace" id="loop-brace" style="display: none;">
-                                        <div class="loop-start"></div>
-                                        <div class="loop-end"></div>
-                                    </div>
-                                </div>
-                                <div class="editor-info-bar" data-info-title="Waveform Info Bar" data-info-desc="Displays waveform length and selection time information" data-info-shortcut="">
-                                    <span data-info-title="Length Display" data-info-desc="Total length of the audio waveform" data-info-shortcut="">Len: <strong id="waveform-length" data-info-title="Waveform Length" data-info-desc="Total duration of the audio file in minutes:seconds format" data-info-shortcut="">0:00</strong></span>
-                                    <span data-info-title="Selection Display" data-info-desc="Duration of currently selected region" data-info-shortcut="">Sel: <strong id="waveform-selection-time" data-info-title="Selection Time" data-info-desc="Duration of selected audio region in minutes:seconds format" data-info-shortcut="">0:00</strong></span>
-                                    <span data-info-title="BPM Display" data-info-desc="Beats per minute of the clip" data-info-shortcut="">BPM: <strong id="waveform-bpm" data-info-title="Waveform BPM" data-info-desc="BPM of the audio clip" data-info-shortcut="">120</strong></span>
-                                    <span data-info-title="Sample Rate Display" data-info-desc="Sample rate of the audio file" data-info-shortcut="">SR: <strong id="waveform-sr" data-info-title="Waveform Sample Rate" data-info-desc="Sample rate in Hz" data-info-shortcut="">44100</strong> Hz</span>
-                                    <label class="clip-color-label" data-info-title="Clip Color" data-info-desc="Set clip color for visual organization" data-info-shortcut="">
-                                        <span>Color:</span>
-                                        <input type="color" id="clip-color" value="#00d4aa" class="clip-color-picker">
-                                    </label>
-                                </div>
-                                <!-- Clip Properties Panel -->
-                                <div class="clip-properties-panel">
-                                    <div class="properties-group">
-                                        <div class="property-item">
-                                            <label data-info-title="Launch Mode Label" data-info-desc="Label for launch mode selector" data-info-shortcut="">Launch Mode:</label>
-                                            <select id="launch-mode" data-info-title="Launch Mode" data-info-desc="How clip launches: Trigger, Gate, Toggle, Repeat" data-info-shortcut="">
-                                                <option value="trigger">Trigger</option>
-                                                <option value="gate">Gate</option>
-                                                <option value="toggle">Toggle</option>
-                                                <option value="repeat">Repeat</option>
+                                            
+                                            <select id="warp-preserve" class="warp-select">
+                                                <option value="transients">Transients</option>
+                                                <option value="tones">Tones</option>
                                             </select>
+                                            
+                                            <div class="property-row">
+                                                <label>Transients:</label>
+                                                <input type="range" id="transients-slider" min="0" max="200" value="100" class="param-slider">
+                                                <span class="param-value" id="transients-value">100</span>
+                                            </div>
+                                            
+                                            <div class="bpm-controls">
+                                                <div class="bpm-display">
+                                                    <label>BPM:</label>
+                                                    <input type="number" id="clip-bpm" value="120.00" step="0.01" class="bpm-input">
+                                                    <div class="bpm-actions">
+                                                        <button class="bpm-btn" id="bpm-div2">/2</button>
+                                                        <button class="bpm-btn" id="bpm-x2">x2</button>
+                                                    </div>
+                                                </div>
+                                                <div class="bpm-original">
+                                                    <span>70</span>
+                                                    <span>-1.7 dB</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="pitch-controls-row">
+                                                <div class="pitch-field">
+                                                    <label>st:</label>
+                                                    <input type="number" id="pitch-semitones" value="0" min="-48" max="48" class="pitch-input">
+                                                </div>
+                                                <div class="pitch-field">
+                                                    <label>Fine:</label>
+                                                    <input type="number" id="pitch-fine" value="0" min="-50" max="50" class="pitch-input">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="audio-actions">
+                                                <button class="action-btn" id="reverse-audio">Reverse</button>
+                                                <button class="action-btn" id="edit-audio">Edit</button>
+                                                <button class="mode-btn" id="ram-mode">RAM</button>
+                                                <button class="mode-btn" id="hiq-mode">HiQ</button>
+                                            </div>
                                         </div>
-                                        <div class="property-item">
-                                            <label data-info-title="Launch Quantization Label" data-info-desc="Label for launch quantization selector" data-info-shortcut="">Launch Quantization:</label>
-                                            <select id="launch-quantization" data-info-title="Launch Quantization" data-info-desc="When clip launches relative to grid" data-info-shortcut="">
-                                                <option value="none">None</option>
-                                                <option value="8">8 bars</option>
-                                                <option value="4">4 bars</option>
-                                                <option value="2">2 bars</option>
-                                                <option value="1">1 bar</option>
-                                                <option value="1/2">1/2</option>
+                                    </div>
+                                    
+                                    <!-- Quantize Section (Audio only) -->
+                                    <div class="clip-section collapsible audio-only" data-section="quantize">
+                                        <div class="section-header">
+                                            <span class="section-title">Quantize</span>
+                                            <span class="section-toggle">▼</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <div class="grid-buttons">
+                                                <button class="grid-btn" data-grid="1/4">1/4</button>
+                                                <button class="grid-btn active" data-grid="1/8">1/8</button>
+                                                <button class="grid-btn" data-grid="1/16">1/16</button>
+                                                <button class="grid-btn" data-grid="1/32">1/32</button>
+                                            </div>
+                                            
+                                            <label class="toggle-label">
+                                                <input type="checkbox" id="triplets-toggle">
+                                                <span>Triplets</span>
+                                            </label>
+                                            
+                                            <div class="knob-container">
+                                                <div class="knob" id="quantize-amount-knob" data-param="quantize" data-min="0" data-max="100" data-value="100" data-default="100">
+                                                    <div class="knob-value">100%</div>
+                                                </div>
+                                                <label>Amount</label>
+                                            </div>
+                                            
+                                            <button class="apply-btn" id="apply-quantize">Apply</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Main Editor Area -->
+                                <div class="clip-editor-main">
+                                    <!-- Editor Tabs -->
+                                    <div class="editor-tabs">
+                                        <button class="editor-tab active" data-tab="sample">Sample</button>
+                                        <button class="editor-tab" data-tab="envelopes">Envelopes</button>
+                                    </div>
+                                    
+                                    <!-- Timeline Ruler -->
+                                    <div class="timeline-ruler" id="timeline-ruler">
+                                        <div class="ruler-grid"></div>
+                                        <div class="ruler-markers"></div>
+                                        <div class="grid-resolution">
+                                            <select id="grid-resolution">
                                                 <option value="1/4">1/4</option>
-                                                <option value="1/8">1/8</option>
-                                            </select>
-                                        </div>
-                                        <div class="property-item">
-                                            <label data-info-title="Follow Action Label" data-info-desc="Label for follow action selector" data-info-shortcut="">Follow Action:</label>
-                                            <select id="follow-action" data-info-title="Follow Action" data-info-desc="What happens after clip finishes" data-info-shortcut="">
-                                                <option value="none">None</option>
-                                                <option value="next">Next</option>
-                                                <option value="previous">Previous</option>
-                                                <option value="first">First</option>
-                                                <option value="random">Random</option>
+                                                <option value="1/8" selected>1/8</option>
+                                                <option value="1/16">1/16</option>
+                                                <option value="1/32">1/32</option>
                                             </select>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            
-                            <div class="editor-content" id="editor-piano-roll">
-                                <div class="piano-roll-compact">
-                                    <!-- Piano Roll Header -->
-                                    <div class="piano-roll-header">
-                                        <div class="piano-controls-row">
-                                            <label class="piano-control-label" data-info-title="Grid Display Toggle" data-info-desc="Show/hide quantization grid" data-info-shortcut="">
-                                                <input type="checkbox" id="grid-display" checked class="piano-toggle">
-                                                <span>Grid</span>
-                                            </label>
-                                            <label class="piano-control-label" data-info-title="Note Names Toggle" data-info-desc="Show note names (C, C#, D, etc.)" data-info-shortcut="">
-                                                <input type="checkbox" id="note-names" class="piano-toggle">
-                                                <span>Names</span>
-                                            </label>
-                                            <label class="piano-control-label" data-info-title="Scale Highlight Toggle" data-info-desc="Highlight notes in selected scale" data-info-shortcut="">
-                                                <input type="checkbox" id="scale-highlight" class="piano-toggle">
-                                                <span>Scale</span>
-                                            </label>
-                                            <select class="piano-control-select" id="scale-selector" data-info-title="Scale Selector" data-info-desc="Select scale to highlight" data-info-shortcut="">
-                                                <option value="major">Major</option>
-                                                <option value="minor">Minor</option>
-                                                <option value="dorian">Dorian</option>
-                                                <option value="mixolydian">Mixolydian</option>
-                                            </select>
+                                    
+                                    <!-- Waveform Editor (Audio) -->
+                                    <div class="waveform-editor" id="waveform-editor">
+                                        <canvas id="waveform-canvas"></canvas>
+                                        <div class="waveform-overlay">
+                                            <div class="loop-region" id="loop-region"></div>
+                                            <div class="warp-markers" id="warp-markers"></div>
+                                            <div class="selection-region" id="selection-region"></div>
                                         </div>
                                     </div>
-                                    <div class="piano-roll-main">
-                                        <div class="piano-keys-mini" id="piano-keys"></div>
-                                        <canvas id="piano-roll-canvas" style="height: 160px;"></canvas>
-                                        <!-- Velocity Lane -->
-                                        <div class="velocity-lane" id="velocity-lane">
-                                            <div class="lane-label" data-info-title="Velocity Lane Label" data-info-desc="Label for velocity lane" data-info-shortcut="">Velocity</div>
-                                            <canvas id="velocity-canvas" style="height: 40px;"></canvas>
-                                        </div>
-                                        <!-- CC Lanes -->
-                                        <div class="cc-lanes" id="cc-lanes">
-                                            <div class="cc-lane" data-cc="1" data-info-title="Modulation CC Lane" data-info-desc="MIDI CC1 (Modulation) lane" data-info-shortcut="">
-                                                <div class="lane-label" data-info-title="CC Lane Label" data-info-desc="Label for CC lane" data-info-shortcut="">Modulation (CC1)</div>
-                                                <canvas class="cc-canvas" style="height: 30px;"></canvas>
-                                            </div>
+                                    
+                                    <!-- Piano Roll Editor (MIDI) -->
+                                    <div class="piano-roll-editor" id="piano-roll-editor" style="display: none;">
+                                        <div class="piano-keys-panel" id="piano-keys"></div>
+                                        <div class="piano-roll-grid" id="piano-roll-grid">
+                                            <canvas id="piano-roll-canvas"></canvas>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="editor-info-bar" data-info-title="Piano Roll Info Bar" data-info-desc="Displays MIDI note velocity and quantization settings" data-info-shortcut="">
-                                    <label data-info-title="Velocity Control" data-info-desc="Adjust velocity for selected MIDI notes or new notes" data-info-shortcut="">Vel: <input type="range" id="velocity-slider" min="1" max="127" value="100" style="width: 60px;" data-info-title="Velocity Slider" data-info-desc="Adjust MIDI note velocity from 1 (softest) to 127 (loudest). Affects selected notes or new notes being added." data-info-shortcut="Shift+V"> <span id="velocity-value" data-info-title="Velocity Value" data-info-desc="Current velocity value (1-127)" data-info-shortcut="">100</span></label>
-                                    <label data-info-title="Quantize Control" data-info-desc="Set quantization grid for MIDI notes" data-info-shortcut="">Qtz: <select id="quantize-value" style="width: 45px;" data-info-title="Quantize Grid" data-info-desc="Set quantization grid: 1/32 (32nd notes), 1/16 (16th notes), 1/8 (8th notes), 1/4 (quarter notes), etc. Notes snap to this grid when quantized." data-info-shortcut="Q"><option value="1/16" selected>1/16</option></select></label>
-                                    <label data-info-title="Fold Octaves Toggle" data-info-desc="Show only used octaves" data-info-shortcut="">Fold: <input type="checkbox" id="fold-octaves" data-info-title="Fold Octaves" data-info-desc="Fold unused octaves to show only active range" data-info-shortcut=""></label>
-                                </div>
-                            </div>
-                            
-                            <div class="editor-content" id="editor-timeline">
-                                <div class="timeline-compact">
-                                    <div class="timeline-ruler-compact" id="timeline-ruler"></div>
-                                    <div class="timeline-tracks-compact" id="timeline-tracks">
-                                        <!-- Track Structure Example -->
-                                        <div class="timeline-track" data-track="0" data-info-title="Timeline Track" data-info-desc="Track in timeline with controls and clips" data-info-shortcut="">
-                                            <div class="track-header-compact" data-info-title="Track Header" data-info-desc="Track name and control buttons" data-info-shortcut="">
-                                                <div class="track-name-compact" data-info-title="Track Name" data-info-desc="Name of the track" data-info-shortcut="">Track 1</div>
-                                                <div class="track-controls-compact">
-                                                    <button class="track-btn-compact" data-action="mute" data-info-title="Track Mute" data-info-desc="Mute/unmute this track" data-info-shortcut="M">M</button>
-                                                    <button class="track-btn-compact" data-action="solo" data-info-title="Track Solo" data-info-desc="Solo/unsolo this track" data-info-shortcut="S">S</button>
-                                                    <button class="track-btn-compact" data-action="arm" data-info-title="Track Arm" data-info-desc="Arm track for recording" data-info-shortcut="R">R</button>
-                                                </div>
-                                                <div class="track-fader-compact" data-info-title="Track Volume Fader" data-info-desc="Vertical volume fader for track" data-info-shortcut="">
-                                                    <input type="range" class="track-volume" id="track-volume-0" min="0" max="100" value="75" style="writing-mode: vertical-lr; direction: rtl;" data-info-title="Track Volume" data-info-desc="Track volume fader (0-100)" data-info-shortcut="">
-                                                </div>
+                                    
+                                    <!-- Velocity Lane (MIDI) -->
+                                    <div class="velocity-lane-editor" id="velocity-lane-editor" style="display: none;">
+                                        <div class="lane-header">
+                                            <span class="lane-title">Velocity</span>
+                                            <button class="lane-action-btn" id="randomize-velocity">Randomize</button>
+                                            <div class="velocity-params">
+                                                <input type="number" id="velocity-ramp" value="100" min="0" max="127" class="param-input">
+                                                <input type="number" id="velocity-range" value="100" min="0" max="127" class="param-input">
+                                                <span class="param-label">127</span>
+                                                <span class="param-label">0</span>
                                             </div>
-                                            <div class="track-lane-compact" data-info-title="Track Lane" data-info-desc="Timeline lane where clips are placed" data-info-shortcut="">
-                                                <!-- Clips will be rendered here -->
-                                            </div>
-                                            <!-- Automation Lane -->
-                                            <div class="automation-lane-compact" data-param="volume" data-info-title="Automation Lane" data-info-desc="Automation lane for track parameters" data-info-shortcut="">
-                                                <div class="lane-label-compact" data-info-title="Automation Lane Label" data-info-desc="Label for automation lane" data-info-shortcut="">Volume</div>
-                                                <canvas class="automation-canvas-compact" style="height: 30px;"></canvas>
-                                            </div>
+                                            <input type="number" id="velocity-deviation" value="0" min="0" max="127" class="deviation-input">
+                                            <label>Deviation:</label>
                                         </div>
+                                        <canvas id="velocity-canvas"></canvas>
                                     </div>
-                                </div>
-                                <div class="editor-info-bar" data-info-title="Timeline Info Bar" data-info-desc="Displays timeline track and clip information" data-info-shortcut="">
-                                    <span data-info-title="Track Count Display" data-info-desc="Number of tracks in timeline" data-info-shortcut="">Tracks: <strong id="timeline-track-count" data-info-title="Timeline Track Count" data-info-desc="Total number of tracks" data-info-shortcut="">1</strong></span>
-                                    <span data-info-title="Clip Count Display" data-info-desc="Number of clips in timeline" data-info-shortcut="">Clips: <strong id="timeline-clip-count" data-info-title="Timeline Clip Count" data-info-desc="Total number of clips" data-info-shortcut="">0</strong></span>
-                                    <label data-info-title="Track Height Control" data-info-desc="Adjust track height" data-info-shortcut="">Track Height: <input type="range" id="track-height" min="30" max="200" value="80" data-info-title="Track Height Slider" data-info-desc="Adjust track height (30-200px)" data-info-shortcut=""></label>
+                                    
+                                    <!-- Editor Info Bar -->
+                                    <div class="editor-info-bar">
+                                        <span>Len: <strong id="waveform-length">0:00</strong></span>
+                                        <span>Sel: <strong id="waveform-selection-time">0:00</strong></span>
+                                        <span>BPM: <strong id="waveform-bpm">120</strong></span>
+                                        <span>SR: <strong id="waveform-sr">44100</strong> Hz</span>
+                                        <label class="clip-color-label">
+                                            <span>Color:</span>
+                                            <input type="color" id="clip-color" value="#00d4aa" class="clip-color-picker">
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -5668,6 +7078,135 @@
                 const debugToolsModule = await import('./js/debug-tools.js');
                 DebugTools = debugToolsModule.DebugTools;
                 
+                // Library Tab Enhancements - Phase 1: Foundation
+                let EnhancedSearchParser, AdvancedFilters;
+                try {
+                    const enhancedSearchModule = await import('./js/search-parser-enhanced.js');
+                    EnhancedSearchParser = enhancedSearchModule.EnhancedSearchParser;
+                } catch (err) {
+                    console.warn('[App] Enhanced Search Parser module not available:', err);
+                }
+                
+                try {
+                    const advancedFiltersModule = await import('./js/advanced-filters.js');
+                    AdvancedFilters = advancedFiltersModule.AdvancedFilters;
+                } catch (err) {
+                    console.warn('[App] Advanced Filters module not available:', err);
+                }
+                
+                // Library Tab Enhancements - Phase 2: Core
+                let EnhancedMediaDisplay, FavoritesCollections;
+                try {
+                    const enhancedDisplayModule = await import('./js/enhanced-media-display.js');
+                    EnhancedMediaDisplay = enhancedDisplayModule.EnhancedMediaDisplay;
+                } catch (err) {
+                    console.warn('[App] Enhanced Media Display module not available:', err);
+                }
+                
+                try {
+                    const favoritesModule = await import('./js/favorites-collections.js');
+                    FavoritesCollections = favoritesModule.FavoritesCollections;
+                } catch (err) {
+                    console.warn('[App] Favorites Collections module not available:', err);
+                }
+                
+                // Library Tab Enhancements - Phase 3: Advanced
+                let LibraryDragDrop, LibraryKeyboardShortcuts;
+                try {
+                    const dragDropModule = await import('./js/library-drag-drop.js');
+                    LibraryDragDrop = dragDropModule.LibraryDragDrop;
+                } catch (err) {
+                    console.warn('[App] Library Drag Drop module not available:', err);
+                }
+                
+                try {
+                    const keyboardShortcutsModule = await import('./js/library-keyboard-shortcuts.js');
+                    LibraryKeyboardShortcuts = keyboardShortcutsModule.LibraryKeyboardShortcuts;
+                } catch (err) {
+                    console.warn('[App] Library Keyboard Shortcuts module not available:', err);
+                }
+                
+                // Library Tab Enhancements - Phase 4: Initialization
+                let initializeLibraryTabEnhancements;
+                
+                // Import Library Index Manager
+                try {
+                    const libraryIndexModule = await import('./js/library-index-manager.js');
+                    window.LibraryIndexManager = libraryIndexModule.LibraryIndexManager;
+                    if (!window.libraryIndexManager) {
+                        window.libraryIndexManager = new window.LibraryIndexManager();
+                    }
+                    console.log('[Library] LibraryIndexManager loaded');
+                } catch (err) {
+                    console.warn('[Library] LibraryIndexManager failed to load:', err);
+                }
+                
+                // Import Generation Library Bridge
+                try {
+                    const bridgeModule = await import('./js/generation-library-bridge.js');
+                    window.GenerationLibraryBridge = bridgeModule.GenerationLibraryBridge;
+                    if (!window.generationLibraryBridge) {
+                        window.generationLibraryBridge = new window.GenerationLibraryBridge();
+                    }
+                    console.log('[Library] GenerationLibraryBridge loaded');
+                } catch (err) {
+                    console.warn('[Library] GenerationLibraryBridge failed to load:', err);
+                }
+                
+                // Import Library Auto-Refresh
+                try {
+                    const refreshModule = await import('./js/library-auto-refresh.js');
+                    window.LibraryAutoRefresh = refreshModule.LibraryAutoRefresh;
+                    if (!window.libraryAutoRefresh) {
+                        window.libraryAutoRefresh = new window.LibraryAutoRefresh();
+                    }
+                    console.log('[Library] LibraryAutoRefresh loaded');
+                } catch (err) {
+                    console.warn('[Library] LibraryAutoRefresh failed to load:', err);
+                }
+                
+                // Import Enhanced Clip Editor
+                try {
+                    const enhancedEditorModule = await import('./js/enhanced-clip-editor.js');
+                    window.EnhancedClipEditor = enhancedEditorModule.EnhancedClipEditor;
+                    window.ParameterKnob = enhancedEditorModule.ParameterKnob;
+                    window.EnhancedWaveformEditor = enhancedEditorModule.EnhancedWaveformEditor;
+                    window.EnhancedPianoRollEditor = enhancedEditorModule.EnhancedPianoRollEditor;
+                    console.log('[Library] EnhancedClipEditor loaded');
+                } catch (err) {
+                    console.warn('[Library] EnhancedClipEditor failed to load:', err);
+                }
+                
+                try {
+                    const initModule = await import('./js/library-tab-enhancements-init.js');
+                    initializeLibraryTabEnhancements = initModule.initializeLibraryTabEnhancements;
+                } catch (err) {
+                    console.warn('[App] Library Tab Enhancements Init module not available:', err);
+                }
+                
+                // Make enhancement classes available globally
+                if (typeof EnhancedSearchParser !== 'undefined') {
+                    window.EnhancedSearchParser = EnhancedSearchParser;
+                }
+                if (typeof AdvancedFilters !== 'undefined') {
+                    window.AdvancedFilters = AdvancedFilters;
+                }
+                if (typeof EnhancedMediaDisplay !== 'undefined') {
+                    window.EnhancedMediaDisplay = EnhancedMediaDisplay;
+                }
+                if (typeof FavoritesCollections !== 'undefined') {
+                    window.FavoritesCollections = FavoritesCollections;
+                }
+                if (typeof LibraryDragDrop !== 'undefined') {
+                    window.LibraryDragDrop = LibraryDragDrop;
+                }
+                if (typeof LibraryKeyboardShortcuts !== 'undefined') {
+                    window.LibraryKeyboardShortcuts = LibraryKeyboardShortcuts;
+                }
+                if (typeof initializeLibraryTabEnhancements !== 'undefined') {
+                    window.initializeLibraryTabEnhancements = initializeLibraryTabEnhancements;
+                }
+                
                 // State helpers
                 const stateHelpersModule = await import('./js/state-helpers.js');
                 // Make state helpers available globally
@@ -5697,6 +7236,10 @@
                 // Initialize controller handlers
                 try {
                     window.controllerHandlers = await initializeControllerHandlers('http://localhost:8000');
+                    // Make library handler accessible globally for drag-drop and other enhancements
+                    if (window.controllerHandlers && window.controllerHandlers.handlers && window.controllerHandlers.handlers.library) {
+                        window.libraryHandlers = window.controllerHandlers.handlers.library;
+                    }
                     console.log('[App] Controller handlers initialized');
                 } catch (err) {
                     console.error('[App] Controller handlers initialization failed:', err);
@@ -6035,9 +7578,26 @@
                     window.uiEnhancements = {};
                 }
                 
-                // Initialize virtual scrolling for media list FIRST
+                // CRITICAL: Initialize EnhancedMediaDisplay BEFORE BrowserList
+                // This ensures the createItemElement prototype override is in place
+                // before any items are created
+                try {
+                    if (typeof EnhancedMediaDisplay !== 'undefined') {
+                        window.enhancedMediaDisplay = new EnhancedMediaDisplay();
+                        // Ensure BrowserList override is set up immediately
+                        if (window.enhancedMediaDisplay.setupEnhancedRendering) {
+                            window.enhancedMediaDisplay.setupEnhancedRendering();
+                        }
+                        console.log('[Library Tab] Enhanced Media Display initialized (early)');
+                    }
+                } catch (err) {
+                    console.warn('[Library Tab] Enhanced Media Display early initialization failed:', err);
+                }
+                
+                // Initialize virtual scrolling for media list
                 // This must happen before MediaItemInteraction because BrowserList
                 // replaces the container content with its wrapper
+                // NOTE: EnhancedMediaDisplay prototype override is now in place
                 const mediaListContainer = document.getElementById('media-list');
                 if (mediaListContainer) {
                     try {
@@ -6149,6 +7709,51 @@
             console.log('[Library Tab] Wiring button handlers...');
             wireLibraryTabButtons();
             
+            // Initialize Library Tab Enhancements
+            try {
+                if (window.initializeLibraryTabEnhancements) {
+                    window.initializeLibraryTabEnhancements();
+                }
+            } catch (err) {
+                console.warn('[Library Tab] Enhancements initialization failed:', err);
+            }
+            
+            // Initialize library index refresh
+            try {
+                if (window.libraryIndexManager) {
+                    // Refresh index from filesystem on tab open
+                    window.libraryIndexManager.refreshFromFilesystem().then(added => {
+                        if (added > 0) {
+                            console.log(`[Library Tab] Indexed ${added} new files`);
+                            if (window.libraryAutoRefresh) {
+                                window.libraryAutoRefresh.refreshLibraryItems();
+                            }
+                        }
+                    }).catch(err => {
+                        console.warn('[Library Tab] Index refresh failed:', err);
+                    });
+                }
+            } catch (err) {
+                console.warn('[Library Tab] Index refresh initialization failed:', err);
+            }
+            
+            // Initialize Enhanced Clip Editor
+            try {
+                if (window.EnhancedClipEditor) {
+                    window.enhancedClipEditor = new window.EnhancedClipEditor();
+                    console.log('[Library Tab] EnhancedClipEditor initialized');
+                }
+            } catch (err) {
+                console.warn('[Library Tab] EnhancedClipEditor initialization failed:', err);
+            }
+            
+            // Listen for media items rendered event to update group counts
+            document.addEventListener('mediaItemsRendered', function(e) {
+                if (typeof updateGroupCounts === 'function') {
+                    updateGroupCounts();
+                }
+            });
+            
             console.log('[Library Tab] Initialization complete');
         }
         
@@ -6252,6 +7857,10 @@
                 
                 searchClear.addEventListener('click', function() {
                     searchInput.value = '';
+                    const queryDisplay = document.getElementById('search-query-display');
+                    if (queryDisplay) {
+                        queryDisplay.textContent = '';
+                    }
                     searchInput.focus();
                     this.style.display = 'none';
                     
@@ -6274,17 +7883,40 @@
                 });
             }
             
-            // 3. Group Toggle Buttons
+            // 3. Group Toggle Buttons and Headers
             const groupToggles = document.querySelectorAll('.group-toggle');
+            const groupHeaders = document.querySelectorAll('.group-header');
+            
+            // Toggle function
+            const toggleGroup = (group) => {
+                if (group) {
+                    group.classList.toggle('collapsed');
+                    const isCollapsed = group.classList.contains('collapsed');
+                    const toggleBtn = group.querySelector('.group-toggle');
+                    if (toggleBtn) {
+                        toggleBtn.textContent = isCollapsed ? '▶' : '▼';
+                    }
+                }
+            };
+            
+            // Toggle on button click
             groupToggles.forEach(toggle => {
                 toggle.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const group = this.closest('.media-group');
-                    if (group) {
-                        group.classList.toggle('collapsed');
-                        const isCollapsed = group.classList.contains('collapsed');
-                        this.textContent = isCollapsed ? '▶' : '▼';
+                    toggleGroup(group);
+                });
+            });
+            
+            // Toggle on header click (but not on toggle button)
+            groupHeaders.forEach(header => {
+                header.addEventListener('click', function(e) {
+                    // Don't toggle if clicking the toggle button itself
+                    if (e.target.classList.contains('group-toggle')) {
+                        return;
                     }
+                    const group = this.closest('.media-group');
+                    toggleGroup(group);
                 });
             });
             
@@ -6894,6 +8526,10 @@
                         if (cached) {
                             if (window.browserList && window.browserList.setItems) {
                                 window.browserList.setItems(cached);
+                                // Update group counts after items are set
+                                if (typeof updateGroupCounts === 'function') {
+                                    setTimeout(() => updateGroupCounts(), 100);
+                                }
                             }
                             if (window.visualFeedback && window.visualFeedback.hideLoading) {
                                 window.visualFeedback.hideLoading('library-search');
@@ -6946,17 +8582,27 @@
                     
                     if (response && response.status === 'ok') {
                         // Convert to BrowserList format
-                        const items = (response.items || []).map(item => ({
-                            id: item.path || item.name,
-                            name: item.name,
-                            type: item.item_type || 'audio',
-                            path: item.path,
-                            icon: item.item_type === 'midi_clip' ? '🎹' : '🎵',
-                            duration: item.duration || null,
-                            bpm: item.bpm || null,
-                            key: item.key || null,
-                            ...item
-                        }));
+                        const items = (response.items || []).map(item => {
+                            const mediaId = item.path || item.name || item.id;
+                            // Check if item is favorite
+                            const isFavorite = window.favoritesCollections && 
+                                             window.favoritesCollections.isFavorite(mediaId);
+                            
+                            return {
+                                id: mediaId,
+                                name: item.name,
+                                type: item.item_type || item.type || 'audio',
+                                path: item.path,
+                                icon: (item.item_type || item.type) === 'midi_clip' ? '🎹' : '🎵',
+                                duration: item.duration || null,
+                                bpm: item.bpm || null,
+                                key: item.key || null,
+                                sample_rate: item.sample_rate || null,
+                                genre: item.genre || null,
+                                isFavorite: isFavorite,
+                                ...item
+                            };
+                        });
                         
                         // Cache results
                         try {
@@ -9120,12 +10766,16 @@
                 }
             }
             
-            // Waveform Editor Controls
+            // Waveform Editor Controls (Enhanced - delegates to EnhancedClipEditor)
             function initWaveformControls() {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller_Preview.html:6510',message:'initWaveformControls entry',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
+                // Enhanced editor handles controls, but we keep this for backward compatibility
+                if (window.enhancedClipEditor && window.enhancedClipEditor.sidebar) {
+                    // Enhanced editor is handling controls
+                    console.log('[Waveform Controls] Using EnhancedClipEditor');
+                    return;
+                }
                 
+                // Fallback to original implementation if enhanced editor not available
                 const warpToggle = document.getElementById('warp-toggle');
                 const warpMode = document.getElementById('warp-mode');
                 const clipGain = document.getElementById('clip-gain');
@@ -9134,10 +10784,6 @@
                 const clipTransposeValue = document.getElementById('clip-transpose-value');
                 const clipColor = document.getElementById('clip-color');
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller_Preview.html:6522',message:'Waveform elements found',data:{warpToggle:!!warpToggle,warpMode:!!warpMode,clipGain:!!clipGain,clipColor:!!clipColor},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-                
                 if (warpToggle) {
                     warpToggle.addEventListener('change', function() {
                         const state = window.editorStates?.waveform;
@@ -9145,8 +10791,12 @@
                             state.clipProperties.warp.enabled = this.checked;
                             state.saveState();
                             if (window.updateWaveformCanvas) window.updateWaveformCanvas();
-                            sendToMax('set_warp', state.clipProperties.warp.enabled);
-                            showNotification(`Warp ${state.clipProperties.warp.enabled ? 'ON' : 'OFF'}`);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_warp', state.clipProperties.warp.enabled);
+                            }
+                            if (typeof showNotification === 'function') {
+                                showNotification(`Warp ${state.clipProperties.warp.enabled ? 'ON' : 'OFF'}`);
+                            }
                         }
                     });
                 }
@@ -9158,8 +10808,12 @@
                             state.clipProperties.warp.mode = this.value;
                             state.saveState();
                             if (window.updateWaveformCanvas) window.updateWaveformCanvas();
-                            sendToMax('set_warp_mode', this.value);
-                            showNotification(`Warp Mode: ${this.value}`);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_warp_mode', this.value);
+                            }
+                            if (typeof showNotification === 'function') {
+                                showNotification(`Warp Mode: ${this.value}`);
+                            }
                         }
                     });
                 }
@@ -9172,7 +10826,9 @@
                         if (state) {
                             state.clipProperties.gain = value;
                             state.saveState();
-                            sendToMax('set_clip_gain', value);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_clip_gain', value);
+                            }
                         }
                     });
                 }
@@ -9186,7 +10842,9 @@
                             state.clipProperties.transpose = value;
                             state.saveState();
                             if (window.updateWaveformCanvas) window.updateWaveformCanvas();
-                            sendToMax('set_clip_transpose', value);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_clip_transpose', value);
+                            }
                         }
                     });
                 }
@@ -9198,7 +10856,9 @@
                             state.clipProperties.color = this.value;
                             state.saveState();
                             if (window.updateWaveformCanvas) window.updateWaveformCanvas();
-                            sendToMax('set_clip_color', this.value);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_clip_color', this.value);
+                            }
                         }
                     });
                 }
@@ -9426,6 +11086,14 @@
             
             // Clip Properties
             function initClipProperties() {
+                // Enhanced editor handles clip properties, but we keep this for backward compatibility
+                if (window.enhancedClipEditor && window.enhancedClipEditor.sidebar) {
+                    // Enhanced editor is handling properties
+                    console.log('[Clip Properties] Using EnhancedClipEditor');
+                    return;
+                }
+                
+                // Fallback to original implementation if enhanced editor not available
                 const launchMode = document.getElementById('launch-mode');
                 const launchQuantization = document.getElementById('launch-quantization');
                 const followAction = document.getElementById('follow-action');
@@ -9436,7 +11104,9 @@
                         if (state) {
                             state.clipProperties.launch.mode = this.value;
                             state.saveState();
-                            sendToMax('set_launch_mode', this.value);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_launch_mode', this.value);
+                            }
                         }
                     });
                 }
@@ -9447,7 +11117,9 @@
                         if (state) {
                             state.clipProperties.launch.quantization = this.value;
                             state.saveState();
-                            sendToMax('set_launch_quantization', this.value);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_launch_quantization', this.value);
+                            }
                         }
                     });
                 }
@@ -9458,7 +11130,9 @@
                         if (state) {
                             state.clipProperties.launch.followAction = this.value;
                             state.saveState();
-                            sendToMax('set_follow_action', this.value);
+                            if (typeof sendToMax === 'function') {
+                                sendToMax('set_follow_action', this.value);
+                            }
                         }
                     });
                 }
@@ -10082,29 +11756,64 @@
             'use strict';
             
             function updateMediaCounter() {
-                const items = document.querySelectorAll('.browser-item[data-media-id]');
-                const currentIndex = Array.from(items).findIndex(item => 
-                    item.classList.contains('selected') || item.classList.contains('loaded')
-                );
+                const items = Array.from(document.querySelectorAll('.browser-item[data-media-id]:not([style*="display: none"])'));
+                const selectedItem = document.querySelector('.browser-item.selected, .browser-item.loaded');
+                let currentIndex = -1;
+                
+                if (selectedItem) {
+                    currentIndex = items.indexOf(selectedItem);
+                } else if (window.mediaKeyboardNavigation && window.mediaKeyboardNavigation.getCurrentIndex) {
+                    // Use MediaKeyboardNavigation current index if available
+                    const navIndex = window.mediaKeyboardNavigation.getCurrentIndex();
+                    if (navIndex >= 0 && navIndex < items.length) {
+                        currentIndex = navIndex;
+                    }
+                }
                 
                 const currentEl = document.getElementById('current-media-index');
                 const totalEl = document.getElementById('total-media-count');
                 
-                if (currentEl) currentEl.textContent = currentIndex >= 0 ? (currentIndex + 1) : '-';
-                if (totalEl) totalEl.textContent = items.length;
+                // Format as "current / total" (0-based index)
+                if (currentEl) {
+                    currentEl.textContent = currentIndex >= 0 ? currentIndex : '-';
+                }
+                if (totalEl) {
+                    totalEl.textContent = items.length;
+                }
             }
             
+            // Expose function globally for use by other modules
+            window.updateMediaPagination = updateMediaCounter;
+            
             // Update counter when media list changes
-            const observer = new MutationObserver(updateMediaCounter);
+            const observer = new MutationObserver(() => {
+                setTimeout(updateMediaCounter, 50);
+            });
             const mediaList = document.getElementById('media-list');
             if (mediaList) {
-                observer.observe(mediaList, { childList: true, subtree: true });
+                observer.observe(mediaList, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
             }
             
             // Update counter on selection changes
             document.addEventListener('click', () => {
                 setTimeout(updateMediaCounter, 100);
             });
+            
+            // Listen for selection changes from MediaItemInteraction
+            document.addEventListener('mediaSelected', () => {
+                setTimeout(updateMediaCounter, 50);
+            });
+            
+            // Listen for navigation from MediaKeyboardNavigation
+            if (window.mediaKeyboardNavigation) {
+                const originalUpdateSelection = window.mediaKeyboardNavigation.updateSelection;
+                if (originalUpdateSelection) {
+                    window.mediaKeyboardNavigation.updateSelection = function() {
+                        originalUpdateSelection.call(this);
+                        setTimeout(updateMediaCounter, 50);
+                    };
+                }
+            }
             
             // Navigation buttons
             const prevBtn = document.getElementById('prev-media');
@@ -12518,6 +14227,28 @@
             }
             
             function updatePianoRollCanvas() {
+                // Use enhanced editor if available
+                if (window.enhancedClipEditor && window.enhancedClipEditor.mainEditor && window.enhancedClipEditor.mainEditor.pianoRollEditor) {
+                    const editor = window.enhancedClipEditor.mainEditor.pianoRollEditor;
+                    const state = window.editorStates?.['piano-roll'];
+                    if (state) {
+                        if (state.data && state.data.notes) {
+                            editor.setNotes(state.data.notes);
+                        }
+                        if (state.pianoRollSettings) {
+                            editor.setShowGrid(state.pianoRollSettings.showGrid || false);
+                            editor.setShowNoteNames(state.pianoRollSettings.showNoteNames || false);
+                            editor.setScaleHighlight(state.pianoRollSettings.scaleHighlight || false);
+                            if (state.pianoRollSettings.scale) {
+                                const scaleParts = state.pianoRollSettings.scale.split(' ');
+                                editor.setScale(scaleParts[0] || 'C', scaleParts[1] || 'major');
+                            }
+                        }
+                    }
+                    return;
+                }
+                
+                // Fallback to original implementation
                 const canvas = document.getElementById('piano-roll-canvas');
                 if (!canvas) return;
                 

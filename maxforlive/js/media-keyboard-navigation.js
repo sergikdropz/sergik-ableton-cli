@@ -228,6 +228,11 @@ export class MediaKeyboardNavigation {
             item.classList.add('selected');
             item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+        
+        // Update pagination display
+        if (typeof window.updateMediaPagination === 'function') {
+            window.updateMediaPagination();
+        }
     }
 
     /**

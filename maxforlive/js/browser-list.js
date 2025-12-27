@@ -104,6 +104,25 @@ export class BrowserList {
         this.totalHeight = items.length * this.itemHeight;
         this.updateVisibleRange();
         this.render();
+        
+        // Dispatch event for items rendered
+        document.dispatchEvent(new CustomEvent('mediaItemsRendered', {
+            detail: { items: items, count: items.length }
+        }));
+        
+        // Make items draggable if drag-drop is available
+        if (window.libraryDragDrop && window.libraryDragDrop.makeItemsDraggable) {
+            setTimeout(() => {
+                window.libraryDragDrop.makeItemsDraggable();
+            }, 50);
+        }
+        
+        // Update favorites UI if available
+        if (window.favoritesCollections && window.favoritesCollections.updateAllFavoriteUI) {
+            setTimeout(() => {
+                window.favoritesCollections.updateAllFavoriteUI();
+            }, 50);
+        }
     }
 
     /**
@@ -200,7 +219,19 @@ export class BrowserList {
     createItemElement(item, index) {
         const element = document.createElement('div');
         element.className = 'browser-item';
-        element.setAttribute('data-media-id', item.id || `item-${index}`);
+        const mediaId = item.id || item.path || `item-${index}`;
+        element.setAttribute('data-media-id', mediaId);
+        
+        // Add all metadata as data attributes for enhanced display
+        if (item.path) element.setAttribute('data-media-path', item.path);
+        if (item.type) element.setAttribute('data-media-type', item.type);
+        if (item.bpm) element.setAttribute('data-bpm', item.bpm);
+        if (item.key) element.setAttribute('data-key', item.key);
+        if (item.duration) element.setAttribute('data-duration', item.duration);
+        if (item.sample_rate) element.setAttribute('data-sample-rate', item.sample_rate);
+        if (item.genre) element.setAttribute('data-genre', item.genre);
+        if (item.name) element.setAttribute('data-media-name', item.name);
+        
         element.style.cssText = `
             position: absolute;
             top: ${index * this.itemHeight}px;

@@ -11,6 +11,7 @@ export class MediaLoader {
         this.historyIndex = -1;
         this.loadedMedia = new Map(); // Cache loaded media
         this.mediaCache = new Map(); // Media data cache
+        this.recentMetadata = new Map(); // Metadata for recent items
         this.maxCacheSize = 100;
         this.maxHistorySize = 50;
         this.preloadQueue = [];
@@ -238,6 +239,24 @@ export class MediaLoader {
      */
     getCurrentMedia() {
         return this.currentMedia;
+    }
+
+    /**
+     * Add to recent list (for library auto-refresh)
+     * @param {string} mediaId - Media ID
+     * @param {Object} metadata - Media metadata
+     */
+    addToRecent(mediaId, metadata = {}) {
+        this._addToHistory(mediaId);
+        
+        // Store metadata for recent items
+        if (!this.recentMetadata) {
+            this.recentMetadata = new Map();
+        }
+        this.recentMetadata.set(mediaId, {
+            ...metadata,
+            addedAt: new Date().toISOString()
+        });
     }
 
     /**

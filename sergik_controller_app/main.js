@@ -25,6 +25,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const axios = require('axios');
 const { safeStorage } = require('electron');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
 
 // Immediate log test on module load
 const logPath = '/Users/machd/sergik_custom_gpt/.cursor/debug.log';
@@ -66,8 +67,10 @@ process.on('unhandledRejection', (reason, promise) => {
 // Keep a global reference of the window object
 let mainWindow;
 let apiBaseUrl = 'http://127.0.0.1:8000';
+let aiTeamBaseUrl = 'http://127.0.0.1:8001'; // SERGIK AI Team server URL
 let isRecording = false;
 let apiSettings = null;
+let serverProcess = null; // Track the SERGIK ML server process
 
 // API Keys storage (encrypted)
 let apiKeysStore = {};
@@ -1016,6 +1019,252 @@ ipcMain.handle('check-health', async (event) => {
   }
 });
 
+// Server Management Functions
+function getServerPath() {
+  // Get the path to run_server.py in the parent directory
+  const parentDir = path.resolve(__dirname, '..');
+  return path.join(parentDir, 'run_server.py');
+}
+
+function isServerRunning() {
+  return serverProcess !== null && serverProcess.exitCode === null;
+}
+
+function startServer() {
+  return new Promise((resolve, reject) => {
+    // If server is already running, just resolve
+    if (isServerRunning()) {
+      resolve({ success: true, message: 'Server already running' });
+      return;
+    }
+
+    // Kill any existing process
+    if (serverProcess) {
+      try {
+        serverProcess.kill();
+      } catch (e) {
+        // Ignore errors
+      }
+      serverProcess = null;
+    }
+
+    const serverPath = getServerPath();
+    console.log('[Server] Starting SERGIK ML server:', serverPath);
+
+    // Determine Python command
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    
+    // Spawn the server process
+    serverProcess = spawn(pythonCmd, [serverPath], {
+      cwd: path.resolve(__dirname, '..'),
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: false
+    });
+
+    let serverOutput = '';
+    let serverError = '';
+
+    serverProcess.stdout.on('data', (data) => {
+      serverOutput += data.toString();
+      console.log('[Server]', data.toString().trim());
+    });
+
+    serverProcess.stderr.on('data', (data) => {
+      serverError += data.toString();
+      console.error('[Server Error]', data.toString().trim());
+    });
+
+    serverProcess.on('error', (error) => {
+      console.error('[Server] Failed to start:', error);
+      serverProcess = null;
+      reject({ success: false, error: error.message });
+    });
+
+    serverProcess.on('exit', (code, signal) => {
+      console.log('[Server] Process exited:', { code, signal });
+      serverProcess = null;
+    });
+
+    // Wait a bit to see if server starts successfully
+    setTimeout(() => {
+      if (isServerRunning()) {
+        resolve({ success: true, message: 'Server started successfully' });
+      } else {
+        reject({ success: false, error: 'Server failed to start', output: serverOutput, error: serverError });
+      }
+    }, 2000);
+  });
+}
+
+function stopServer() {
+  return new Promise((resolve) => {
+    if (!serverProcess) {
+      resolve({ success: true, message: 'No server process to stop' });
+      return;
+    }
+
+    try {
+      serverProcess.kill();
+      serverProcess = null;
+      resolve({ success: true, message: 'Server stopped' });
+    } catch (error) {
+      resolve({ success: false, error: error.message });
+    }
+  });
+}
+
+async function restartServer() {
+  await stopServer();
+  await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit before restarting
+  return await startServer();
+}
+
+// IPC Handlers for Server Management
+ipcMain.handle('start-server', async () => {
+  try {
+    return await startServer();
+  } catch (error) {
+    return { success: false, error: error.message || 'Failed to start server' };
+  }
+});
+
+ipcMain.handle('stop-server', async () => {
+  try {
+    return await stopServer();
+  } catch (error) {
+    return { success: false, error: error.message || 'Failed to stop server' };
+  }
+});
+
+ipcMain.handle('restart-server', async () => {
+  try {
+    return await restartServer();
+  } catch (error) {
+    return { success: false, error: error.message || 'Failed to restart server' };
+  }
+});
+
+ipcMain.handle('check-server-status', async () => {
+  // Check if server process is running
+  const processRunning = isServerRunning();
+  
+  // Also check if server is responding to health check
+  try {
+    const healthResult = await apiRequest('GET', '/health', null, { endpointType: 'health' });
+    return {
+      processRunning,
+      serverResponding: healthResult.success,
+      status: healthResult.success ? 'running' : 'not responding'
+    };
+  } catch (error) {
+    return {
+      processRunning,
+      serverResponding: false,
+      status: processRunning ? 'starting' : 'stopped'
+    };
+  }
+});
+
+// Server Management Functions
+function getServerPath() {
+  // Get the path to run_server.py in the parent directory
+  const parentDir = path.resolve(__dirname, '..');
+  return path.join(parentDir, 'run_server.py');
+}
+
+function isServerRunning() {
+  return serverProcess !== null && serverProcess.exitCode === null;
+}
+
+function startServer() {
+  return new Promise((resolve, reject) => {
+    // If server is already running, just resolve
+    if (isServerRunning()) {
+      resolve({ success: true, message: 'Server already running' });
+      return;
+    }
+
+    // Kill any existing process
+    if (serverProcess) {
+      try {
+        serverProcess.kill();
+      } catch (e) {
+        // Ignore errors
+      }
+      serverProcess = null;
+    }
+
+    const serverPath = getServerPath();
+    console.log('[Server] Starting SERGIK ML server:', serverPath);
+
+    // Determine Python command
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    
+    // Spawn the server process
+    serverProcess = spawn(pythonCmd, [serverPath], {
+      cwd: path.resolve(__dirname, '..'),
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: false
+    });
+
+    let serverOutput = '';
+    let serverError = '';
+
+    serverProcess.stdout.on('data', (data) => {
+      serverOutput += data.toString();
+      console.log('[Server]', data.toString().trim());
+    });
+
+    serverProcess.stderr.on('data', (data) => {
+      serverError += data.toString();
+      console.error('[Server Error]', data.toString().trim());
+    });
+
+    serverProcess.on('error', (error) => {
+      console.error('[Server] Failed to start:', error);
+      serverProcess = null;
+      reject({ success: false, error: error.message });
+    });
+
+    serverProcess.on('exit', (code, signal) => {
+      console.log('[Server] Process exited:', { code, signal });
+      serverProcess = null;
+    });
+
+    // Wait a bit to see if server starts successfully
+    setTimeout(() => {
+      if (isServerRunning()) {
+        resolve({ success: true, message: 'Server started successfully' });
+      } else {
+        reject({ success: false, error: 'Server failed to start', output: serverOutput, error: serverError });
+      }
+    }, 2000);
+  });
+}
+
+function stopServer() {
+  return new Promise((resolve) => {
+    if (!serverProcess) {
+      resolve({ success: true, message: 'No server process to stop' });
+      return;
+    }
+
+    try {
+      serverProcess.kill();
+      serverProcess = null;
+      resolve({ success: true, message: 'Server stopped' });
+    } catch (error) {
+      resolve({ success: false, error: error.message });
+    }
+  });
+}
+
+async function restartServer() {
+  await stopServer();
+  await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit before restarting
+  return await startServer();
+}
+
 // GPT Health Check
 ipcMain.handle('check-gpt-health', async () => {
   const result = await apiRequest('GET', '/gpt/health', null, { endpointType: 'health' });
@@ -1026,6 +1275,96 @@ ipcMain.handle('check-gpt-health', async () => {
     };
   }
   return result;
+});
+
+// SERGIK AI Team Integration
+ipcMain.handle('ai-team-health', async () => {
+  try {
+    const response = await axios.get(`${aiTeamBaseUrl}/health`, { timeout: 5000 });
+    return {
+      success: true,
+      status: response.data?.status || 'ok',
+      agents: response.data?.agents || [],
+      sergik_ml: response.data?.sergik_ml || 'unknown'
+    };
+  } catch (error) {
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      return {
+        success: false,
+        error: 'Cannot connect to AI Team server. Is it running on ' + aiTeamBaseUrl + '?',
+        errorCode: error.code
+      };
+    }
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('ai-team-message', async (event, agent, content, sender = 'User') => {
+  try {
+    const response = await axios.post(
+      `${aiTeamBaseUrl}/agent/message`,
+      {
+        sender: sender,
+        receiver: agent,
+        content: content,
+        metadata: {}
+      },
+      { timeout: 30000 }
+    );
+    
+    if (response.data && response.data.success !== false) {
+      return {
+        success: true,
+        agent: response.data.agent || agent,
+        reply: response.data.reply || '',
+        error: response.data.error || null
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || 'Unknown error from AI Team'
+      };
+    }
+  } catch (error) {
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      return {
+        success: false,
+        error: 'Cannot connect to AI Team server. Is it running on ' + aiTeamBaseUrl + '?',
+        errorCode: error.code
+      };
+    }
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('ai-team-list-agents', async () => {
+  try {
+    const response = await axios.get(`${aiTeamBaseUrl}/agent/list`, { timeout: 5000 });
+    return {
+      success: true,
+      agents: response.data?.agents || []
+    };
+  } catch (error) {
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      return {
+        success: false,
+        error: 'Cannot connect to AI Team server. Is it running on ' + aiTeamBaseUrl + '?',
+        errorCode: error.code,
+        agents: []
+      };
+    }
+    return {
+      success: false,
+      error: error.message,
+      agents: []
+    };
+  }
 });
 
 // Voice Control
@@ -1175,14 +1514,40 @@ ipcMain.handle('generate-arps', async (event, params) => {
 
 // Generate Drums
 ipcMain.handle('generate-drums', async (event, params) => {
+  // #region agent log
+  const logPath = '/Users/machd/sergik_custom_gpt/.cursor/debug.log';
+  try {
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:1425',message:'generate-drums entry',data:{params},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'GEN_A'})+'\n');
+  } catch(e) {}
+  // #endregion
   try {
     const response = await axios.post(
       `${apiBaseUrl}/drums/generate`,
       params,
       { timeout: 30000 }
     );
+    // #region agent log
+    const responseData = {
+      hasData: !!response.data,
+      dataKeys: response.data ? Object.keys(response.data) : [],
+      hasStatus: !!response.data?.status,
+      hasPattern: !!response.data?.pattern,
+      hasPatternHits: !!response.data?.pattern?.hits,
+      dataPreview: JSON.stringify(response.data).substring(0, 500)
+    };
+    console.log('[DEBUG] generate-drums response:', responseData);
+    try {
+      fs.appendFileSync(logPath, JSON.stringify({location:'main.js:1432',message:'generate-drums response',data:responseData,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'GEN_B'})+'\n');
+    } catch(e) {}
+    // #endregion
     return { success: true, data: response.data };
   } catch (error) {
+    // #region agent log
+    console.error('[DEBUG] generate-drums error:', error.message);
+    try {
+      fs.appendFileSync(logPath, JSON.stringify({location:'main.js:1434',message:'generate-drums error',data:{errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'GEN_C'})+'\n');
+    } catch(e) {}
+    // #endregion
     return { 
       success: false, 
       error: error.message 
@@ -1460,6 +1825,60 @@ ipcMain.handle('get-clip-notes', async (event, trackIndex, slotIndex) => {
       success: false, 
       error: error.message 
     };
+  }
+});
+
+// Clip Property Management
+ipcMain.handle('set-clip-property', async (event, params) => {
+  try {
+    const { param, value, trackIndex, slotIndex } = params;
+    const response = await axios.post(
+      `${apiBaseUrl}/live/clips/set_property`,
+      { param, value, track_index: trackIndex, slot_index: slotIndex },
+      { timeout: 5000 }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('set-clip-bpm', async (event, bpm) => {
+  try {
+    const response = await axios.post(
+      `${apiBaseUrl}/live/clips/set_bpm`,
+      { bpm },
+      { timeout: 5000 }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('add-warp-marker', async (event, marker) => {
+  try {
+    const response = await axios.post(
+      `${apiBaseUrl}/live/clips/add_warp_marker`,
+      marker,
+      { timeout: 5000 }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('transpose-notes', async (event, params) => {
+  try {
+    const response = await axios.post(
+      `${apiBaseUrl}/live/clips/transpose_notes`,
+      params,
+      { timeout: 5000 }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 });
 
@@ -1812,7 +2231,8 @@ function convertNotesToMIDI(notes, tempo = 120) {
       notes.forEach(note => {
         const pitch = note.pitch || note.note || 60;
         const velocity = note.velocity || 100;
-        const start = note.start || currentTime;
+        // Handle both 'start' and 'start_time' (API uses start_time)
+        const start = note.start || note.start_time || currentTime;
         const duration = note.duration || 0.25;
         
         // Convert time to ticks (assuming 480 ticks per quarter note)
@@ -1834,6 +2254,16 @@ function convertNotesToMIDI(notes, tempo = 120) {
 
 // Save MIDI file to library
 ipcMain.handle('save-midi-to-library', async (event, midiData, filename) => {
+  // #region agent log
+  const logPath = '/Users/machd/sergik_custom_gpt/.cursor/debug.log';
+  const logEntry = {location:'main.js:2084',message:'save-midi-to-library entry',data:{hasMidiData:!!midiData,midiDataType:typeof midiData,isArray:Array.isArray(midiData),isBuffer:Buffer.isBuffer(midiData),hasNotes:!!midiData?.notes,hasPattern:!!midiData?.pattern,hasPatternHits:!!midiData?.pattern?.hits,midiDataKeys:midiData?Object.keys(midiData):[],midiDataPreview:JSON.stringify(midiData).substring(0,500),filename},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
+  console.log('[DEBUG] save-midi-to-library entry:', logEntry.data);
+  try {
+    fs.appendFileSync(logPath, JSON.stringify(logEntry)+'\n');
+  } catch(e) {
+    console.error('[DEBUG] Log write failed:', e);
+  }
+  // #endregion
   try {
     // Use new media storage directory for generated media
     const midiDir = getMediaDirectoryByType('MIDI', 'Generated');
@@ -1841,12 +2271,67 @@ ipcMain.handle('save-midi-to-library', async (event, midiData, filename) => {
     const safeFilename = filename || `generated_${timestamp}.mid`;
     const filePath = path.join(midiDir, safeFilename);
     
+    // #region agent log
+    try {
+      fs.appendFileSync(logPath, JSON.stringify({location:'main.js:2092',message:'Before format check',data:{filePath,hasNotes:!!midiData?.notes,isArray:Array.isArray(midiData),isBuffer:Buffer.isBuffer(midiData),isString:typeof midiData==='string'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n');
+    } catch(e) {}
+    // #endregion
+    
+    // Handle API response format: { status: "ok", pattern: { hits: [...] }, format: "midi" }
+    // Extract notes from various possible structures
+    let notes = null;
+    let tempo = 120;
+    
+    // #region agent log
+    console.log('[DEBUG] Extracting notes from midiData:', {
+      hasPattern: !!midiData?.pattern,
+      hasPatternHits: !!midiData?.pattern?.hits,
+      hasNotes: !!midiData?.notes,
+      isArray: Array.isArray(midiData),
+      keys: midiData ? Object.keys(midiData) : []
+    });
+    // #endregion
+    
+    // API returns: { status: "ok", pattern: { hits: [...], tempo: ... }, format: "midi" }
+    // Check for pattern.hits first (most common API response format)
+    if (midiData && midiData.pattern && Array.isArray(midiData.pattern.hits)) {
+      // API response format - most common case
+      notes = midiData.pattern.hits;
+      tempo = midiData.pattern.tempo || midiData.tempo || 120;
+      console.log('[DEBUG] Using pattern.hits, notes length:', notes?.length, 'tempo:', tempo);
+    } else if (midiData && (midiData.notes || Array.isArray(midiData))) {
+      // Direct notes array or object with notes property
+      notes = midiData.notes || midiData;
+      tempo = midiData.tempo || midiData.metadata?.tempo || 120;
+      console.log('[DEBUG] Using notes property, notes length:', notes?.length, 'tempo:', tempo);
+    } else if (midiData && midiData.status === "ok" && midiData.pattern) {
+      // Handle case where status is at top level
+      notes = midiData.pattern.hits || midiData.pattern.notes;
+      tempo = midiData.pattern.tempo || midiData.tempo || 120;
+      console.log('[DEBUG] Using status+pattern, notes length:', notes?.length, 'tempo:', tempo);
+    } else {
+      // Log the full structure for debugging
+      const errorMsg = `[DEBUG] No notes found. Structure: ${JSON.stringify(midiData).substring(0, 1000)}`;
+      console.error(errorMsg);
+      try {
+        fs.appendFileSync(logPath, JSON.stringify({location:'main.js:2141',message:'No notes found - full structure',data:{midiData:JSON.stringify(midiData).substring(0,1000)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})+'\n');
+      } catch(e) {}
+    }
+    
     // If midiData is notes array, convert to MIDI file
-    if (midiData.notes || Array.isArray(midiData)) {
-      const notes = midiData.notes || midiData;
-      const tempo = midiData.tempo || midiData.metadata?.tempo || 120;
+    if (notes) {
       
+      // #region agent log
+      try {
+        fs.appendFileSync(logPath, JSON.stringify({location:'main.js:2097',message:'Before convertNotesToMIDI',data:{notesLength:notes?.length||0,notesType:typeof notes,isNotesArray:Array.isArray(notes),tempo,notesPreview:JSON.stringify(notes).substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})+'\n');
+      } catch(e) {}
+      // #endregion
       const midiBuffer = convertNotesToMIDI(notes, tempo);
+      // #region agent log
+      try {
+        fs.appendFileSync(logPath, JSON.stringify({location:'main.js:2098',message:'After convertNotesToMIDI',data:{bufferLength:midiBuffer?.length||0,isBuffer:Buffer.isBuffer(midiBuffer)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n');
+      } catch(e) {}
+      // #endregion
       
       if (midiBuffer.length > 0) {
         fs.writeFileSync(filePath, midiBuffer);
@@ -1873,6 +2358,11 @@ ipcMain.handle('save-midi-to-library', async (event, midiData, filename) => {
       }
     } else if (Buffer.isBuffer(midiData) || typeof midiData === 'string') {
       // Already a MIDI file buffer or base64
+      // #region agent log
+      try {
+        fs.appendFileSync(logPath, JSON.stringify({location:'main.js:2122',message:'Buffer or string path',data:{isBuffer:Buffer.isBuffer(midiData),isString:typeof midiData==='string',stringLength:typeof midiData==='string'?midiData.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n');
+      } catch(e) {}
+      // #endregion
       const buffer = Buffer.isBuffer(midiData) ? midiData : Buffer.from(midiData, 'base64');
       fs.writeFileSync(filePath, buffer);
       
@@ -1882,9 +2372,37 @@ ipcMain.handle('save-midi-to-library', async (event, midiData, filename) => {
         message: `Saved MIDI file to library: ${safeFilename}`
       };
     } else {
+      // #region agent log
+      const errorData = {
+        midiDataType: typeof midiData,
+        isNull: midiData === null,
+        isUndefined: midiData === undefined,
+        midiDataKeys: midiData ? Object.keys(midiData) : [],
+        hasPattern: !!midiData?.pattern,
+        hasPatternHits: !!midiData?.pattern?.hits,
+        hasPatternNotes: !!midiData?.pattern?.notes,
+        hasNotes: !!midiData?.notes,
+        isArray: Array.isArray(midiData),
+        isBuffer: Buffer.isBuffer(midiData),
+        isString: typeof midiData === 'string',
+        midiDataPreview: JSON.stringify(midiData).substring(0, 1000)
+      };
+      const errorMsg = `[DEBUG] Invalid format - full structure: ${JSON.stringify(errorData)}`;
+      console.error(errorMsg);
+      try {
+        fs.appendFileSync(logPath, JSON.stringify({location:'main.js:2204',message:'Invalid format - throwing error',data:errorData,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})+'\n');
+      } catch(e) {
+        console.error('[DEBUG] Log write failed:', e);
+      }
+      // #endregion
       throw new Error('Invalid MIDI data format');
     }
   } catch (error) {
+    // #region agent log
+    try {
+      fs.appendFileSync(logPath, JSON.stringify({location:'main.js:2135',message:'save-midi-to-library error',data:{errorMessage:error.message,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})+'\n');
+    } catch(e) {}
+    // #endregion
     console.error('[Main] Save MIDI error:', error);
     return { 
       success: false, 

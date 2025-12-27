@@ -110,11 +110,21 @@ export class UIEnhancements {
     updateSuggestions(query, container) {
         container.innerHTML = '';
 
-        // Get suggestions from SearchParser
-        if (window.SearchParser && window.searchParser) {
+        // Get suggestions from SearchParser (use enhanced if available)
+        if (window.searchParser) {
             const parser = window.searchParser;
-            const recentItems = parser.getRecentQueries().slice(0, 5);
-            const suggestions = parser.getSuggestions(query, recentItems);
+            const recentItems = parser.getRecentQueries ? parser.getRecentQueries().slice(0, 5) : [];
+            
+            // Try enhanced suggestions first if available
+            let suggestions = [];
+            if (parser.getEnhancedSuggestions && window.browserList) {
+                // Use enhanced suggestions with media items for fuzzy matching
+                const mediaItems = window.browserList.items || [];
+                suggestions = parser.getEnhancedSuggestions(query, recentItems, mediaItems);
+            } else if (parser.getSuggestions) {
+                // Fallback to regular suggestions
+                suggestions = parser.getSuggestions(query, recentItems);
+            }
 
             if (suggestions.length === 0) {
                 container.style.display = 'none';
@@ -128,8 +138,26 @@ export class UIEnhancements {
                     padding: 10px 15px;
                     cursor: pointer;
                     border-bottom: 1px solid #2a2a2a;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
                 `;
-                item.textContent = suggestion.text;
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = suggestion.text;
+                item.appendChild(textSpan);
+                
+                // Add type badge if available
+                if (suggestion.type) {
+                    const typeBadge = document.createElement('span');
+                    typeBadge.textContent = suggestion.type;
+                    typeBadge.style.cssText = `
+                        font-size: 10px;
+                        color: var(--text-tertiary, #666);
+                        margin-left: 8px;
+                    `;
+                    item.appendChild(typeBadge);
+                }
 
                 item.addEventListener('mouseenter', () => {
                     item.style.background = '#2a2a2a';
@@ -143,7 +171,7 @@ export class UIEnhancements {
                     const searchInput = document.getElementById('media-search');
                     if (searchInput) {
                         searchInput.value = suggestion.text;
-                        searchInput.dispatchEvent(new Event('input'));
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
                         container.style.display = 'none';
                     }
                 });
@@ -389,8 +417,11 @@ export class UIEnhancements {
                 }
                 break;
             case 'favorite':
-                // Add to favorites
-                if (window.stateManager) {
+                // Add to favorites using FavoritesCollections if available
+                if (window.favoritesCollections) {
+                    window.favoritesCollections.toggleFavorite(mediaId);
+                } else if (window.stateManager) {
+                    // Fallback to stateManager
                     const favorites = window.stateManager.get('favorites') || [];
                     if (!favorites.includes(mediaId)) {
                         favorites.push(mediaId);

@@ -268,3 +268,24 @@ if (typeof module !== "undefined" && module.exports) {
     module.exports = SearchParser;
 }
 
+// Optional: Enhance with fuzzy matching if EnhancedSearchParser is available
+// This allows the enhanced version to be loaded dynamically
+if (typeof window !== "undefined" && window.EnhancedSearchParser) {
+    try {
+        // Extend SearchParser prototype with enhanced methods if available
+        const enhancedProto = window.EnhancedSearchParser.prototype;
+        if (enhancedProto.getEnhancedSuggestions) {
+            SearchParser.prototype.getEnhancedSuggestions = enhancedProto.getEnhancedSuggestions.bind(enhancedProto);
+        }
+        if (enhancedProto.parseWithFuzzy) {
+            SearchParser.prototype.parseWithFuzzy = enhancedProto.parseWithFuzzy.bind(enhancedProto);
+        }
+        if (enhancedProto.fuzzyMatch) {
+            SearchParser.prototype.fuzzyMatch = enhancedProto.fuzzyMatch.bind(enhancedProto);
+        }
+    } catch (e) {
+        // Silently fail if enhancement not available
+        console.debug('[SearchParser] Enhanced features not available');
+    }
+}
+
