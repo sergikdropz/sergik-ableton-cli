@@ -17,13 +17,35 @@ export class MediaItemInteraction {
      */
     setupInteractions() {
         // Use event delegation for media items
-        // Try to find BrowserList wrapper first, fallback to media-list container
+        // Try to find BrowserList wrapper first (created by BrowserList class)
+        // Fallback to media-list container if wrapper doesn't exist yet
         let eventTarget = document.querySelector('#media-list .browser-list-wrapper') || 
+                         document.querySelector('#media-list .browser-list-items') ||
                          document.getElementById('media-list');
         if (!eventTarget) {
-            console.warn('Media list element not found');
+            console.warn('[MediaItemInteraction] Media list element not found, retrying...');
+            // Retry after a short delay in case BrowserList hasn't created wrapper yet
+            setTimeout(() => {
+                eventTarget = document.querySelector('#media-list .browser-list-wrapper') || 
+                             document.querySelector('#media-list .browser-list-items') ||
+                             document.getElementById('media-list');
+                if (eventTarget) {
+                    this.attachEventListeners(eventTarget);
+                } else {
+                    console.error('[MediaItemInteraction] Media list element still not found after retry');
+                }
+            }, 100);
             return;
         }
+        
+        this.attachEventListeners(eventTarget);
+    }
+    
+    /**
+     * Attach event listeners to the target element
+     * @param {HTMLElement} eventTarget - Element to attach listeners to
+     */
+    attachEventListeners(eventTarget) {
 
         // Click handler (single or double)
         eventTarget.addEventListener('click', (e) => {

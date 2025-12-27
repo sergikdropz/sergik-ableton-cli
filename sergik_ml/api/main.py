@@ -24,6 +24,7 @@ from .routers import (
     voice_router,
     compat_router,
 )
+from .routers.pipeline import router as pipeline_router
 from ..serving.rate_limiter import RateLimitMiddleware
 from .middleware.logging_middleware import LoggingMiddleware
 from .middleware.auth import AuthenticationMiddleware, RequestSizeMiddleware
@@ -176,6 +177,7 @@ def create_app() -> FastAPI:
     app.include_router(tracks_router)
     app.include_router(voice_router)
     app.include_router(compat_router)  # Compatibility endpoints for frontend
+    app.include_router(pipeline_router)  # ML pipeline management
     
     # Include dashboard router (lazy import)
     try:
@@ -244,6 +246,21 @@ def create_app() -> FastAPI:
         from ..core.container import get_container
         container = get_container()
         container.startup()
+        
+        # Initialize ML pipeline (optional - can be started via API)
+        try:
+            from ..pipelines.ml_pipeline import get_pipeline, PipelineConfig
+            pipeline_config = PipelineConfig(
+                collect_controller_data=True,
+                auto_retrain=True,
+                health_check_interval_seconds=60
+            )
+            pipeline = get_pipeline(pipeline_config)
+            # Don't auto-start - let user control via API
+            # pipeline.start()
+            logger.info("ML Pipeline initialized (start via /pipeline/start)")
+        except Exception as e:
+            logger.warning(f"ML Pipeline initialization failed: {e}")
         
         logger.info("SERGIK ML Service started")
     

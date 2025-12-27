@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Cache Control: Prevent caching of old versions with Mix/Arrange/Automate tabs -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>SERGIK AI Controller - Device Preview</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -4252,6 +4256,11 @@
                 </div>
                 
                 <!-- Main Tab Navigation -->
+                <!-- 
+                    NOTE: Mix, Arrange, and Automate tabs have been REMOVED.
+                    Only 4 tabs remain: Create, Analyze, Library, and AI.
+                    If you see Mix/Arrange/Automate tabs, clear browser cache and reload.
+                -->
                 <div class="main-tabs">
                     <button class="main-tab-btn active" data-main-tab="create">
                         <span class="icon">&#127929;</span>
@@ -4270,6 +4279,7 @@
                         <span class="icon">&#129302;</span>
                         <span>AI</span>
                     </button>
+                    <!-- Mix, Arrange, and Automate tabs removed - do not add them back -->
                 </div>
                 
                 <!-- Create Tab Section -->
@@ -5200,7 +5210,12 @@
                 
                 <!-- Edit Tab Section - REMOVED (merged into Library) -->
                 
-                <!-- Mix, Arrange, and Automate Tab Sections - REMOVED -->
+                <!-- 
+                    Mix, Arrange, and Automate Tab Sections - REMOVED
+                    These tabs have been completely removed from the interface.
+                    Only Create, Analyze, Library, and AI tabs remain active.
+                    If you see these tabs in the UI, clear browser cache and reload.
+                -->
                 
                 <!-- AI Tab Section -->
                 <div class="tab-section" id="tab-section-ai">
@@ -5414,27 +5429,100 @@
     </div>
     
     <script type="module">
-        // Genre system - imported module
-        import { initializeGenreSystem } from './js/genre-system.js';
-        import { initializeIntelligenceSelector } from './js/intelligence-selector.js';
-        import { initializeIdeaAnalyzer } from './js/idea-analyzer.js';
-        import { initializeTempoModeManager } from './js/tempo-mode-manager.js';
-        import { debounce } from './js/utils/debounce.ts';
+        // CRITICAL: Wrap all imports in try-catch to prevent script failure
+        // If imports fail, we'll use fallbacks so the app still works
+        let initializeGenreSystem, initializeIntelligenceSelector, initializeIdeaAnalyzer, initializeTempoModeManager, debounce;
+        let SearchParser, MediaLoader, MediaItemInteraction, MediaKeyboardNavigation, BrowserList;
+        let VisualFeedback, UIEnhancements, RequestManager, MediaCache, BrowserCache, ErrorHandler, StateManager, DebugTools;
         
-        // Library Tab optimization modules
-        import { SearchParser } from './js/search-parser.js';
-        import { MediaLoader } from './js/media-loader.js';
-        import { MediaItemInteraction } from './js/media-item-interaction.js';
-        import { MediaKeyboardNavigation } from './js/media-keyboard-navigation.js';
-        import { BrowserList } from './js/browser-list.js';
-        import { VisualFeedback } from './js/visual-feedback.js';
-        import { UIEnhancements } from './js/ui-enhancements.js';
-        import { RequestManager } from './js/request-manager.js';
-        import { MediaCache } from './js/media-cache.js';
-        import { BrowserCache } from './js/browser-cache.js';
-        import { ErrorHandler } from './js/error-handler.js';
-        import { StateManager } from './js/state-manager.js';
-        import { DebugTools } from './js/debug-tools.js';
+        // Use async IIFE to handle dynamic imports
+        (async () => {
+            try {
+                // Genre system - imported module
+                const genreModule = await import('./js/genre-system.js');
+                initializeGenreSystem = genreModule.initializeGenreSystem;
+                
+                const intelModule = await import('./js/intelligence-selector.js');
+                initializeIntelligenceSelector = intelModule.initializeIntelligenceSelector;
+                
+                const ideaModule = await import('./js/idea-analyzer.js');
+                initializeIdeaAnalyzer = ideaModule.initializeIdeaAnalyzer;
+                
+                const tempoModule = await import('./js/tempo-mode-manager.js');
+                initializeTempoModeManager = tempoModule.initializeTempoModeManager;
+                
+                const debounceModule = await import('./js/utils/debounce.ts');
+                debounce = debounceModule.debounce;
+                
+                // Library Tab optimization modules
+                const searchParserModule = await import('./js/search-parser.js');
+                SearchParser = searchParserModule.SearchParser;
+                
+                const mediaLoaderModule = await import('./js/media-loader.js');
+                MediaLoader = mediaLoaderModule.MediaLoader;
+                
+                const mediaInteractionModule = await import('./js/media-item-interaction.js');
+                MediaItemInteraction = mediaInteractionModule.MediaItemInteraction;
+                
+                const mediaKeyboardModule = await import('./js/media-keyboard-navigation.js');
+                MediaKeyboardNavigation = mediaKeyboardModule.MediaKeyboardNavigation;
+                
+                const browserListModule = await import('./js/browser-list.js');
+                BrowserList = browserListModule.BrowserList;
+                
+                const visualFeedbackModule = await import('./js/visual-feedback.js');
+                VisualFeedback = visualFeedbackModule.VisualFeedback;
+                
+                const uiEnhancementsModule = await import('./js/ui-enhancements.js');
+                UIEnhancements = uiEnhancementsModule.UIEnhancements;
+                
+                const requestManagerModule = await import('./js/request-manager.js');
+                RequestManager = requestManagerModule.RequestManager;
+                
+                const mediaCacheModule = await import('./js/media-cache.js');
+                MediaCache = mediaCacheModule.MediaCache;
+                
+                const browserCacheModule = await import('./js/browser-cache.js');
+                BrowserCache = browserCacheModule.BrowserCache;
+                
+                const errorHandlerModule = await import('./js/error-handler.js');
+                ErrorHandler = errorHandlerModule.ErrorHandler;
+                
+                const stateManagerModule = await import('./js/state-manager.js');
+                StateManager = stateManagerModule.StateManager;
+                
+                const debugToolsModule = await import('./js/debug-tools.js');
+                DebugTools = debugToolsModule.DebugTools;
+                
+                console.log('[App] All modules loaded successfully');
+            } catch (err) {
+                console.error('[App] Module import failed, using fallbacks:', err);
+                // Create fallback functions/classes
+                initializeGenreSystem = () => ({});
+                initializeIntelligenceSelector = () => ({});
+                initializeIdeaAnalyzer = () => ({ analyze: () => ({}) });
+                initializeTempoModeManager = () => ({});
+                debounce = (fn, delay) => {
+                    let timeout;
+                    return (...args) => {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => fn(...args), delay);
+                    };
+                };
+                SearchParser = class { parse() { return {}; } };
+                MediaLoader = class { loadMediaIntoEditor() { return Promise.resolve(); } };
+                MediaItemInteraction = class { setupInteractions() {} };
+                MediaKeyboardNavigation = class {};
+                BrowserList = class { setItems() {}; clearItems() {}; items = []; };
+                VisualFeedback = class { showLoading() {}; hideLoading() {}; showError() {} };
+                UIEnhancements = class {};
+                RequestManager = class { debounce() {} };
+                MediaCache = class { get() { return null; }; set() {}; clear() {} };
+                BrowserCache = class { getSearchResults() { return null; }; setSearchResults() {} };
+                ErrorHandler = class { handle() { console.error(...arguments); } };
+                StateManager = class { get() { return null; }; set() {} };
+                DebugTools = class { setEnabled() {}; inspectState() {}; getLogs() { return []; } };
+            }
         
         // Export classes to window for global access (fixes module scope issues)
         // This ensures classes are available even if module scope has issues
@@ -5452,36 +5540,47 @@
         window.StateManager = StateManager;
         window.DebugTools = DebugTools;
         
-        // Initialize genre system
-        const genreSystem = initializeGenreSystem();
-        
-        // Initialize intelligence selector
-        const intelligenceSelector = initializeIntelligenceSelector();
-        
-        // Initialize idea analyzer
-        const ideaAnalyzer = initializeIdeaAnalyzer();
-        
-        // Initialize tempo mode manager
-        const tempoModeManager = initializeTempoModeManager();
+                // Initialize genre system (if loaded)
+                if (initializeGenreSystem) {
+                    const genreSystem = initializeGenreSystem();
+                }
+                
+                // Initialize intelligence selector (if loaded)
+                if (initializeIntelligenceSelector) {
+                    const intelligenceSelector = initializeIntelligenceSelector();
+                }
+                
+                // Initialize idea analyzer (if loaded)
+                if (initializeIdeaAnalyzer) {
+                    const ideaAnalyzer = initializeIdeaAnalyzer();
+                }
+                
+                // Initialize tempo mode manager (if loaded)
+                if (initializeTempoModeManager) {
+                    const tempoModeManager = initializeTempoModeManager();
+                }
+            })(); // Close async IIFE
         
         // External code (MaxForLive device) can update tempo by:
         // 1. Setting window.currentLiveTempo = 126.5;
         // 2. Or calling window.tempoModeManager.updateTempo(126.5);
         
-        // Wire up idea input with analyzer and auto-fill
-        const ideaInput = document.getElementById('idea-input');
-        const genreSelect = document.getElementById('genre-select');
-        const tempoSelect = document.getElementById('tempo-select');
-        const energySelect = document.getElementById('energy-select');
-        const keySelect = document.getElementById('key-select');
-        const scaleSelect = document.getElementById('scale-select');
-        const intelligenceSelect = document.getElementById('intelligence-select');
-        
-        if (ideaInput) {
-            const analyzeIdea = debounce((ideaText) => {
-                if (!ideaText || ideaText.trim() === '') return;
-                
-                const suggestions = ideaAnalyzer.analyze(ideaText);
+        // Wire up idea input with analyzer and auto-fill (only if modules loaded)
+        if (debounce && initializeIdeaAnalyzer) {
+            const ideaInput = document.getElementById('idea-input');
+            const genreSelect = document.getElementById('genre-select');
+            const tempoSelect = document.getElementById('tempo-select');
+            const energySelect = document.getElementById('energy-select');
+            const keySelect = document.getElementById('key-select');
+            const scaleSelect = document.getElementById('scale-select');
+            const intelligenceSelect = document.getElementById('intelligence-select');
+            
+            if (ideaInput) {
+                const ideaAnalyzer = initializeIdeaAnalyzer();
+                const analyzeIdea = debounce((ideaText) => {
+                    if (!ideaText || ideaText.trim() === '') return;
+                    
+                    const suggestions = ideaAnalyzer.analyze(ideaText);
                 
                 // Auto-fill genre if detected
                 if (suggestions.genre && genreSelect) {
@@ -5730,7 +5829,9 @@
                     window.uiEnhancements = {};
                 }
                 
-                // Initialize virtual scrolling for media list
+                // Initialize virtual scrolling for media list FIRST
+                // This must happen before MediaItemInteraction because BrowserList
+                // replaces the container content with its wrapper
                 const mediaListContainer = document.getElementById('media-list');
                 if (mediaListContainer) {
                     try {
@@ -5749,14 +5850,18 @@
                     }
                 }
                 
-                // Initialize interaction handlers
-                try {
-                    window.mediaItemInteraction = new MediaItemInteraction();
-                    console.log('[Library Tab] MediaItemInteraction initialized');
-                } catch (err) {
-                    console.warn('[Library Tab] MediaItemInteraction initialization failed, using fallback:', err);
-                    window.mediaItemInteraction = { loadMedia: () => {} };
-                }
+                // Initialize interaction handlers AFTER BrowserList
+                // This ensures the browser-list-wrapper exists for event delegation
+                // Use setTimeout to ensure BrowserList wrapper is fully created
+                setTimeout(() => {
+                    try {
+                        window.mediaItemInteraction = new MediaItemInteraction();
+                        console.log('[Library Tab] MediaItemInteraction initialized');
+                    } catch (err) {
+                        console.warn('[Library Tab] MediaItemInteraction initialization failed, using fallback:', err);
+                        window.mediaItemInteraction = { loadMedia: () => {} };
+                    }
+                }, 50);
                 
                 try {
                     window.mediaKeyboardNavigation = new MediaKeyboardNavigation();
@@ -12407,6 +12512,168 @@
             } else {
                 initContextMenuSystem();
             }
+        })();
+    </script>
+    
+    <!-- CRITICAL: Non-module script to ensure basic functionality works even if modules fail -->
+    <script>
+        // This script runs immediately and ensures basic clicks work
+        (function() {
+            'use strict';
+            
+            console.log('[App] Initializing critical event listeners...');
+            
+            // Wire main tabs immediately on DOM ready
+            function initCriticalListeners() {
+                try {
+                    // Main tab switching - MUST work
+                    const mainTabBtns = document.querySelectorAll('.main-tab-btn');
+                    const tabSections = document.querySelectorAll('.tab-section');
+                    
+                    console.log('[Critical] Found', mainTabBtns.length, 'main tab buttons');
+                    
+                    mainTabBtns.forEach((btn, index) => {
+                        // Remove old listener
+                        if (btn._criticalTabHandler) {
+                            btn.removeEventListener('click', btn._criticalTabHandler);
+                        }
+                        
+                        // Create critical handler
+                        btn._criticalTabHandler = function(e) {
+                            try {
+                                const tabId = this.dataset.mainTab;
+                                console.log('[Critical] Tab clicked:', tabId);
+                                
+                                if (!tabId) return;
+                                
+                                // Update UI
+                                mainTabBtns.forEach(b => b.classList.remove('active'));
+                                tabSections.forEach(s => s.classList.remove('active'));
+                                
+                                this.classList.add('active');
+                                const targetSection = document.getElementById('tab-section-' + tabId);
+                                if (targetSection) {
+                                    targetSection.classList.add('active');
+                                }
+                                
+                                // Call module handler if it exists
+                                if (btn._mainTabClickHandler) {
+                                    btn._mainTabClickHandler.call(this, e);
+                                }
+                            } catch (err) {
+                                console.error('[Critical] Error in tab handler:', err);
+                            }
+                        };
+                        
+                        btn.addEventListener('click', btn._criticalTabHandler);
+                        console.log('[Critical] Wired tab', index, ':', tabId);
+                    });
+                    
+                    console.log('[Critical] Critical listeners wired successfully');
+                } catch (err) {
+                    console.error('[Critical] Failed to wire critical listeners:', err);
+                }
+            }
+            
+            // Run immediately if DOM ready, otherwise wait
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initCriticalListeners);
+            } else {
+                initCriticalListeners();
+            }
+            
+            // Also try after a short delay to catch late-loading elements
+            setTimeout(initCriticalListeners, 100);
+            setTimeout(initCriticalListeners, 500);
+        })();
+    </script>
+    
+    <!-- CRITICAL: Non-module script to ensure basic functionality works even if modules fail -->
+    <script>
+        // This script runs immediately and ensures basic clicks work
+        (function() {
+            'use strict';
+            
+            console.log('[Critical] Initializing critical event listeners...');
+            
+            // Wire main tabs immediately on DOM ready
+            function initCriticalListeners() {
+                try {
+                    // Main tab switching - MUST work
+                    const mainTabBtns = document.querySelectorAll('.main-tab-btn');
+                    const tabSections = document.querySelectorAll('.tab-section');
+                    
+                    console.log('[Critical] Found', mainTabBtns.length, 'main tab buttons');
+                    
+                    if (mainTabBtns.length === 0) {
+                        console.warn('[Critical] No main tab buttons found, retrying...');
+                        return;
+                    }
+                    
+                    mainTabBtns.forEach((btn, index) => {
+                        // Remove old listener
+                        if (btn._criticalTabHandler) {
+                            btn.removeEventListener('click', btn._criticalTabHandler);
+                        }
+                        
+                        // Create critical handler
+                        btn._criticalTabHandler = function(e) {
+                            try {
+                                const tabId = this.dataset.mainTab;
+                                console.log('[Critical] Tab clicked:', tabId);
+                                
+                                if (!tabId) {
+                                    console.error('[Critical] Tab button has no data-main-tab');
+                                    return;
+                                }
+                                
+                                // Update UI immediately
+                                mainTabBtns.forEach(b => b.classList.remove('active'));
+                                tabSections.forEach(s => s.classList.remove('active'));
+                                
+                                this.classList.add('active');
+                                const targetSection = document.getElementById('tab-section-' + tabId);
+                                if (targetSection) {
+                                    targetSection.classList.add('active');
+                                    console.log('[Critical] Activated tab:', tabId);
+                                } else {
+                                    console.warn('[Critical] Tab section not found:', 'tab-section-' + tabId);
+                                }
+                                
+                                // Call module handler if it exists (for additional functionality)
+                                if (btn._mainTabClickHandler) {
+                                    try {
+                                        btn._mainTabClickHandler.call(this, e);
+                                    } catch (err) {
+                                        console.warn('[Critical] Module handler failed:', err);
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('[Critical] Error in tab handler:', err);
+                            }
+                        };
+                        
+                        btn.addEventListener('click', btn._criticalTabHandler);
+                        console.log('[Critical] Wired tab', index, ':', btn.dataset.mainTab);
+                    });
+                    
+                    console.log('[Critical] Critical listeners wired successfully');
+                } catch (err) {
+                    console.error('[Critical] Failed to wire critical listeners:', err);
+                }
+            }
+            
+            // Run immediately if DOM ready, otherwise wait
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initCriticalListeners);
+            } else {
+                initCriticalListeners();
+            }
+            
+            // Also try after delays to catch late-loading elements
+            setTimeout(initCriticalListeners, 100);
+            setTimeout(initCriticalListeners, 500);
+            setTimeout(initCriticalListeners, 1000);
         })();
     </script>
     
