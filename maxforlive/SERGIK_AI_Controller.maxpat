@@ -45,8 +45,8 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 20.0, 10.0, 300.0, 25.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 10.0, 5.0, 280.0, 25.0 ],
-					"text" : "🎛️ SERGIK AI Controller v2.0 - Full Ableton Integration",
+					"presentation_rect" : [ 10.0, 5.0, 400.0, 25.0 ],
+					"text" : "🎛️ SERGIK AI Controller v2.0",
 					"fontsize" : 16.0,
 					"fontface" : 1
 				}
@@ -303,7 +303,8 @@
 					"presentation" : 1,
 					"presentation_rect" : [ 200.0, 75.0, 50.0, 22.0 ],
 					"minimum" : 1.0,
-					"maximum" : 32.0
+					"maximum" : 32.0,
+					"value" : 8.0
 				}
 			},
 			{
@@ -557,6 +558,28 @@
 			},
 			{
 				"box" : 				{
+					"id" : "init_humanize",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 700.0, 110.0, 35.0, 22.0 ],
+					"text" : "15"
+				}
+			},
+			{
+				"box" : 				{
+					"id" : "init_density",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 740.0, 110.0, 35.0, 22.0 ],
+					"text" : "60"
+				}
+			},
+			{
+				"box" : 				{
 					"id" : "msg_humanize",
 					"maxclass" : "prepend",
 					"numinlets" : 1,
@@ -800,6 +823,18 @@
 			},
 			{
 				"patchline" : 				{
+					"source" : [ "loadbang", 0 ],
+					"destination" : [ "init_humanize", 0 ]
+				}
+			},
+			{
+				"patchline" : 				{
+					"source" : [ "loadbang", 0 ],
+					"destination" : [ "init_density", 0 ]
+				}
+			},
+			{
+				"patchline" : 				{
 					"source" : [ "init_key", 0 ],
 					"destination" : [ "key_menu", 0 ]
 				}
@@ -814,6 +849,18 @@
 				"patchline" : 				{
 					"source" : [ "init_style", 0 ],
 					"destination" : [ "style_menu", 0 ]
+				}
+			},
+			{
+				"patchline" : 				{
+					"source" : [ "init_humanize", 0 ],
+					"destination" : [ "dial_humanize", 0 ]
+				}
+			},
+			{
+				"patchline" : 				{
+					"source" : [ "init_density", 0 ],
+					"destination" : [ "dial_density", 0 ]
 				}
 			}
 		],

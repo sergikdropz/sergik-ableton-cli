@@ -1,155 +1,120 @@
-# Quick Start Guide
+# SERGIK AI Controller - Quick Start Guide
 
-## 🚀 Getting Started
+## What It Does
 
-The genre system is ready for use. Follow these steps to get started.
+The SERGIK AI Controller provides complete control over Ableton Live through AI-powered MIDI generation and Live Object Model integration. It generates musical patterns and controls all aspects of your Ableton Live session.
 
-## Installation
+## Features
 
-```bash
-cd maxforlive
-npm install
-```
+- **Generate MIDI**: Chords, bass, arpeggios, drums
+- **Track Management**: Create, delete, rename, arm, mute, solo tracks
+- **Device Control**: Load devices/VSTs, set parameters, load presets
+- **Clip Management**: Create, fire, duplicate clips, set notes
+- **Session Control**: Scenes, tempo, quantization, undo/redo
+- **Transport Control**: Play, stop, record
+- **Natural Language**: Describe what you want in plain English
 
-## Development
+## Quick Start
 
-```bash
-# Start development server
-npm run dev
-
-# Server will start on http://localhost:8000
-# Hot Module Replacement (HMR) enabled
-```
-
-## Production Build
+### 1. Start the API Server
 
 ```bash
-# Build for production
-npm run build
-
-# Output: dist/
-# - SERGIK_AI_Controller_Preview.html (77.14 kB)
-# - js/main.js (47.00 kB, gzipped: 13.63 kB)
+cd ~/sergik_custom_gpt
+python -m sergik_ml.serving.api
 ```
 
-## Quality Checks
+### 2. Load Device in Ableton
 
-```bash
-# Run all tests
-npm test
+1. Create a MIDI track
+2. Go to **Max for Live → Max MIDI Effect**
+3. Select **SERGIK AI Controller**
 
-# Lint code
-npm run lint
+### 3. Generate MIDI
 
-# Format code
-npm run format
+1. **Set Parameters:**
+   - Key: Select musical key (e.g., 10B)
+   - Bars: Set length (1-32, default: 8)
+   - Style: Choose genre (house, techno, etc.)
+   - Voicing: Select type (stabs, pads, leads, bass)
 
-# Type check
-npm run type-check
+2. **Generate:**
+   - Click **CHORDS**, **BASS**, **ARPS**, or **DRUMS**
+   - Or type in natural language field
+
+3. **Use Generated Notes:**
+   - Click **PLAY** to hear
+   - Click **INSERT** to add to selected clip
+
+### 4. Control Ableton Live
+
+**Create Track:**
+```
+create_track midi Lead Synth
 ```
 
-## Available Scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm test` | Run all tests |
-| `npm run test:watch` | Watch mode for tests |
-| `npm run test:coverage` | Generate coverage report |
-| `npm run lint` | Lint code |
-| `npm run lint:fix` | Fix linting issues |
-| `npm run format` | Format code with Prettier |
-| `npm run format:check` | Check code formatting |
-| `npm run type-check` | TypeScript type checking |
-| `npm run docs` | Generate API documentation |
-
-## System Features
-
-### ✅ Implemented Features
-
-- **43 Genres** across 8 categories
-- **184+ Sub-genres** with dynamic loading
-- **Search Functionality** with debouncing
-- **Recent Selections** with localStorage
-- **Keyboard Navigation** full support
-- **Screen Reader Support** with ARIA
-- **Performance Optimized** with memoization
-- **Security Hardened** with input validation
-
-### 🎯 Key Improvements
-
-1. **Production-Safe Logging** - Environment-aware logging
-2. **Error Handling** - Standardized error boundaries
-3. **Input Validation** - XSS prevention & sanitization
-4. **Accessibility** - WCAG compliant
-5. **Performance** - Debounced search, memoization, key-based diffing
-6. **Developer Experience** - TypeScript, ESLint, Prettier, CI/CD
-
-## File Structure
-
+**Load Device:**
 ```
-maxforlive/
-├── js/
-│   ├── utils/              # Utility modules
-│   │   ├── logger.ts       # Logging system
-│   │   ├── validator.ts    # Input validation
-│   │   ├── debounce.ts     # Debounce utility
-│   │   ├── error-handler.ts # Error handling
-│   │   └── keyboard-navigation.ts # Keyboard nav
-│   ├── components/         # Web Components
-│   └── *.js, *.ts          # Core modules
-├── tests/                  # Test files
-├── dist/                   # Build output
-├── docs/                   # Documentation
-└── .github/workflows/      # CI/CD
+load_device 0 Wavetable
 ```
 
-## Usage Example
-
-```javascript
-// Basic usage
-import { initializeGenreSystem } from './js/genre-system.js';
-initializeGenreSystem();
-
-// Enhanced usage with state management
-import { initializeEnhancedGenreSystem } from './js/genre-system-enhanced.js';
-const system = initializeEnhancedGenreSystem();
-const stateManager = system?.getStateManager();
-stateManager?.subscribe((state) => {
-    console.log('Genre:', state.selectedGenre);
-});
+**Create and Fire Clip:**
 ```
+create_clip 0 0 16
+fire_clip 0 0
+```
+
+**Control Session:**
+```
+set_tempo 128
+fire_scene 0
+```
+
+## Natural Language Examples
+
+Type in the natural language field:
+
+```
+generate tech house chords in 10B
+create a new MIDI track called Lead Synth
+load Wavetable on track 1
+fire scene 2
+set tempo to 128
+create a walking bass line in D minor
+```
+
+## Parameters
+
+- **Key**: Musical key (10B, 7A, 11B, etc.)
+- **Bars**: Pattern length (1-32, default: 8)
+- **Style**: Genre/style (house, techno, jazz, etc.)
+- **Voicing**: Chord voicing (stabs, pads, leads, bass)
+- **Humanize**: Timing variation (0-100, default: 15)
+- **Density**: Note density (0-100, default: 60)
 
 ## Troubleshooting
 
-### Build Issues
-```bash
-# Clear cache and rebuild
-rm -rf node_modules/.vite dist
-npm install
-npm run build
-```
+**"Disconnected" status:**
+- Start the API server
+- Click **HEALTH** button
+- Check server is running on port 8000
 
-### Import Errors
-- All TypeScript utilities use `.ts` extension in imports
-- Vite handles TypeScript resolution automatically
+**Notes not inserting:**
+- Create a MIDI clip first
+- Select the clip
+- Click **INSERT**
 
-### Test Failures
-- 2 validation-related test failures are non-critical
-- System functionality is not affected
+**Commands not working:**
+- Check API server is running
+- Verify connection with **HEALTH** button
+- Check Max console for errors
+- Ensure track/device/clip indices are correct (0-indexed)
 
-## Next Steps
-
-1. ✅ **System Ready** - All improvements implemented
-2. ✅ **Build Working** - Production builds successful  
-3. ✅ **Tests Passing** - 96.6% pass rate
-4. 🔄 **Optional** - Fix remaining test failures
-5. 🔄 **Optional** - Resolve minor TypeScript warnings
+**Track/Device/Clip commands:**
+- All commands use 0-indexed values
+- Track 0 = first track
+- Device 0 = first device on track
+- Clip slot 0 = first clip slot
 
 ---
 
-**Status**: ✅ **READY FOR USE**  
-**Version**: 2.2.0
-
+*SERGIK AI v2.0 - Full Ableton Live Integration*

@@ -203,6 +203,9 @@ var TRACK_COLORS = 70;
 // ============================================================================
 
 function httpRequest(method, endpoint, data, callback) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:141',message:'httpRequest called',data:{method:method,endpoint:endpoint,hasData:!!data,url:API_BASE_URL + endpoint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     var url = API_BASE_URL + endpoint;
     var request = new XMLHttpRequest();
@@ -210,18 +213,33 @@ function httpRequest(method, endpoint, data, callback) {
     request.open(method, url, true);
     request.setRequestHeader("Content-Type", "application/json");
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:149',message:'HTTP request opened',data:{method:method,url:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     request.onreadystatechange = function() {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:152',message:'HTTP state change',data:{readyState:request.readyState,status:request.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         
         if (request.readyState === 4) {
             if (request.status === 200) {
                 try {
                     var response = JSON.parse(request.responseText);
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:157',message:'HTTP success',data:{status:request.status,responseStatus:response.status || 'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     callback(null, response);
                 } catch (e) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:161',message:'JSON parse error',data:{error:e.toString(),responseText:request.responseText.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     callback("JSON parse error: " + e, null);
                 }
             } else {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:166',message:'HTTP error status',data:{status:request.status,statusText:request.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
                 callback("HTTP error: " + request.status, null);
             }
         }
@@ -229,11 +247,17 @@ function httpRequest(method, endpoint, data, callback) {
     
     // Add error handler for network failures
     request.onerror = function() {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:173',message:'HTTP network error',data:{url:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         callback("Network error: Unable to connect to " + url, null);
     };
     
     // Add timeout handler
     request.ontimeout = function() {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:179',message:'HTTP timeout',data:{url:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         callback("Request timeout: " + url, null);
     };
     
@@ -1483,12 +1507,18 @@ function extractMetadataFromLiveItem(item) {
 }
 
 function searchLibrary(query) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1324',message:'searchLibrary called',data:{query:query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     
     status("Searching library: " + query);
     
     // Parse structured query
     var parsed = parseBrowserQuery(query);
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1331',message:'Query parsed',data:{parsed:JSON.stringify(parsed)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     
     // Search Live browser via LOM
     var liveResults = [];
@@ -1502,13 +1532,22 @@ function searchLibrary(query) {
         // The Max device would need to implement browser navigation differently
         
     } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1342',message:'LOM browser search error',data:{error:e.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         post("[Browser] Live browser search error: " + e + "\n");
     }
     
     // Search via API (SERGIK catalog + Live browser results from API)
     var apiUrl = "/live/browser/search?query=" + encodeURIComponent(query);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1348',message:'Calling API search',data:{apiUrl:apiUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     
     httpRequest("GET", apiUrl, null, function(err, response) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1351',message:'API search callback',data:{hasError:!!err,responseStatus:response ? response.status : null,itemCount:response ? (response.items ? response.items.length : 0) : 0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         
         if (err) {
             status("❌ Search failed: " + err);
@@ -1523,10 +1562,16 @@ function searchLibrary(query) {
             // Merge Live browser results with API results
             var allResults = liveResults.concat(response.items || []);
             
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1362',message:'Merging results',data:{liveResultsCount:liveResults.length,apiResultsCount:response.items ? response.items.length : 0,totalBeforeFilter:allResults.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             
             // Filter by parsed query criteria
             var filtered = filterResults(allResults, parsed);
             
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1368',message:'Filtering complete',data:{filteredCount:filtered.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             
             status("✅ Found " + filtered.length + " results");
             outputJSON({
@@ -1540,6 +1585,9 @@ function searchLibrary(query) {
 }
 
 function loadSample(trackIndex, samplePath) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1374',message:'loadSample called',data:{trackIndex:trackIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     
     status("Loading sample: " + samplePath);
     
@@ -1547,6 +1595,9 @@ function loadSample(trackIndex, samplePath) {
         // Validate track exists
         var track = new LiveAPI("live_set tracks " + trackIndex);
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1382',message:'Track LOM access',data:{trackIndex:trackIndex,hasId:!!track.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         
         if (!track.id) {
             throw new Error("Track " + trackIndex + " not found");
@@ -1554,15 +1605,24 @@ function loadSample(trackIndex, samplePath) {
         
         // Load item into track via LOM
         // Note: load_item may need the full path or URI format
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1389',message:'Calling LOM load_item',data:{samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         
         var result = track.call("load_item", samplePath);
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1392',message:'LOM load_item result',data:{result:result ? result.toString() : 'null'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         
         // Find which clip slot was used (if any)
         var clipSlots = track.get("clip_slots");
         var slotIndex = null;
         var slotCount = Math.floor(clipSlots.length / 2);
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1398',message:'Finding clip slot',data:{slotCount:slotCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         
         // Try to find the loaded clip slot
         // This is approximate - Live may load to first empty slot or create new
@@ -1571,6 +1631,9 @@ function loadSample(trackIndex, samplePath) {
             if (slot.get("has_clip")) {
                 var clip = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + i + " clip");
                 var clipPath = clip.get("file_path");
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1406',message:'Checking clip slot',data:{slotIndex:i,clipPath:clipPath ? clipPath.toString() : 'null',samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 
                 // Match by filename or full path
                 if (clipPath) {
@@ -1578,6 +1641,9 @@ function loadSample(trackIndex, samplePath) {
                     var samplePathBase = samplePath.split("/").pop().split("\\").pop(); // Get filename
                     if (clipPathStr.indexOf(samplePath) !== -1 || clipPathStr.indexOf(samplePathBase) !== -1) {
                         slotIndex = i;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1413',message:'Found matching clip slot',data:{slotIndex:slotIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
                         break;
                     }
                 }
@@ -1589,6 +1655,9 @@ function loadSample(trackIndex, samplePath) {
             item_path: samplePath,
             track_index: trackIndex
         }, function(err, response) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1425',message:'API load callback',data:{hasError:!!err,responseStatus:response ? response.status : null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             
             // API response is for logging/confirmation
             if (!err && response.status === "ok") {
@@ -1613,6 +1682,9 @@ function loadSample(trackIndex, samplePath) {
         });
         
     } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1443',message:'loadSample exception',data:{error:e.toString(),trackIndex:trackIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         status("❌ Load sample failed: " + e);
         outputJSON({
             status: "error",
@@ -1624,6 +1696,9 @@ function loadSample(trackIndex, samplePath) {
 }
 
 function hotSwapSample(trackIndex, deviceIndex, samplePath) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1444',message:'hotSwapSample called',data:{trackIndex:trackIndex,deviceIndex:deviceIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     
     status("Hot swapping sample...");
     
@@ -1631,6 +1706,9 @@ function hotSwapSample(trackIndex, deviceIndex, samplePath) {
         // Get device
         var device = new LiveAPI("live_set tracks " + trackIndex + " devices " + deviceIndex);
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1452',message:'Device LOM access',data:{trackIndex:trackIndex,deviceIndex:deviceIndex,hasId:!!device.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         
         if (!device.id) {
             throw new Error("Device not found at track " + trackIndex + " device " + deviceIndex);
@@ -1639,15 +1717,24 @@ function hotSwapSample(trackIndex, deviceIndex, samplePath) {
         // Verify device type (Simpler/Sampler only)
         var deviceName = device.get("name").toString();
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1460',message:'Device type check',data:{deviceName:deviceName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         
         if (deviceName !== "Simpler" && deviceName !== "Sampler") {
             throw new Error("Hot-swap only works with Simpler/Sampler, found: " + deviceName);
         }
         
         // Perform hot-swap via LOM
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1467',message:'Calling LOM hot_swap',data:{samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         
         device.call("hot_swap", samplePath);
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1471',message:'LOM hot_swap completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         
         // Also send to API for logging
         httpRequest("POST", "/live/browser/hot_swap", {
@@ -1655,6 +1742,9 @@ function hotSwapSample(trackIndex, deviceIndex, samplePath) {
             device_index: deviceIndex,
             sample_path: samplePath
         }, function(err, response) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1479',message:'API hot_swap callback',data:{hasError:!!err,responseStatus:response ? response.status : null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
             
             // API response is for logging/confirmation
             if (!err && response.status === "ok") {
@@ -1681,6 +1771,9 @@ function hotSwapSample(trackIndex, deviceIndex, samplePath) {
         });
         
     } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SERGIK_AI_Controller.js:1501',message:'hotSwapSample exception',data:{error:e.toString(),trackIndex:trackIndex,deviceIndex:deviceIndex,samplePath:samplePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         status("❌ Hot swap failed: " + e);
         outputJSON({
             status: "error",

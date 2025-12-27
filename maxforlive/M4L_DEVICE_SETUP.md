@@ -9,11 +9,12 @@
 
 ### 2. Install the Device
 
-1. **Copy the device file:**
-   ```bash
-   # Copy to your Ableton User Library
-   cp SERGIK_AI_Controller.maxpat ~/Music/Ableton/User\ Library/Presets/MIDI\ Effects/Max\ MIDI\ Effect/
-   ```
+1. **Save the device file:**
+   - Open `SERGIK_AI_Controller.maxpat` in Max
+   - **File → Save As**
+   - Navigate to: `~/Music/Ableton/User Library/Presets/MIDI Effects/Max MIDI Effect/`
+   - Change format to **"Max for Live Device"**
+   - Save as: `SERGIK_AI_Controller.amxd` (or your preferred name)
 
 2. **Ensure JavaScript file is accessible:**
    - The device references `SERGIK_AI_Controller.js`
@@ -44,31 +45,28 @@
 - **INSERT** - Insert generated notes into selected clip
 
 ### Parameters
-- **Key** - Musical key (10B, 7A, etc.)
-- **Bars** - Length in bars (1-32)
+- **Key** - Musical key (10B, 7A, 11B, 8A, 9B, 6A, 12B, 5A, 1B, 4A, 2B, 3A)
+- **Bars** - Length in bars (1-32, default: 8)
 - **Style** - Musical style (house, techno, jazz, etc.)
 - **Voicing** - Voicing type (stabs, pads, leads, bass)
-- **Humanize** - Humanization amount (0-100)
-- **Density** - Pattern density (0-100)
+- **Humanize** - Humanization amount (0-100, default: 15)
+- **Density** - Pattern density (0-100, default: 60)
 
 ### Natural Language Input
-Type commands like:
+Type commands in the natural language field:
 - `generate tech house chords in 10B`
 - `create a walking bass line in D minor`
 - `make 8 bars of minimal techno drums`
+- `generate trap drums at 140 BPM`
 
 ### Playback Controls
 - **▶ PLAY** - Play generated notes
 - **CLEAR** - Clear note buffer
 - **HEALTH** - Check API connection status
 
-## Advanced Usage
+## Complete Command Reference
 
-### Command Reference
-
-All commands can be sent to the device's first inlet:
-
-**MIDI Generation:**
+### MIDI Generation
 ```
 generate_chords
 generate_bass
@@ -76,58 +74,102 @@ generate_arps
 prompt <text>
 ```
 
-**Drum Generation:**
+### Drum Generation
 ```
 generate_drums
 drums <genre>
 drum_prompt <text>
+drum_genre <name>
 swing <0-100>
 humanize <0-100>
 density <0.1-2.0>
 ```
 
-**Track Management:**
+### Track Management
 ```
-create_track <type> [name]
-delete_track <index>
-arm_track <index> [0/1]
-mute_track <index> [0/1]
-solo_track <index> [0/1]
-set_volume <index> <0-1>
-set_pan <index> <-1 to 1>
-get_tracks
-```
-
-**Device Control:**
-```
-load_device <track> <name>
-load_vst <track> <name>
-set_param <track> <device> <param> <value>
-get_params <track> <device>
-toggle_device <track> <device>
-get_devices <track>
+create_track <type> [name]          # Create track (midi/audio/return)
+delete_track <index>                 # Delete track by index
+arm_track <index> [0/1]              # Arm track for recording
+mute_track <index> [0/1]             # Mute/unmute track
+solo_track <index> [0/1]             # Solo/unsolo track
+set_volume <index> <0-1>             # Set track volume
+set_pan <index> <-1 to 1>           # Set track pan
+rename_track <index> <name>          # Rename track
+set_track_color <index> <0-69>       # Set track color
+get_tracks                           # List all tracks
+get_track_info <index>               # Get track details
 ```
 
-**Clip Management:**
+### Device Control
 ```
-create_clip <track> <slot> [length]
-fire_clip <track> <slot>
-stop_clip <track> [slot]
-set_clip_notes <track> <slot>
-get_clip_notes <track> <slot>
-```
-
-**Session Control:**
-```
-fire_scene <index>
-set_tempo <bpm>
-set_quantization <value>
-transport_play
-transport_stop
-transport_record
+load_device <track> <name>           # Load Ableton device
+load_vst <track> <name>              # Load VST/AU plugin
+set_param <track> <device> <param> <value>  # Set parameter
+get_params <track> <device>        # Get all parameters
+toggle_device <track> <device>     # Enable/disable device
+load_preset <track> <device> <preset_name>  # Load preset
+get_devices <track>                 # List devices on track
 ```
 
-See `SERGIK_AI_Device_Guide.md` for complete command reference.
+### Clip Management
+```
+create_clip <track> <slot> [length]  # Create empty clip
+delete_clip <track> <slot>           # Delete clip
+fire_clip <track> <slot>              # Launch clip
+stop_clip <track> [slot]              # Stop clip(s)
+duplicate_clip <track> <slot> [target_track] [target_slot]  # Duplicate clip
+set_clip_notes <track> <slot>         # Set notes from buffer
+get_clip_notes <track> <slot>         # Get notes to buffer
+get_clip_info <track> <slot>         # Get clip properties
+```
+
+### Browser/Library
+```
+search_library <query>               # Search Ableton library
+load_sample <track> <path>           # Load sample to track
+hot_swap <track> <device> <path>     # Hot-swap sample
+```
+
+### Session Control
+```
+fire_scene <index>                   # Launch scene
+stop_scene                           # Stop all clips
+create_scene [name]                  # Create new scene
+delete_scene <index>                 # Delete scene
+duplicate_scene <index>              # Duplicate scene
+set_tempo <bpm>                      # Set session tempo
+set_quantization <value>             # Set quantization
+undo                                 # Undo last action
+redo                                 # Redo action
+get_session_state                    # Get full session state
+```
+
+### Transport Control
+```
+transport_play                       # Start playback
+transport_stop                       # Stop playback
+transport_record                     # Start recording
+stop_all_clips                       # Stop all clips
+```
+
+### Mixer Control
+```
+set_send <track> <send_index> <level>  # Set send level
+```
+
+### Playback
+```
+play                                 # Play generated notes
+stop                                 # Stop playback
+clear                                # Clear note buffer
+insert                               # Insert notes into selected clip
+```
+
+### System
+```
+health                               # Check API connection
+set_api <host> <port>                # Change API endpoint
+```
 
 ## Troubleshooting
 
@@ -158,10 +200,9 @@ See `SERGIK_AI_Device_Guide.md` for complete command reference.
 
 ```
 maxforlive/
-├── SERGIK_AI_Controller.maxpat    # Max for Live device (this file)
-├── SERGIK_AI_Controller.js       # JavaScript engine
-├── SERGIK_AI_Device_Guide.md      # Complete documentation
-└── M4L_DEVICE_SETUP.md           # This file
+├── SERGIK_AI_Controller.maxpat    # Max for Live device source
+├── SERGIK_AI_Controller.js        # JavaScript engine
+└── M4L_DEVICE_SETUP.md            # This file
 ```
 
 ## Saving as Preset
@@ -175,4 +216,3 @@ After customizing the device:
 ---
 
 *SERGIK AI v2.0 - Full Ableton Live Integration*
-
