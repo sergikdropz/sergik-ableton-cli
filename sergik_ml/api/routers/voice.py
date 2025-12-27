@@ -17,12 +17,15 @@ from ...api.dependencies import (
     get_voice_service,
     get_track_service,
     get_ableton_service,
-    get_generation_service
+    get_generation_service,
+    get_gpt_voice_service
 )
 from ...services.voice_service import VoiceService
 from ...services.track_service import TrackService
 from ...services.ableton_service import AbletonService
 from ...services.generation_service import GenerationService
+from ...services.gpt_voice_service import GPTVoiceService
+from ...services.voice_orchestrator import VoiceOrchestrator
 from ...utils.errors import ValidationError as SergikValidationError, ServiceError
 from ...stores.sql_store import log_action
 from ...policies.action_policy import validate_action
@@ -209,6 +212,94 @@ async def voice(
         err = str(e)
         osc_error(err, "voice")
         logger.error(f"Voice processing failed: {err}", exc_info=True)
+        return VoiceOut(status="error", error=err)
+    finally:
+        # Cleanup uploaded file
+        if wav_path and wav_path.exists():
+            try:
+                wav_path.unlink()
+            except Exception as cleanup_error:
+                logger.warning(f"Failed to cleanup voice file {wav_path}: {cleanup_error}")
+
+
+@router.post("/gpt", response_model=VoiceOut)
+async def voice_gpt(
+    file: UploadFile = File(...),
+    gpt_voice_service: GPTVoiceService = Depends(get_gpt_voice_service),
+    ableton_service: AbletonService = Depends(get_ableton_service),
+    voice_service: VoiceService = Depends(get_voice_service)
+):
+    """
+    Process voice recording using GPT Actions for intelligent intent understanding.
+    
+    This endpoint uses SERGIK GPT Actions to understand voice commands and
+    execute Ableton Live controls or music generation tasks.
+    
+    Pipeline:
+    1. STT: Transcribe voice to text
+    2. GPT: Send to GPT Actions API for intent understanding
+    3. Execute: Run Ableton commands or generation tasks
+    4. TTS: Generate spoken response
+    
+    Examples:
+    - "Set tempo to 125 BPM"
+    - "Create a tech house drum pattern"
+    - "Generate chords in D minor"
+    - "Mute track 2"
+    """
+    wav_path = None
+    try:
+        # Save uploaded file
+        upload_dir = Path("uploads")
+        upload_dir.mkdir(exist_ok=True)
+        wav_path = upload_dir / f"voice_gpt_{uuid.uuid4().hex}.wav"
+        
+        content = await file.read()
+        wav_path.write_bytes(content)
+        
+        # Create orchestrator
+        orchestrator = VoiceOrchestrator(
+            gpt_voice_service=gpt_voice_service,
+            ableton_service=ableton_service,
+            voice_service=voice_service
+        )
+        
+        # Process voice command
+        result = orchestrator.process_voice_command(str(wav_path))
+        
+        # Convert to VoiceOut format
+        return VoiceOut(
+            status="ok",
+            text=result.get("text", ""),
+            intent=VoiceIntent(
+                text=result.get("text", ""),
+                cmd=None,  # GPT handles multiple commands
+                args={},
+                tts=result.get("summary", ""),
+                confidence=0.9 if result.get("executed") else 0.5
+            ),
+            action=ActionOut(
+                status="ok" if not result.get("errors") else "error",
+                cmd="gpt_voice",
+                result={
+                    "executed": result.get("executed", []),
+                    "errors": result.get("errors", []),
+                    "summary": result.get("summary", "")
+                },
+                error=None if not result.get("errors") else str(result.get("errors"))
+            ),
+            tts_path=result.get("tts_path", "")
+        )
+    
+    except SergikValidationError as e:
+        err = str(e)
+        osc_error(err, "voice_gpt")
+        logger.error(f"GPT voice processing validation failed: {err}", exc_info=True)
+        return VoiceOut(status="error", error=err)
+    except Exception as e:
+        err = str(e)
+        osc_error(err, "voice_gpt")
+        logger.error(f"GPT voice processing failed: {err}", exc_info=True)
         return VoiceOut(status="error", error=err)
     finally:
         # Cleanup uploaded file

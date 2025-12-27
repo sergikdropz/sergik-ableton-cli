@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERGIK AI Controller</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1>🎵 SERGIK AI Controller</h1>
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" id="settingsBtn">⚙️ Settings</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Left Sidebar: Generation Controls -->
+            <aside class="sidebar sidebar-left">
+                <section class="panel">
+                    <h2>🎹 Generation</h2>
+                    
+                    <div class="form-group">
+                        <label>Key</label>
+                        <select id="keySelect">
+                            <option value="10B">10B (D Major)</option>
+                            <option value="11B">11B (A Major)</option>
+                            <option value="7A">7A (D Minor)</option>
+                            <option value="8A">8A (A Minor)</option>
+                            <option value="9B">9B (E Major)</option>
+                            <option value="6A">6A (G Minor)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bars</label>
+                        <input type="number" id="barsInput" value="8" min="1" max="32">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Style</label>
+                        <select id="styleSelect">
+                            <option value="house">House</option>
+                            <option value="tech_house">Tech House</option>
+                            <option value="techno">Techno</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="hiphop">Hip-Hop</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="generateChordsBtn">Chords</button>
+                        <button class="btn btn-primary" id="generateBassBtn">Bass</button>
+                        <button class="btn btn-primary" id="generateArpsBtn">Arps</button>
+                        <button class="btn btn-primary" id="generateDrumsBtn">Drums</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Natural Language</label>
+                        <textarea id="naturalLanguageInput" placeholder="e.g., 'Generate tech house chords in D minor'"></textarea>
+                        <button class="btn btn-secondary" id="naturalLanguageBtn">Generate</button>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>🎤 Voice Control</h2>
+                    <button class="btn btn-voice" id="voiceRecordBtn">
+                        <span class="voice-icon">🎤</span>
+                        <span id="voiceRecordText">Hold to Record</span>
+                    </button>
+                    <div class="voice-status" id="voiceStatus"></div>
+                </section>
+            </aside>
+
+            <!-- Center: Main Workspace -->
+            <div class="workspace">
+                <section class="panel panel-main">
+                    <h2>🎛️ Ableton Live Control</h2>
+                    
+                    <div class="transport-controls">
+                        <button class="btn btn-transport" id="playBtn">▶️ Play</button>
+                        <button class="btn btn-transport" id="stopBtn">⏹️ Stop</button>
+                        <button class="btn btn-transport" id="recordBtn">⏺️ Record</button>
+                    </div>
+
+                    <div class="tempo-control">
+                        <label>Tempo (BPM)</label>
+                        <div class="tempo-input-group">
+                            <input type="number" id="tempoInput" value="125" min="20" max="999">
+                            <button class="btn btn-small" id="setTempoBtn">Set</button>
+                        </div>
+                    </div>
+
+                    <div class="command-input">
+                        <label>Ableton Command</label>
+                        <div class="command-input-group">
+                            <input type="text" id="commandInput" placeholder="e.g., 'Create MIDI track called Lead'">
+                            <button class="btn btn-primary" id="executeCommandBtn">Execute</button>
+                        </div>
+                    </div>
+
+                    <div class="status-log" id="statusLog">
+                        <div class="log-entry">Ready. Connect to Ableton Live to start.</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Sidebar: Session Info -->
+            <aside class="sidebar sidebar-right">
+                <section class="panel">
+                    <h2>📊 Session</h2>
+                    <div class="session-info" id="sessionInfo">
+                        <div class="info-item">
+                            <span class="info-label">Tempo:</span>
+                            <span class="info-value" id="sessionTempo">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tracks:</span>
+                            <span class="info-value" id="sessionTracks">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Scenes:</span>
+                            <span class="info-value" id="sessionScenes">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" id="sessionStatus">--</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="refreshSessionBtn">🔄 Refresh</button>
+                </section>
+
+                <section class="panel">
+                    <h2>📝 Recent Commands</h2>
+                    <div class="command-history" id="commandHistory"></div>
+                </section>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="apiUrlInput" value="http://127.0.0.1:8000">
+                    <button class="btn btn-primary" id="saveApiUrlBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
+

@@ -11,6 +11,7 @@ from ..services.analysis_service import AnalysisService
 from ..services.track_service import TrackService
 from ..services.voice_service import VoiceService
 from ..services.state_service import StateService
+from ..services.gpt_voice_service import GPTVoiceService
 
 
 def get_generation_service() -> GenerationService:
@@ -41,4 +42,9 @@ def get_voice_service() -> VoiceService:
 def get_state_service() -> StateService:
     """Get state service instance from container."""
     return get_container().get("state_service")
+
+
+def get_gpt_voice_service() -> GPTVoiceService:
+    """Get GPT voice service instance."""
+    return get_container().get("gpt_voice_service")
 

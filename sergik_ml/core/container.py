@@ -224,6 +224,7 @@ def _setup_default_services(container: Container) -> None:
     from ..services.track_service import TrackService
     from ..services.voice_service import VoiceService
     from ..services.state_service import StateService
+    from ..services.gpt_voice_service import GPTVoiceService
     
     # Register service types
     container.register_type("generation_service", GenerationService)
@@ -232,6 +233,7 @@ def _setup_default_services(container: Container) -> None:
     container.register_type("track_service", TrackService)
     container.register_type("voice_service", VoiceService)
     container.register_type("state_service", StateService)
+    container.register_type("gpt_voice_service", GPTVoiceService)
     
     logger.info("Default services registered in container")
 

@@ -123,3 +123,87 @@ async def get_analysis_presets():
     presets = AnalysisPresets()
     return presets.model_dump()
 
+
+@router.post("/batch")
+async def analyze_batch(
+    source_dir: str = Query(..., description="Source directory to analyze"),
+    include_musicbrainz: bool = Query(True, description="Include MusicBrainz data"),
+    generate_profiles: bool = Query(True, description="Generate DNA profiles"),
+    analysis_service: AnalysisService = Depends(get_analysis_service)
+):
+    """
+    Batch analyze multiple files in a directory.
+    
+    Analyzes all audio files in the specified directory and generates
+    DNA profiles if requested.
+    """
+    try:
+        from pathlib import Path
+        
+        source_path = Path(source_dir)
+        if not source_path.exists():
+            raise HTTPException(status_code=404, detail=f"Source directory not found: {source_dir}")
+        
+        if not source_path.is_dir():
+            raise HTTPException(status_code=400, detail=f"Path is not a directory: {source_dir}")
+        
+        # Find all audio files
+        audio_exts = {".wav", ".aif", ".aiff", ".mp3", ".m4a", ".flac"}
+        audio_files = [f for f in source_path.rglob("*") 
+                      if f.is_file() and f.suffix.lower() in audio_exts]
+        
+        if not audio_files:
+            return {
+                "status": "ok",
+                "files_analyzed": 0,
+                "files_failed": 0,
+                "results": [],
+                "errors": []
+            }
+        
+        results = []
+        errors = []
+        
+        for audio_file in audio_files:
+            try:
+                result = analysis_service.analyze_audio(
+                    file_path=str(audio_file),
+                    include_musicbrainz=include_musicbrainz
+                )
+                results.append({
+                    "file": str(audio_file),
+                    "result": result
+                })
+            except Exception as e:
+                errors.append({
+                    "file": str(audio_file),
+                    "error": str(e)
+                })
+                logger.warning(f"Failed to analyze {audio_file}: {e}")
+        
+        # Generate DNA profiles if requested
+        profiles = []
+        if generate_profiles:
+            # Aggregate DNA data from results
+            dna_data = {}
+            for r in results:
+                if r.get("result", {}).get("sergik_dna"):
+                    dna_data[r["file"]] = r["result"]["sergik_dna"]
+            profiles = dna_data
+        
+        return {
+            "status": "ok",
+            "files_analyzed": len(results),
+            "files_failed": len(errors),
+            "total_files": len(audio_files),
+            "results": results,
+            "errors": errors,
+            "profiles": profiles if generate_profiles else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Batch analysis failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+

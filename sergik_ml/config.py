@@ -37,6 +37,7 @@ class ConfigSchema(BaseModel):
     # Model microservices (optional)
     sergik_gen_url: str = Field(default="http://127.0.0.1:8011", description="SERGIK generator service URL")
     musicbrains_url: str = Field(default="http://127.0.0.1:8012", description="MusicBrains service URL")
+    api_base_url: str = Field(default="http://127.0.0.1:8000", description="SERGIK ML API base URL")
     
     # Voice providers
     use_openai_voice: bool = Field(default=False, description="Use OpenAI for STT/TTS")
@@ -140,6 +141,7 @@ def _load_config_from_env() -> ConfigSchema:
             ableton_osc_port=_get_int_env_var("SERGIK_ABLETON_OSC_PORT", 9000),
             sergik_gen_url=_get_env_var("SERGIK_GEN_URL", "http://127.0.0.1:8011"),
             musicbrains_url=_get_env_var("SERGIK_MUSICBRAINS_URL", "http://127.0.0.1:8012"),
+            api_base_url=_get_env_var("SERGIK_API_BASE_URL", "http://127.0.0.1:8000"),
             use_openai_voice=_get_bool_env_var("SERGIK_USE_OPENAI_VOICE", False),
             openai_api_key=_get_env_var("OPENAI_API_KEY", None),
             default_sample_rate=_get_int_env_var("SERGIK_SAMPLE_RATE", 44100),
