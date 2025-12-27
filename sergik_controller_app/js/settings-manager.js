@@ -57,7 +57,42 @@ class SettingsManager {
                 // Connection settings
                 keepAlive: true,
                 maxConnections: 10,
-                connectionTimeout: 5000
+                connectionTimeout: 5000,
+                // Ngrok support
+                useNgrok: false,
+                ngrokUrl: '',
+                ngrokApiKey: '', // For ngrok API to get dynamic URLs
+                // Multiple API Keys for AI services
+                apiKeys: {
+                    // SERGIK API
+                    sergik: {
+                        enabled: false,
+                        key: '',
+                        header: 'X-API-Key'
+                    },
+                    // OpenAI for GPT/voice
+                    openai: {
+                        enabled: false,
+                        key: '',
+                        header: 'Authorization',
+                        prefix: 'Bearer'
+                    },
+                    // Anthropic Claude
+                    anthropic: {
+                        enabled: false,
+                        key: '',
+                        header: 'x-api-key'
+                    },
+                    // Google AI
+                    google: {
+                        enabled: false,
+                        key: '',
+                        header: 'Authorization',
+                        prefix: 'Bearer'
+                    },
+                    // Custom API keys
+                    custom: []
+                }
             },
             appearance: {
                 theme: 'dark',
@@ -315,6 +350,9 @@ class SettingsManager {
         // Update auth visibility
         this.updateAuthFieldsVisibility();
         
+        // Populate API keys (async, loads from main process)
+        setTimeout(() => this.populateApiKeysUI(), 100);
+        
         // Appearance
         const theme = document.getElementById('settings-theme');
         const fontSize = document.getElementById('settings-font-size');
@@ -351,6 +389,18 @@ class SettingsManager {
         
         // Keyboard shortcuts
         this.populateKeyboardShortcuts();
+
+        // Ngrok settings
+        const useNgrok = document.getElementById('settings-use-ngrok');
+        const ngrokUrl = document.getElementById('settings-ngrok-url');
+        const ngrokApiKey = document.getElementById('settings-ngrok-api-key');
+        
+        if (useNgrok) useNgrok.checked = this.settings.api.useNgrok === true;
+        if (ngrokUrl) ngrokUrl.value = this.settings.api.ngrokUrl || '';
+        if (ngrokApiKey) ngrokApiKey.value = this.settings.api.ngrokApiKey || '';
+        
+        // Populate API keys
+        this.populateApiKeysUI();
     }
     
     populateKeyboardShortcuts() {
@@ -437,6 +487,15 @@ class SettingsManager {
         if (maxConnections) this.settings.api.maxConnections = parseInt(maxConnections.value) || 10;
         if (connectionTimeout) this.settings.api.connectionTimeout = parseInt(connectionTimeout.value) || 5000;
         if (validateSSL) this.settings.api.validateSSL = validateSSL.checked;
+        
+        // Ngrok settings
+        const useNgrok = document.getElementById('settings-use-ngrok');
+        const ngrokUrl = document.getElementById('settings-ngrok-url');
+        const ngrokApiKey = document.getElementById('settings-ngrok-api-key');
+        
+        if (useNgrok) this.settings.api.useNgrok = useNgrok.checked;
+        if (ngrokUrl) this.settings.api.ngrokUrl = ngrokUrl.value;
+        if (ngrokApiKey) this.settings.api.ngrokApiKey = ngrokApiKey.value;
         
         // Appearance
         const theme = document.getElementById('settings-theme');
@@ -627,6 +686,209 @@ class SettingsManager {
         }
         obj[lastPart] = value;
         this.saveSettings();
+    }
+
+    async populateApiKeysUI() {
+        const list = document.getElementById('api-keys-list');
+        if (!list) return;
+        
+        list.innerHTML = '';
+        
+        const services = [
+            { name: 'sergik', label: 'SERGIK API', description: 'For SERGIK ML endpoints', envVar: 'SERGIK_API_KEY' },
+            { name: 'openai', label: 'OpenAI', description: 'For GPT generation and voice', envVar: 'OPENAI_API_KEY' },
+            { name: 'anthropic', label: 'Anthropic Claude', description: 'For Claude AI models', envVar: 'ANTHROPIC_API_KEY' },
+            { name: 'google', label: 'Google AI', description: 'For Google AI services', envVar: 'GOOGLE_API_KEY' }
+        ];
+        
+        // Check which services have keys stored and their sources
+        const hasKeys = {};
+        const keySources = {}; // Track where keys came from (env vs user)
+        
+        if (window.sergikAPI && window.sergikAPI.listApiKeys) {
+            try {
+                const storedKeys = await window.sergikAPI.listApiKeys();
+                storedKeys.forEach(service => {
+                    hasKeys[service] = true;
+                });
+                
+                // Get info about key sources
+                if (window.sergikAPI.getApiKeysInfo) {
+                    try {
+                        const keysInfo = await window.sergikAPI.getApiKeysInfo();
+                        Object.entries(keysInfo).forEach(([service, info]) => {
+                            keySources[service] = info;
+                        });
+                    } catch (error) {
+                        console.warn('[Settings] Failed to get API keys info:', error);
+                    }
+                }
+            } catch (error) {
+                console.error('[Settings] Failed to load API keys list:', error);
+            }
+        }
+        
+        services.forEach(({ name, label, description, envVar }) => {
+            const keyConfig = this.settings.api?.apiKeys?.[name] || { enabled: false, key: '' };
+            const hasKey = hasKeys[name] || false;
+            const keySource = keySources[name];
+            
+            // Show hint about environment variable if key exists and came from env
+            let envHint = '';
+            if (hasKey && keySource && keySource.source === 'environment' && keySource.envVar) {
+                envHint = `<span class="field-hint" style="display: block; margin-top: 2px; font-size: 9px; color: var(--accent-cyan);">✓ Loaded from ${keySource.envVar}</span>`;
+            } else if (hasKey && envVar) {
+                envHint = `<span class="field-hint" style="display: block; margin-top: 2px; font-size: 9px; color: var(--text-tertiary);">Set ${envVar} to load automatically</span>`;
+            }
+            
+            const item = document.createElement('div');
+            item.className = 'api-key-item';
+            item.innerHTML = `
+                <div class="api-key-header">
+                    <div>
+                        <label>
+                            <input type="checkbox" class="api-key-enabled" data-service="${name}" ${keyConfig.enabled ? 'checked' : ''}>
+                            <strong>${label}</strong>
+                        </label>
+                        <span class="field-hint" style="display: block; margin-top: 4px;">${description}</span>
+                        ${envHint}
+                    </div>
+                    ${hasKey ? `<button class="btn-icon delete-api-key" data-service="${name}" title="Delete key">×</button>` : ''}
+                </div>
+                <div class="api-key-input">
+                    <input type="password" 
+                           class="api-key-value" 
+                           data-service="${name}" 
+                           placeholder="Enter ${label} API key${envVar ? ` (or set ${envVar})` : ''}"
+                           value="${hasKey ? '••••••••' : ''}"
+                           ${hasKey ? 'data-has-key="true"' : ''}>
+                    ${hasKey ? `<button class="btn-small toggle-visibility" data-service="${name}" data-visible="false">Show</button>` : ''}
+                </div>
+            `;
+            list.appendChild(item);
+        });
+        
+        // Add event listeners
+        list.querySelectorAll('.api-key-enabled').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const service = e.target.dataset.service;
+                if (!this.settings.api.apiKeys[service]) {
+                    this.settings.api.apiKeys[service] = { enabled: false, key: '' };
+                }
+                this.settings.api.apiKeys[service].enabled = e.target.checked;
+                this.saveSettings();
+            });
+        });
+        
+        list.querySelectorAll('.api-key-value').forEach(input => {
+            input.addEventListener('blur', async (e) => {
+                const service = e.target.dataset.service;
+                const value = e.target.value;
+                
+                if (value && value !== '••••••••') {
+                    // Save to main process securely
+                    if (window.sergikAPI && window.sergikAPI.setApiKey) {
+                        try {
+                            await window.sergikAPI.setApiKey(service, value);
+                            // Update UI to show key is saved
+                            e.target.value = '••••••••';
+                            // Add delete button if not present
+                            const item = e.target.closest('.api-key-item');
+                            const header = item.querySelector('.api-key-header');
+                            if (!header.querySelector('.delete-api-key')) {
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.className = 'btn-icon delete-api-key';
+                                deleteBtn.dataset.service = service;
+                                deleteBtn.title = 'Delete key';
+                                deleteBtn.textContent = '×';
+                                deleteBtn.addEventListener('click', async () => {
+                                    if (confirm(`Delete ${service} API key?`)) {
+                                        if (window.sergikAPI && window.sergikAPI.deleteApiKey) {
+                                            await window.sergikAPI.deleteApiKey(service);
+                                        }
+                                        if (this.settings.api.apiKeys[service]) {
+                                            delete this.settings.api.apiKeys[service];
+                                        }
+                                        this.populateApiKeysUI();
+                                    }
+                                });
+                                header.appendChild(deleteBtn);
+                            }
+                            // Add show/hide button if not present
+                            const inputContainer = item.querySelector('.api-key-input');
+                            if (!inputContainer.querySelector('.toggle-visibility')) {
+                                const toggleBtn = document.createElement('button');
+                                toggleBtn.className = 'btn-small toggle-visibility';
+                                toggleBtn.dataset.service = service;
+                                toggleBtn.dataset.visible = 'false';
+                                toggleBtn.textContent = 'Show';
+                                toggleBtn.addEventListener('click', () => {
+                                    const isVisible = toggleBtn.dataset.visible === 'true';
+                                    e.target.type = isVisible ? 'password' : 'text';
+                                    toggleBtn.textContent = isVisible ? 'Show' : 'Hide';
+                                    toggleBtn.dataset.visible = isVisible ? 'false' : 'true';
+                                });
+                                inputContainer.appendChild(toggleBtn);
+                            }
+                            if (window.showNotification) {
+                                window.showNotification(`${service.toUpperCase()} API key saved securely`, 'success', 2000);
+                            }
+                        } catch (error) {
+                            console.error('[Settings] Failed to save API key:', error);
+                            if (window.showNotification) {
+                                window.showNotification('Failed to save API key', 'error', 3000);
+                            }
+                        }
+                    }
+                    
+                    if (!this.settings.api.apiKeys[service]) {
+                        this.settings.api.apiKeys[service] = { enabled: false, key: '' };
+                    }
+                    this.settings.api.apiKeys[service].key = '***'; // Don't store in localStorage
+                    this.saveSettings();
+                }
+            });
+        });
+        
+        list.querySelectorAll('.delete-api-key').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const service = e.target.dataset.service;
+                if (confirm(`Delete ${service} API key?`)) {
+                    if (window.sergikAPI && window.sergikAPI.deleteApiKey) {
+                        try {
+                            await window.sergikAPI.deleteApiKey(service);
+                            if (this.settings.api.apiKeys && this.settings.api.apiKeys[service]) {
+                                delete this.settings.api.apiKeys[service];
+                            }
+                            this.populateApiKeysUI();
+                            if (window.showNotification) {
+                                window.showNotification(`${service.toUpperCase()} API key deleted`, 'success', 2000);
+                            }
+                        } catch (error) {
+                            console.error('[Settings] Failed to delete API key:', error);
+                            if (window.showNotification) {
+                                window.showNotification('Failed to delete API key', 'error', 3000);
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Toggle visibility buttons
+        list.querySelectorAll('.toggle-visibility').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const service = e.target.dataset.service;
+                const input = list.querySelector(`.api-key-value[data-service="${service}"]`);
+                const isVisible = e.target.dataset.visible === 'true';
+                
+                if (input) {
+                    input.type = isVisible ? 'password' : 'text';
+                    e.target.textContent = isVisible ? 'Show' : 'Hide';
+                    e.target.dataset.visible = isVisible ? 'false' : 'true';
+                }
+            });
+        });
     }
 }
 

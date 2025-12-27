@@ -130,6 +130,19 @@ async function initializeApp() {
         window.undoManager = new window.UndoManager(50);
     }
     
+    // Test IPC communication first
+    console.log('[Renderer] Testing IPC communication...');
+    if (window.sergikAPI) {
+        try {
+            const testResult = await window.sergikAPI.getApiUrl();
+            console.log('[Renderer] IPC test successful, API URL:', testResult);
+        } catch (error) {
+            console.error('[Renderer] IPC test failed:', error);
+        }
+    } else {
+        console.error('[Renderer] window.sergikAPI is not available!');
+    }
+    
     // Check connection
     await checkConnection();
     
@@ -168,21 +181,57 @@ async function initializeApp() {
 
 async function loadInitialData() {
     console.log('[Renderer] Loading initial data...');
+    logToDevConsole('info', 'Loading initial data...');
+    
+    const errors = [];
     
     try {
         // Load session state (tracks, clips)
-        const sessionState = await loadSessionState();
+        try {
+            logToDevConsole('info', 'Loading session state...');
+            const sessionState = await loadSessionState();
+            logToDevConsole('success', 'Session state loaded', { tracks: sessionState?.tracks?.length || 0 });
+        } catch (error) {
+            const errorMsg = `Failed to load session state: ${error.message}`;
+            console.error('[Renderer]', errorMsg, error);
+            logToDevConsole('error', errorMsg, error);
+            errors.push('session state');
+        }
         
         // Load drum genres
-        await loadDrumGenres();
+        try {
+            logToDevConsole('info', 'Loading drum genres...');
+            await loadDrumGenres();
+            logToDevConsole('success', 'Drum genres loaded');
+        } catch (error) {
+            const errorMsg = `Failed to load drum genres: ${error.message}`;
+            console.error('[Renderer]', errorMsg, error);
+            logToDevConsole('error', errorMsg, error);
+            errors.push('drum genres');
+        }
         
         // Load media library (recent items)
-        await loadRecentMedia();
+        try {
+            logToDevConsole('info', 'Loading recent media...');
+            await loadRecentMedia();
+            logToDevConsole('success', 'Recent media loaded');
+        } catch (error) {
+            const errorMsg = `Failed to load recent media: ${error.message}`;
+            console.error('[Renderer]', errorMsg, error);
+            logToDevConsole('error', errorMsg, error);
+            errors.push('recent media');
+        }
         
         // Update track and slot options with session data
-        if (sessionState && sessionState.tracks) {
-            updateTrackAndSlotOptions(sessionState.tracks);
-        } else {
+        try {
+            const sessionState = await loadSessionState().catch(() => null);
+            if (sessionState && sessionState.tracks) {
+                updateTrackAndSlotOptions(sessionState.tracks);
+            } else {
+                updateTrackAndSlotOptions([]);
+            }
+        } catch (error) {
+            console.warn('[Renderer] Failed to update track options:', error);
             updateTrackAndSlotOptions([]);
         }
         
@@ -195,9 +244,18 @@ async function loadInitialData() {
         // Initialize empty canvas states
         initializeEmptyCanvases();
         
-        addAction('Initial data loaded', 'success');
+        if (errors.length > 0) {
+            const errorMsg = `Initial data loaded with errors: ${errors.join(', ')}`;
+            addAction(errorMsg, 'warning');
+            logToDevConsole('warning', errorMsg);
+        } else {
+            addAction('Initial data loaded', 'success');
+            logToDevConsole('success', 'Initial data loaded successfully');
+        }
     } catch (error) {
-        console.error('[Renderer] Failed to load initial data:', error);
+        const errorMsg = `Failed to load initial data: ${error.message}`;
+        console.error('[Renderer]', errorMsg, error);
+        logToDevConsole('error', errorMsg, error);
         addAction('Failed to load initial data', 'error');
         // Still initialize empty states
         initializeEmptyCanvases();
@@ -300,33 +358,69 @@ async function loadRecentMedia() {
                 console.warn('[Renderer] Failed to load recent media from API:', apiError);
             }
             
-            // Load from local library directory
+            // Load from media storage directory (new dedicated storage) - PRIORITY
+            try {
+                // Load all media from storage (generated and imported)
+                const mediaResult = await window.sergikAPI.listMediaStorageFiles({ source: 'all', type: 'all' });
+                if (mediaResult.success && mediaResult.files) {
+                    const mediaItems = mediaResult.files.map(file => {
+                        // Determine type from extension or source
+                        let fileType = 'audio';
+                        const ext = file.type || '';
+                        if (['mid', 'midi'].includes(ext)) {
+                            fileType = 'midi';
+                        } else if (['wav', 'mp3', 'aiff', 'aif', 'flac', 'ogg'].includes(ext)) {
+                            fileType = 'audio';
+                        }
+                        
+                        return {
+                            id: file.path,
+                            name: file.name,
+                            path: file.path,
+                            type: fileType,
+                            duration: 0, // Duration not stored in file metadata
+                            source: file.source || 'media',
+                            modified: file.modified,
+                            size: file.size
+                        };
+                    });
+                    allItems.push(...mediaItems);
+                }
+            } catch (mediaError) {
+                console.warn('[Renderer] Failed to load media storage files:', mediaError);
+            }
+            
+            // Load from local library directory (legacy - for backward compatibility)
             try {
                 const libraryResult = await window.sergikAPI.listLibraryFiles('MIDI');
                 if (libraryResult.success && libraryResult.files) {
-                    const libraryItems = libraryResult.files.map(file => ({
-                        id: file.path,
-                        name: file.name,
-                        path: file.path,
-                        type: 'midi',
-                        duration: 0, // Duration not stored in file metadata
-                        source: 'library',
-                        modified: file.modified
-                    }));
+                    const libraryItems = libraryResult.files
+                        .filter(file => file.source === 'library') // Only include legacy library files
+                        .map(file => ({
+                            id: file.path,
+                            name: file.name,
+                            path: file.path,
+                            type: 'midi',
+                            duration: 0,
+                            source: 'library',
+                            modified: file.modified
+                        }));
                     allItems.push(...libraryItems);
                 }
                 
                 const audioResult = await window.sergikAPI.listLibraryFiles('Audio');
                 if (audioResult.success && audioResult.files) {
-                    const audioItems = audioResult.files.map(file => ({
-                        id: file.path,
-                        name: file.name,
-                        path: file.path,
-                        type: 'audio',
-                        duration: 0,
-                        source: 'library',
-                        modified: file.modified
-                    }));
+                    const audioItems = audioResult.files
+                        .filter(file => file.source === 'library') // Only include legacy library files
+                        .map(file => ({
+                            id: file.path,
+                            name: file.name,
+                            path: file.path,
+                            type: 'audio',
+                            duration: 0,
+                            source: 'library',
+                            modified: file.modified
+                        }));
                     allItems.push(...audioItems);
                 }
             } catch (libraryError) {
@@ -346,7 +440,9 @@ async function loadRecentMedia() {
         updateMediaList(recentItems);
         
         if (recentItems.length > 0) {
-            console.log(`[Renderer] Loaded ${recentItems.length} media items (${recentItems.filter(i => i.source === 'library').length} from library)`);
+            const mediaCount = recentItems.filter(i => i.source && i.source.startsWith('media')).length;
+            const libraryCount = recentItems.filter(i => i.source === 'library').length;
+            console.log(`[Renderer] Loaded ${recentItems.length} media items (${mediaCount} from media storage, ${libraryCount} from library)`);
         }
         
         return recentItems;
@@ -463,6 +559,10 @@ function setupEventListeners() {
         } else if (intelligenceSubLine) {
             intelligenceSubLine.style.display = 'none';
         }
+        // Update advanced panel if open
+        if (typeof updateAdvancedIntelligencePanel === 'function') {
+            updateAdvancedIntelligencePanel();
+        }
     });
     
     // Function to populate intelligence sub-options
@@ -470,24 +570,23 @@ function setupEventListeners() {
         if (!subSelect) return;
         
         // Clear existing options
-        subSelect.innerHTML = '';
+        subSelect.innerHTML = '<option value="">None</option>';
         
-        // Define options for each category
-        const options = {
-            'emotional': ['Joy', 'Sadness', 'Anger', 'Fear', 'Surprise', 'Disgust'],
-            'psychological': ['Arousal', 'Valence', 'Dominance', 'Tension', 'Release'],
-            'sonic': ['Brightness', 'Warmth', 'Punch', 'Depth', 'Width'],
-            'intent': ['Creative', 'Chill', 'Dance Floor', 'Social', 'Study']
-        };
+        // Use global INTELLIGENCE_CATEGORIES (defined later in file)
+        if (typeof INTELLIGENCE_CATEGORIES === 'undefined') return;
+        if (!INTELLIGENCE_CATEGORIES[category]) return;
         
-        const subOptions = options[category] || [];
-        subOptions.forEach(option => {
+        const categoryData = INTELLIGENCE_CATEGORIES[category];
+        categoryData.subOptions.forEach(option => {
             const opt = document.createElement('option');
-            opt.value = option.toLowerCase().replace(/\s+/g, '-');
+            opt.value = option.toLowerCase().replace(/\s+/g, '_');
             opt.textContent = option;
             subSelect.appendChild(opt);
         });
     }
+    
+    // Setup advanced intelligence panel (will be called after INTELLIGENCE_CATEGORIES is defined)
+    // This will be called from the global scope after the constant is defined
     
     // Tempo follow toggle
     elements.tempoFollowToggle?.addEventListener('change', (e) => {
@@ -705,8 +804,23 @@ function setupEventListeners() {
             const formData = new FormData();
             formData.append('file', file);
             
-            // Make API request
-            const apiBaseUrl = window.sergikAPI?.getApiBaseUrl() || 'http://localhost:8000';
+            // Use IPC handler for file upload
+            if (window.sergikAPI) {
+                const fileResult = await window.sergikAPI.selectFileForAnalysis();
+                if (fileResult.success) {
+                    const result = await window.sergikAPI.analyzeUpload(fileResult.filePath);
+                    if (result.success) {
+                        displayAnalysisResults(result.data);
+                        addAction('Analysis complete', 'success');
+                        return;
+                    } else {
+                        throw new Error(result.error || 'Analysis failed');
+                    }
+                }
+            }
+            
+            // Fallback: direct API call
+            const apiBaseUrl = await window.sergikAPI?.getApiBaseUrl() || 'http://localhost:8000';
             const response = await fetch(`${apiBaseUrl}/api/analyze/upload`, {
                 method: 'POST',
                 body: formData
@@ -740,8 +854,26 @@ function setupEventListeners() {
                 return;
             }
             
-            // Make API request
-            const apiBaseUrl = window.sergikAPI?.getApiBaseUrl() || 'http://localhost:8000';
+            // Use IPC handler for preview
+            if (window.sergikAPI) {
+                // Parse query to extract organize parameters
+                const params = {
+                    source_dirs: query,
+                    target_base: '/Users/machd/Desktop/SERGIK_Organized',
+                    organize_by: 'genre,bpm,key'
+                };
+                const result = await window.sergikAPI.organizePreview(params);
+                if (result.success) {
+                    displayPreviewResults(result.data);
+                    addAction('Preview complete', 'success');
+                    return;
+                } else {
+                    throw new Error(result.error || 'Preview failed');
+                }
+            }
+            
+            // Fallback: direct API call
+            const apiBaseUrl = await window.sergikAPI?.getApiBaseUrl() || 'http://localhost:8000';
             const response = await fetch(`${apiBaseUrl}/api/organize/preview?query=${encodeURIComponent(query)}`, {
                 method: 'GET'
             });
@@ -846,6 +978,9 @@ function setupEventListeners() {
     
     // Advanced key panel
     setupAdvancedKeyPanel();
+    
+    // Advanced intelligence panel (will be initialized after INTELLIGENCE_CATEGORIES is defined)
+    // Called at end of file after constant definition
 }
 
 // Handle multiple file uploads
@@ -1130,8 +1265,23 @@ function setupAnalyzeTab() {
             const formData = new FormData();
             formData.append('file', file);
             
-            // Make API request to DNA analysis endpoint
-            const apiBaseUrl = window.sergikAPI?.getApiBaseUrl() || 'http://localhost:8000';
+            // Use IPC handler for DNA analysis
+            if (window.sergikAPI) {
+                const fileResult = await window.sergikAPI.selectFileForAnalysis();
+                if (fileResult.success) {
+                    const result = await window.sergikAPI.gptAnalyze(fileResult.filePath);
+                    if (result.success) {
+                        displayDNAMatchResults(result.data);
+                        addAction('DNA match complete', 'success');
+                        return;
+                    } else {
+                        throw new Error(result.error || 'DNA match failed');
+                    }
+                }
+            }
+            
+            // Fallback: direct API call
+            const apiBaseUrl = await window.sergikAPI?.getApiBaseUrl() || 'http://localhost:8000';
             const response = await fetch(`${apiBaseUrl}/api/gpt/analyze`, {
                 method: 'POST',
                 body: formData
@@ -1660,37 +1810,143 @@ function switchAnalysisView(view) {
 
 // Connection Management
 async function checkConnection() {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1799',message:'checkConnection entry',data:{hasSergikAPI:!!window.sergikAPI,hasCheckHealth:!!(window.sergikAPI&&window.sergikAPI.checkHealth)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     try {
         if (window.sergikAPI) {
-        const result = await window.sergikAPI.checkHealth();
-        if (result.success) {
-                updateConnectionStatus(true, 'CONNECTED');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1802',message:'calling checkHealth',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        const startTime = Date.now();
+        let result;
+        console.log('[Renderer Debug] Starting checkHealth call', { 
+          hasSergikAPI: !!window.sergikAPI,
+          hasCheckHealth: !!(window.sergikAPI && window.sergikAPI.checkHealth),
+          timestamp: new Date().toISOString()
+        });
+        try {
+            const healthPromise = window.sergikAPI.checkHealth();
+            console.log('[Renderer Debug] checkHealth promise created', { isPromise: healthPromise instanceof Promise });
+            result = await Promise.race([
+                healthPromise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('IPC timeout after 10s')), 10000))
+            ]);
+            console.log('[Renderer Debug] checkHealth completed', { result, duration: Date.now() - startTime });
+        } catch (ipcError) {
+            console.error('[Renderer Debug] checkHealth error', ipcError);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1806',message:'checkHealth IPC error',data:{errorMessage:ipcError?.message,errorName:ipcError?.name,duration:Date.now()-startTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'T'})}).catch(()=>{});
+            // #endregion
+            throw ipcError;
+        }
+        const duration = Date.now() - startTime;
+        console.log('[Renderer Debug] checkHealth result', { success: result?.success, duration, error: result?.error });
+        // #region agent log
+        try {
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1814',message:'checkHealth result',data:{success:result?.success,hasStatus:!!result?.status,hasService:!!result?.service,error:result?.error,duration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        } catch (e) {
+            console.error('[Renderer] Log fetch error:', e);
+        }
+        // #endregion
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1852',message:'AFTER ENDREGION - CODE REACHED',data:{hasResult:!!result,success:result?.success},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'EXEC_TEST'})}).catch(()=>{});
+        // #endregion
+        
+        // CRITICAL: Update connection status IMMEDIATELY - no async operations
+        const shouldConnect = result && result.success;
+        const statusText = shouldConnect ? 'CONNECTED' : 'DISCONNECTED';
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1856',message:'VARIABLES CALCULATED',data:{shouldConnect,statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'VARS'})}).catch(()=>{});
+        // #endregion
+        
+        // Update UI DIRECTLY - synchronous DOM operations
+        const statusLed = document.getElementById('status-led');
+        const statusTextEl = document.getElementById('status-text');
+        const statusLedDisplay = document.getElementById('status-led-display');
+        const statusTextDisplay = document.getElementById('status-text-display');
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1865',message:'DOM ELEMENTS RETRIEVED',data:{hasStatusLed:!!statusLed,hasStatusText:!!statusTextEl,hasStatusLedDisplay:!!statusLedDisplay,hasStatusTextDisplay:!!statusTextDisplay},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'DOM'})}).catch(()=>{});
+        // #endregion
+        
+        console.log('[Renderer] Updating UI directly', { shouldConnect, statusText, hasStatusLed: !!statusLed, hasStatusText: !!statusTextEl });
+        
+        if (statusLed) {
+            statusLed.classList.toggle('connected', shouldConnect);
+            statusLed.classList.toggle('disconnected', !shouldConnect);
+        }
+        if (statusTextEl) {
+            statusTextEl.textContent = statusText;
+        }
+        if (statusLedDisplay) {
+            statusLedDisplay.classList.toggle('connected', shouldConnect);
+            statusLedDisplay.classList.toggle('disconnected', !shouldConnect);
+        }
+        if (statusTextDisplay) {
+            statusTextDisplay.textContent = shouldConnect ? 'Ready' : 'Not Ready';
+        }
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1880',message:'UI UPDATE COMPLETED',data:{shouldConnect,statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'UI_DONE'})}).catch(()=>{});
+        // #endregion
+        
+        console.log('[Renderer] UI update completed', { shouldConnect, statusText });
+        
+        // Also call updateConnectionStatus for consistency (async, won't block)
+        try {
+            updateConnectionStatus(shouldConnect, statusText);
+        } catch (e) {
+            console.error('[Renderer] updateConnectionStatus failed:', e);
+        }
         } else {
-                updateConnectionStatus(false, 'DISCONNECTED');
-            }
-        } else {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1809',message:'window.sergikAPI undefined',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             updateConnectionStatus(false, 'NO API');
         }
     } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1812',message:'checkConnection error',data:{errorMessage:error?.message,errorStack:error?.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         updateConnectionStatus(false, 'ERROR');
         console.error('[Renderer] Connection check failed:', error);
     }
 }
 
 function updateConnectionStatus(connected, text) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1868',message:'updateConnectionStatus called',data:{connected,text,hasStatusLed:!!elements.statusLed,hasStatusText:!!elements.statusText,hasStatusLedDisplay:!!elements.statusLedDisplay,hasStatusTextDisplay:!!elements.statusTextDisplay},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'UI_UPDATE'})}).catch(()=>{});
+    // #endregion
+    console.log('[Renderer] updateConnectionStatus called', { connected, text, hasStatusLed: !!elements.statusLed, hasStatusText: !!elements.statusText });
     if (elements.statusLed) {
         elements.statusLed.classList.toggle('connected', connected);
         elements.statusLed.classList.toggle('disconnected', !connected);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1872',message:'statusLed updated',data:{connected,hasClassList:!!elements.statusLed.classList},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'UI_UPDATE'})}).catch(()=>{});
+        // #endregion
     }
     if (elements.statusText) {
-    elements.statusText.textContent = text;
-}
+        elements.statusText.textContent = text;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1877',message:'statusText updated',data:{text,textContent:elements.statusText.textContent},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'UI_UPDATE'})}).catch(()=>{});
+        // #endregion
+    }
     if (elements.statusLedDisplay) {
         elements.statusLedDisplay.classList.toggle('connected', connected);
         elements.statusLedDisplay.classList.toggle('disconnected', !connected);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1882',message:'statusLedDisplay updated',data:{connected},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'UI_UPDATE'})}).catch(()=>{});
+        // #endregion
     }
     if (elements.statusTextDisplay) {
-        elements.statusTextDisplay.textContent = connected ? 'Ready' : 'Not Ready';
+        const displayText = connected ? 'Ready' : 'Not Ready';
+        elements.statusTextDisplay.textContent = displayText;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1a0fb566-a809-4ec8-acf1-755116941527',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'renderer.js:1888',message:'statusTextDisplay updated',data:{connected,displayText,textContent:elements.statusTextDisplay.textContent},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'UI_UPDATE'})}).catch(()=>{});
+        // #endregion
     }
 }
 
@@ -2303,8 +2559,13 @@ function drawTimeline(tracks) {
     const ruler = document.getElementById('timeline-ruler');
     const tracksContainer = document.getElementById('timeline-tracks');
     
-    if (ruler) {
+    // Check if ruler exists and is a canvas element
+    if (ruler && ruler instanceof HTMLCanvasElement) {
         const ctx = ruler.getContext('2d');
+        if (!ctx) {
+            console.warn('[Renderer] Could not get 2d context from timeline ruler');
+            return;
+        }
         const width = ruler.width = ruler.offsetWidth;
         const height = ruler.height = 20;
         
@@ -2327,6 +2588,9 @@ function drawTimeline(tracks) {
             
             ctx.fillText(`${i}`, x + 2, height - 4);
         }
+    } else if (ruler) {
+        // Ruler element exists but is not a canvas - log warning
+        console.warn('[Renderer] Timeline ruler element is not a canvas element');
     }
     
     // Update tracks if provided
@@ -3558,6 +3822,418 @@ function updateNotationButtons() {
     document.querySelectorAll('[data-notation]').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-notation') === keyNotationMode);
     });
+}
+
+// ============================================================================
+// Advanced Intelligence Features
+// ============================================================================
+
+// Intelligence category definitions with sub-options (global scope)
+const INTELLIGENCE_CATEGORIES = {
+    'groovy': {
+        name: 'Groovy',
+        description: 'Funky, rhythmic, and danceable vibes with soulful elements',
+        subOptions: ['Deep Groove', 'Funky', 'Soulful', 'Rhythmic', 'Bouncy', 'Swing']
+    },
+    'chill': {
+        name: 'Chill',
+        description: 'Relaxed, laid-back, and ambient atmospheres',
+        subOptions: ['Ambient', 'Downtempo', 'Lounge', 'Meditative', 'Smooth', 'Relaxed']
+    },
+    'intense': {
+        name: 'Intense',
+        description: 'High energy, powerful, and driving compositions',
+        subOptions: ['Aggressive', 'Powerful', 'Driving', 'Energetic', 'Hard', 'Punchy']
+    },
+    'calm': {
+        name: 'Calm',
+        description: 'Peaceful, serene, and tranquil soundscapes',
+        subOptions: ['Peaceful', 'Serene', 'Tranquil', 'Gentle', 'Soft', 'Soothing']
+    },
+    'social': {
+        name: 'Social',
+        description: 'Engaging, conversational, and interactive music',
+        subOptions: ['Conversational', 'Interactive', 'Engaging', 'Friendly', 'Welcoming', 'Open']
+    },
+    'productivity': {
+        name: 'Productivity',
+        description: 'Focus-enhancing, non-distracting background music',
+        subOptions: ['Focus', 'Concentration', 'Background', 'Non-Distracting', 'Steady', 'Consistent']
+    },
+    'creative': {
+        name: 'Creative',
+        description: 'Inspiring, experimental, and innovative sounds',
+        subOptions: ['Experimental', 'Innovative', 'Inspiring', 'Unique', 'Artistic', 'Original']
+    },
+    'dance_floor': {
+        name: 'Dance Floor',
+        description: 'High-energy, club-ready, and party-starting tracks',
+        subOptions: ['Club', 'Party', 'Festival', 'High Energy', 'Bass Heavy', 'Drop Ready']
+    },
+    'background': {
+        name: 'Background',
+        description: 'Subtle, unobtrusive music for ambient environments',
+        subOptions: ['Ambient', 'Subtle', 'Unobtrusive', 'Atmospheric', 'Textural', 'Minimal']
+    },
+    'workout': {
+        name: 'Workout',
+        description: 'Motivational, high-tempo music for physical activity',
+        subOptions: ['Cardio', 'Strength', 'Endurance', 'Motivational', 'Pumping', 'High Tempo']
+    }
+};
+
+// Intelligence to Key/Scale suggestions mapping
+const INTELLIGENCE_KEY_SCALE_SUGGESTIONS = {
+    'groovy': {
+        keys: ['9B', '10B', '11B', '8B'], // G, D, A, C major - funky keys
+        scales: ['major', 'mixolydian', 'pent_major'],
+        description: 'Major keys with funky, rhythmic scales'
+    },
+    'chill': {
+        keys: ['8A', '7A', '9A', '5A'], // A, D, E, C minor - relaxed keys
+        scales: ['minor', 'dorian', 'pent_minor', 'blues'],
+        description: 'Minor keys with laid-back, ambient scales'
+    },
+    'intense': {
+        keys: ['7A', '10A', '11A', '9A'], // D, B, F#, E minor - powerful keys
+        scales: ['minor', 'harmonic_minor', 'locrian'],
+        description: 'Minor keys with powerful, driving scales'
+    },
+    'calm': {
+        keys: ['8B', '7B', '9B', '8A'], // C, F, G major, A minor - peaceful keys
+        scales: ['major', 'minor', 'pent_major', 'pent_minor'],
+        description: 'Neutral keys with peaceful, serene scales'
+    },
+    'social': {
+        keys: ['10B', '11B', '9B', '8B'], // D, A, G, C major - friendly keys
+        scales: ['major', 'mixolydian', 'lydian'],
+        description: 'Major keys with engaging, conversational scales'
+    },
+    'productivity': {
+        keys: ['8B', '7B', '10B', '8A'], // C, F, D major, A minor - neutral keys
+        scales: ['major', 'minor', 'dorian'],
+        description: 'Neutral keys with focus-enhancing scales'
+    },
+    'creative': {
+        keys: ['10B', '11B', '9B', '7A'], // D, A, G major, D minor - creative keys
+        scales: ['dorian', 'lydian', 'mixolydian', 'pent_major'],
+        description: 'Various keys with experimental, innovative scales'
+    },
+    'dance_floor': {
+        keys: ['10B', '11B', '9B', '12B'], // D, A, G, E major - energetic keys
+        scales: ['major', 'mixolydian', 'pent_major'],
+        description: 'Major keys with high-energy, club-ready scales'
+    },
+    'background': {
+        keys: ['8B', '7B', '8A', '7A'], // C, F major, A, D minor - subtle keys
+        scales: ['major', 'minor', 'pent_major', 'pent_minor'],
+        description: 'Neutral keys with subtle, unobtrusive scales'
+    },
+    'workout': {
+        keys: ['10B', '11B', '9B', '12B'], // D, A, G, E major - motivational keys
+        scales: ['major', 'mixolydian', 'pent_major'],
+        description: 'Major keys with high-tempo, pumping scales'
+    }
+};
+
+// Suggest keys and scales based on intelligence category
+function suggestKeysAndScalesForIntelligence(intelligenceCategory) {
+    if (!intelligenceCategory || !INTELLIGENCE_KEY_SCALE_SUGGESTIONS[intelligenceCategory]) {
+        return null;
+    }
+    
+    return INTELLIGENCE_KEY_SCALE_SUGGESTIONS[intelligenceCategory];
+}
+
+// Apply intelligence-based suggestions to key and scale selects
+function applyIntelligenceSuggestions(intelligenceCategory, autoApply = false) {
+    const suggestions = suggestKeysAndScalesForIntelligence(intelligenceCategory);
+    if (!suggestions) return;
+    
+    const keySelect = document.getElementById('key-select');
+    const scaleSelect = document.getElementById('scale-select');
+    
+    if (autoApply) {
+        // Auto-apply first suggestion
+        if (keySelect && suggestions.keys.length > 0) {
+            const suggestedKey = suggestions.keys[0];
+            const option = keySelect.querySelector(`option[value="${suggestedKey}"]`);
+            if (option) {
+                keySelect.value = suggestedKey;
+                keySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                addAction(`Suggested key: ${suggestedKey} (${intelligenceCategory})`, 'info');
+            }
+        }
+        
+        if (scaleSelect && suggestions.scales.length > 0) {
+            const suggestedScale = suggestions.scales[0];
+            const option = scaleSelect.querySelector(`option[value="${suggestedScale}"]`);
+            if (option) {
+                scaleSelect.value = suggestedScale;
+                scaleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                addAction(`Suggested scale: ${suggestedScale} (${intelligenceCategory})`, 'info');
+            }
+        }
+    }
+    
+    // Update advanced key panel with suggestions
+    updateIntelligenceKeySuggestions(suggestions);
+    
+    // Update advanced scale panel with suggestions
+    updateIntelligenceScaleSuggestions(suggestions);
+}
+
+// Update key suggestions in advanced key panel
+function updateIntelligenceKeySuggestions(suggestions) {
+    const container = document.getElementById('intelligence-key-suggestions');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!suggestions || !suggestions.keys) return;
+    
+    suggestions.keys.forEach(key => {
+        const chip = document.createElement('button');
+        chip.className = 'key-chip compatible';
+        chip.textContent = formatKeyDisplay(key);
+        chip.title = `Suggested for ${suggestions.description || 'intelligence'}`;
+        chip.addEventListener('click', () => {
+            const keySelect = document.getElementById('key-select');
+            if (keySelect) {
+                keySelect.value = key;
+                keySelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        container.appendChild(chip);
+    });
+}
+
+// Update scale suggestions in advanced scale panel
+function updateIntelligenceScaleSuggestions(suggestions) {
+    const container = document.getElementById('intelligence-scale-suggestions');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!suggestions || !suggestions.scales) return;
+    
+    const scaleNames = {
+        'major': 'Major',
+        'minor': 'Minor',
+        'dorian': 'Dorian',
+        'phrygian': 'Phrygian',
+        'lydian': 'Lydian',
+        'mixolydian': 'Mixolydian',
+        'locrian': 'Locrian',
+        'harmonic_minor': 'Harmonic Minor',
+        'melodic_minor': 'Melodic Minor',
+        'pent_major': 'Pentatonic Major',
+        'pent_minor': 'Pentatonic Minor',
+        'blues': 'Blues'
+    };
+    
+    suggestions.scales.forEach(scale => {
+        const chip = document.createElement('button');
+        chip.className = 'key-chip compatible';
+        chip.textContent = scaleNames[scale] || scale;
+        chip.title = `Suggested for ${suggestions.description || 'intelligence'}`;
+        chip.addEventListener('click', () => {
+            const scaleSelect = document.getElementById('scale-select');
+            if (scaleSelect) {
+                scaleSelect.value = scale;
+                scaleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        container.appendChild(chip);
+    });
+}
+
+// Setup advanced intelligence panel
+function setupAdvancedIntelligencePanel() {
+    const toggleBtn = document.getElementById('intelligence-advanced-toggle');
+    const panel = document.getElementById('advanced-intelligence-panel');
+    const closeBtn = document.getElementById('advanced-intelligence-close');
+    const intelligenceSelect = document.getElementById('intelligence-select');
+    const intelligenceSubSelect = document.getElementById('intelligence-sub-select');
+    
+    if (!toggleBtn || !panel) return;
+    
+    // Toggle panel
+    toggleBtn.addEventListener('click', () => {
+        const isVisible = panel.style.display !== 'none';
+        panel.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) {
+            updateAdvancedIntelligencePanel();
+        }
+    });
+    
+    // Close button
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            panel.style.display = 'none';
+        });
+    }
+    
+    // Intelligence change handler
+    if (intelligenceSelect) {
+        intelligenceSelect.addEventListener('change', () => {
+            const category = intelligenceSelect.value;
+            updateAdvancedIntelligencePanel();
+            
+            // Suggest keys and scales based on intelligence
+            if (category) {
+                applyIntelligenceSuggestions(category, false); // false = don't auto-apply, just show suggestions
+            }
+        });
+    }
+    
+    // Sub-select change handler
+    if (intelligenceSubSelect) {
+        intelligenceSubSelect.addEventListener('change', () => {
+            updateAdvancedIntelligencePanel();
+        });
+    }
+    
+    // Apply suggestions button
+    const applyBtn = document.getElementById('apply-intelligence-suggestions');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', () => {
+            const category = intelligenceSelect?.value;
+            if (category) {
+                applyIntelligenceSuggestions(category, true); // true = auto-apply
+            }
+        });
+    }
+    
+    // Initialize
+    updateAdvancedIntelligencePanel();
+}
+
+function updateAdvancedIntelligencePanel() {
+    const intelligenceSelect = document.getElementById('intelligence-select');
+    const intelligenceSubSelect = document.getElementById('intelligence-sub-select');
+    if (!intelligenceSelect) return;
+    
+    const currentCategory = intelligenceSelect.value;
+    const currentSub = intelligenceSubSelect?.value || '';
+    
+    // Update current intelligence display
+    const currentIntelligenceDisplay = document.getElementById('current-intelligence-display');
+    if (currentIntelligenceDisplay) {
+        if (currentCategory) {
+            const categoryData = INTELLIGENCE_CATEGORIES[currentCategory];
+            currentIntelligenceDisplay.textContent = categoryData?.name || currentCategory;
+        } else {
+            currentIntelligenceDisplay.textContent = 'None';
+        }
+    }
+    
+    // Update current sub display
+    const currentSubDisplay = document.getElementById('current-intelligence-sub-display');
+    if (currentSubDisplay) {
+        currentSubDisplay.textContent = currentSub || 'None';
+    }
+    
+    // Update category quick select
+    updateIntelligenceCategories();
+    
+    // Update category description
+    updateIntelligenceDescription(currentCategory);
+    
+    // Update sub-options
+    updateIntelligenceSubOptions(currentCategory);
+    
+    // Update key and scale suggestions
+    if (currentCategory) {
+        applyIntelligenceSuggestions(currentCategory, false);
+    }
+}
+
+function updateIntelligenceCategories() {
+    const container = document.getElementById('intelligence-categories');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    Object.keys(INTELLIGENCE_CATEGORIES).forEach(categoryKey => {
+        const categoryData = INTELLIGENCE_CATEGORIES[categoryKey];
+        const chip = document.createElement('button');
+        chip.className = 'key-chip';
+        chip.textContent = categoryData.name;
+        chip.title = categoryData.description;
+        chip.addEventListener('click', () => {
+            const intelligenceSelect = document.getElementById('intelligence-select');
+            if (intelligenceSelect) {
+                intelligenceSelect.value = categoryKey;
+                intelligenceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        container.appendChild(chip);
+    });
+}
+
+function updateIntelligenceDescription(category) {
+    const container = document.getElementById('intelligence-description');
+    if (!container) return;
+    
+    if (category && INTELLIGENCE_CATEGORIES[category]) {
+        const categoryData = INTELLIGENCE_CATEGORIES[category];
+        container.innerHTML = `
+            <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">
+                <strong style="color: var(--accent-green);">${categoryData.name}</strong><br>
+                ${categoryData.description}
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">
+                Select a category to see details
+            </div>
+        `;
+    }
+}
+
+function updateIntelligenceSubOptions(category) {
+    const container = document.getElementById('intelligence-sub-options');
+    const subSelect = document.getElementById('intelligence-sub-select');
+    if (!container || !subSelect) return;
+    
+    container.innerHTML = '';
+    
+    if (!category || !INTELLIGENCE_CATEGORIES[category]) {
+        subSelect.innerHTML = '<option value="">None</option>';
+        return;
+    }
+    
+    const categoryData = INTELLIGENCE_CATEGORIES[category];
+    
+    // Update dropdown
+    subSelect.innerHTML = '<option value="">None</option>';
+    categoryData.subOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.toLowerCase().replace(/\s+/g, '_');
+        opt.textContent = option;
+        subSelect.appendChild(opt);
+    });
+    
+    // Update chip buttons
+    categoryData.subOptions.forEach(option => {
+        const chip = document.createElement('button');
+        chip.className = 'key-chip';
+        chip.textContent = option;
+        chip.addEventListener('click', () => {
+            if (subSelect) {
+                subSelect.value = option.toLowerCase().replace(/\s+/g, '_');
+                subSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        container.appendChild(chip);
+    });
+}
+
+// Initialize advanced intelligence panel after constants are defined
+if (typeof setupAdvancedIntelligencePanel === 'function') {
+    setupAdvancedIntelligencePanel();
 }
 
 console.log('[Renderer] Script loaded');

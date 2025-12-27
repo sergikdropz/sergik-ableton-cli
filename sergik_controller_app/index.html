@@ -1079,6 +1079,28 @@
                             </div>
                         </div>
                         
+                        <!-- Ngrok Configuration -->
+                        <div class="settings-group">
+                            <h4>Ngrok Configuration</h4>
+                            <div class="settings-field">
+                                <label>
+                                    <input type="checkbox" id="settings-use-ngrok">
+                                    Use Ngrok Tunnel
+                                </label>
+                                <span class="field-hint">Connect through ngrok tunnel for external access to SERGIK AI GPT</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-ngrok-url">Ngrok URL</label>
+                                <input type="text" id="settings-ngrok-url" placeholder="https://xxxx.ngrok.io">
+                                <span class="field-hint">Static ngrok URL (optional if using API key for auto-detection)</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="settings-ngrok-api-key">Ngrok API Key</label>
+                                <input type="password" id="settings-ngrok-api-key" placeholder="Enter ngrok API key">
+                                <span class="field-hint">For automatic URL detection from ngrok dashboard</span>
+                            </div>
+                        </div>
+                        
                         <!-- Retry Settings -->
                         <div class="settings-group">
                             <h4>Retry Settings</h4>
@@ -1227,6 +1249,17 @@
                                     Validate SSL Certificates
                                 </label>
                                 <span class="field-hint">Verify SSL/TLS certificates (disable for self-signed certs)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Service API Keys -->
+                        <div class="settings-group">
+                            <h4>AI Service API Keys</h4>
+                            <p class="field-hint" style="margin-bottom: 16px;">
+                                API keys are stored securely using OS-level encryption. Keys are automatically selected based on endpoint type.
+                            </p>
+                            <div class="api-keys-list" id="api-keys-list">
+                                <!-- Dynamically populated -->
                             </div>
                         </div>
                     </div>

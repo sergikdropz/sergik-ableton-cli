@@ -4,16 +4,74 @@
  * Electron main process for the standalone SERGIK AI Controller app.
  */
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
-const path = require('path');
+// CRITICAL: Write to multiple locations to verify module loads
+// This MUST execute first, before any Electron requires
 const fs = require('fs');
+const path = require('path');
+
+// Write to a test file in the app directory first (most likely to work)
+const testLogPath = path.join(__dirname, 'module-load-test.log');
+try {
+  const testContent = `MODULE LOADED AT: ${new Date().toISOString()}\nPID: ${process.pid}\nNode: ${process.version}\nPlatform: ${process.platform}\n__dirname: ${__dirname}\ncwd: ${process.cwd()}\n`;
+  fs.writeFileSync(testLogPath, testContent);
+  // Also write to stderr immediately (always available)
+  process.stderr.write(`[MAIN.JS] MODULE LOADED - PID: ${process.pid}\n`);
+  process.stderr.write(`[MAIN.JS] Test file: ${testLogPath}\n`);
+} catch (e) {
+  process.stderr.write(`[MAIN.JS] Test file write failed: ${e.message}\n`);
+}
+
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const axios = require('axios');
+const { safeStorage } = require('electron');
+const crypto = require('crypto');
+
+// Immediate log test on module load
+const logPath = '/Users/machd/sergik_custom_gpt/.cursor/debug.log';
+try {
+  fs.appendFileSync(logPath, JSON.stringify({location:'main.js:13',message:'MODULE LOADED',data:{nodeVersion:process.version,platform:process.platform,pid:process.pid,__dirname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'MODULE_LOAD'})+'\n');
+  console.log('[Main Debug] Module loaded, log file test written to:', logPath);
+} catch (e) {
+  console.error('[Main Debug] Module load log failed:', e.message, e.code, e.stack?.substring(0, 200));
+  // Try to write to stderr as fallback
+  process.stderr.write(`[Main Debug] Module load log failed: ${e.message}\n`);
+  // Also try to write to test file
+  try {
+    fs.appendFileSync(testLogPath, `LOG FILE WRITE FAILED: ${e.message}\n`);
+  } catch (e2) {
+    // Ignore
+  }
+}
+
+// Catch uncaught errors that might prevent app from starting
+process.on('uncaughtException', (error) => {
+  try {
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:25',message:'UNCAUGHT EXCEPTION',data:{errorMessage:error.message,errorStack:error.stack?.substring(0,500)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'CRASH'})+'\n');
+  } catch (e) {
+    // Ignore log write failures
+  }
+  console.error('[Main Debug] UNCAUGHT EXCEPTION:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  try {
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:33',message:'UNHANDLED REJECTION',data:{reason:reason?.message || String(reason)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'REJECTION'})+'\n');
+  } catch (e) {
+    // Ignore log write failures
+  }
+  console.error('[Main Debug] UNHANDLED REJECTION:', reason);
+});
 
 // Keep a global reference of the window object
 let mainWindow;
 let apiBaseUrl = 'http://127.0.0.1:8000';
 let isRecording = false;
 let apiSettings = null;
+
+// API Keys storage (encrypted)
+let apiKeysStore = {};
+const ENCRYPTION_KEY_LENGTH = 32;
 
 // ============================================================================
 // Settings Management
@@ -24,8 +82,16 @@ let apiSettings = null;
  */
 function loadApiSettings() {
   try {
+    // #region agent log
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:40',message:'loadApiSettings entry',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'SETTINGS_LOAD'})+'\n');
+    // #endregion
+    
     const userDataPath = app.getPath('userData');
     const settingsPath = path.join(userDataPath, 'settings.json');
+    
+    // #region agent log
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:47',message:'got userDataPath',data:{userDataPath,settingsPath,exists:fs.existsSync(settingsPath)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'SETTINGS_LOAD'})+'\n');
+    // #endregion
     
     if (fs.existsSync(settingsPath)) {
       const settingsData = fs.readFileSync(settingsPath, 'utf8');
@@ -39,7 +105,14 @@ function loadApiSettings() {
     if (apiSettings.url) {
       apiBaseUrl = apiSettings.url;
     }
+    
+    // #region agent log
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:62',message:'loadApiSettings success',data:{apiBaseUrl,hasApiSettings:!!apiSettings},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'SETTINGS_LOAD'})+'\n');
+    // #endregion
   } catch (error) {
+    // #region agent log
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:65',message:'loadApiSettings error',data:{errorMessage:error.message,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'SETTINGS_LOAD'})+'\n');
+    // #endregion
     console.error('[Settings] Failed to load API settings:', error);
     apiSettings = getDefaultApiSettings();
   }
@@ -76,7 +149,44 @@ function getDefaultApiSettings() {
     keepAlive: true,
     maxConnections: 10,
     connectionTimeout: 5000,
-    validateSSL: true
+    validateSSL: true,
+    
+    // Ngrok support
+    useNgrok: false,
+    ngrokUrl: '',
+    ngrokApiKey: process.env.NGROK_API_KEY || '', // For ngrok API to get dynamic URLs
+    
+    // Multiple API Keys for AI services
+    apiKeys: {
+        // SERGIK API
+        sergik: {
+            enabled: false,
+            key: '',
+            header: 'X-API-Key'
+        },
+        // OpenAI for GPT/voice
+        openai: {
+            enabled: false,
+            key: '',
+            header: 'Authorization',
+            prefix: 'Bearer'
+        },
+        // Anthropic Claude
+        anthropic: {
+            enabled: false,
+            key: '',
+            header: 'x-api-key'
+        },
+        // Google AI
+        google: {
+            enabled: false,
+            key: '',
+            header: 'Authorization',
+            prefix: 'Bearer'
+        },
+        // Custom API keys
+        custom: []
+    }
   };
 }
 
@@ -112,20 +222,57 @@ function getEndpointTimeout(endpointType) {
 }
 
 /**
- * Build request headers with authentication
+ * Build request headers with authentication from multiple sources
  */
-function buildRequestHeaders(customHeaders = {}) {
+function buildRequestHeaders(customHeaders = {}, endpointType = 'default') {
   const headers = { ...customHeaders };
   
   if (!apiSettings) return headers;
   
-  // Add authentication headers
+  // Determine which API key to use based on endpoint
+  let selectedKey = null;
+  let selectedHeader = 'X-API-Key';
+  let selectedPrefix = '';
+  
+  // Map endpoint types to API key services
+  const endpointKeyMap = {
+    'gpt': 'openai',
+    'voice': 'openai',
+    'generate': 'sergik',
+    'analyze': 'sergik',
+    'live': 'sergik',
+    'default': 'sergik'
+  };
+  
+  const service = endpointKeyMap[endpointType] || 'sergik';
+  
+  // Check if API keys are configured
+  if (apiSettings.apiKeys && apiSettings.apiKeys[service]) {
+    const keyConfig = apiSettings.apiKeys[service];
+    if (keyConfig.enabled && apiKeysStore[service]) {
+      selectedKey = apiKeysStore[service];
+      selectedHeader = keyConfig.header || 'X-API-Key';
+      selectedPrefix = keyConfig.prefix || '';
+    }
+  }
+  
+  // Fallback to legacy single API key
+  if (!selectedKey && apiSettings.authType === 'api_key' && apiSettings.apiKey) {
+    selectedKey = apiSettings.apiKey;
+    selectedHeader = apiSettings.apiKeyHeader || 'X-API-Key';
+  }
+  
+  // Add authentication header
+  if (selectedKey) {
+    if (selectedPrefix) {
+      headers[selectedHeader] = `${selectedPrefix} ${selectedKey}`;
+    } else {
+      headers[selectedHeader] = selectedKey;
+    }
+  }
+  
+  // Add other auth types (bearer, basic) if configured
   switch (apiSettings.authType) {
-    case 'api_key':
-      if (apiSettings.apiKey) {
-        headers[apiSettings.apiKeyHeader || 'X-API-Key'] = apiSettings.apiKey;
-      }
-      break;
     case 'bearer':
       if (apiSettings.bearerToken) {
         headers['Authorization'] = `Bearer ${apiSettings.bearerToken}`;
@@ -153,14 +300,38 @@ function sleep(ms) {
  * Enhanced API client with retry logic, auth, and logging
  */
 async function apiRequest(method, endpoint, data = null, options = {}) {
+  console.log('[Main Debug] apiRequest called', { method, endpoint, apiBaseUrl });
+  
+  // #region agent log
+  try {
+    fs.appendFileSync('/Users/machd/sergik_custom_gpt/.cursor/debug.log', JSON.stringify({location:'main.js:244',message:'apiRequest entry',data:{method,endpoint,apiBaseUrl,hasApiSettings:!!apiSettings,useNgrok:apiSettings?.useNgrok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})+'\n');
+  } catch (e) {
+    console.error('[Main Debug] Log write failed:', e.message);
+  }
+  // #endregion
+  // Get base URL (ngrok or regular)
+  let baseUrl = apiBaseUrl;
+  if (apiSettings?.useNgrok) {
+    const ngrokUrl = await getNgrokUrl();
+    if (ngrokUrl) {
+      baseUrl = ngrokUrl;
+    }
+  }
+  // #region agent log
+  fs.appendFileSync(logPath, JSON.stringify({location:'main.js:243',message:'baseUrl determined',data:{baseUrl,apiBaseUrl,useNgrok:apiSettings?.useNgrok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})+'\n');
+  // #endregion
+  
   const endpointType = options.endpointType || 'default';
   const timeout = options.timeout || getEndpointTimeout(endpointType);
   const retryCount = options.retryCount ?? (apiSettings?.retryCount ?? 3);
   const retryDelay = apiSettings?.retryDelay ?? 1000;
   const retryBackoff = apiSettings?.retryBackoff !== false;
   
-  const url = `${apiBaseUrl}${endpoint}`;
-  const headers = buildRequestHeaders(options.headers || {});
+  const url = `${baseUrl}${endpoint}`;
+  const headers = buildRequestHeaders(options.headers || {}, endpointType);
+  // #region agent log
+  fs.appendFileSync(logPath, JSON.stringify({location:'main.js:252',message:'request config',data:{url,timeout,retryCount,hasHeaders:!!headers},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})+'\n');
+  // #endregion
   
   const requestConfig = {
     method,
@@ -193,9 +364,15 @@ async function apiRequest(method, endpoint, data = null, options = {}) {
   
   while (attempt <= retryCount) {
     try {
+      // #region agent log
+      fs.appendFileSync('/Users/machd/sergik_custom_gpt/.cursor/debug.log', JSON.stringify({location:'main.js:295',message:'axios attempt',data:{attempt,url,method},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'L'})+'\n');
+      // #endregion
       const startTime = Date.now();
       const response = await axios(requestConfig);
       const duration = Date.now() - startTime;
+      // #region agent log
+      fs.appendFileSync(logPath, JSON.stringify({location:'main.js:298',message:'axios success',data:{status:response.status,duration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})+'\n');
+      // #endregion
       
       // Log response if enabled
       if (apiSettings?.logResponses) {
@@ -215,6 +392,9 @@ async function apiRequest(method, endpoint, data = null, options = {}) {
     } catch (error) {
       lastError = error;
       attempt++;
+      // #region agent log
+      fs.appendFileSync('/Users/machd/sergik_custom_gpt/.cursor/debug.log', JSON.stringify({location:'main.js:316',message:'axios error',data:{attempt,errorMessage:error?.message,errorCode:error?.code,hasResponse:!!error?.response,responseStatus:error?.response?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})+'\n');
+      // #endregion
       
       // Log error if enabled
       if (apiSettings?.logErrors) {
@@ -222,8 +402,10 @@ async function apiRequest(method, endpoint, data = null, options = {}) {
       }
       
       // Don't retry on last attempt or on certain errors
+      // Also don't retry on connection refused (server not running)
       if (attempt > retryCount || 
-          (error.response && error.response.status >= 400 && error.response.status < 500 && error.response.status !== 429)) {
+          (error.response && error.response.status >= 400 && error.response.status < 500 && error.response.status !== 429) ||
+          error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
         break;
       }
       
@@ -234,12 +416,61 @@ async function apiRequest(method, endpoint, data = null, options = {}) {
   }
   
   // All retries failed
+  // #region agent log
+  fs.appendFileSync('/Users/machd/sergik_custom_gpt/.cursor/debug.log', JSON.stringify({location:'main.js:333',message:'apiRequest failed',data:{finalError:lastError?.message,finalErrorCode:lastError?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'O'})+'\n');
+  // #endregion
+  
+  // Provide user-friendly error messages
+  let errorMessage = lastError?.message || 'Request failed';
+  if (lastError?.code === 'ECONNREFUSED') {
+    errorMessage = `Cannot connect to API server at ${baseUrl}. Is the SERGIK ML API server running?`;
+  } else if (lastError?.code === 'ENOTFOUND') {
+    errorMessage = `Cannot resolve API server hostname. Check your API URL settings.`;
+  } else if (lastError?.code === 'ETIMEDOUT') {
+    errorMessage = `Connection to API server timed out. The server may be slow or unresponsive.`;
+  }
+  
   return {
     success: false,
-    error: lastError?.message || 'Request failed',
+    error: errorMessage,
     status: lastError?.response?.status,
-    data: lastError?.response?.data
+    data: lastError?.response?.data,
+    errorCode: lastError?.code
   };
+}
+
+/**
+ * Get ngrok URL dynamically if configured
+ */
+async function getNgrokUrl() {
+  if (!apiSettings?.useNgrok || !apiSettings.ngrokApiKey) {
+    return apiSettings?.ngrokUrl || null;
+  }
+  
+  try {
+    // Query ngrok API for active tunnels
+    const response = await axios.get('https://api.ngrok.com/tunnels', {
+      headers: {
+        'Authorization': `Bearer ${apiSettings.ngrokApiKey}`,
+        'Ngrok-Version': '2'
+      },
+      timeout: 5000
+    });
+    
+    if (response.data && response.data.tunnels && response.data.tunnels.length > 0) {
+      // Find HTTPS tunnel
+      const httpsTunnel = response.data.tunnels.find(t => t.proto === 'https');
+      if (httpsTunnel) {
+        return httpsTunnel.public_url;
+      }
+      // Fallback to first tunnel
+      return response.data.tunnels[0].public_url;
+    }
+  } catch (error) {
+    console.warn('[Ngrok] Failed to fetch dynamic URL, using configured URL:', error.message);
+  }
+  
+  return apiSettings?.ngrokUrl || null;
 }
 
 // ============================================================================
@@ -350,6 +581,281 @@ function initializeLibraryStructure() {
   console.log('[Main] Media storage initialized at:', getMediaStorageDirectory());
 }
 
+/**
+ * Encrypt API key for storage
+ */
+function encryptApiKey(key, value) {
+  try {
+    if (safeStorage.isEncryptionAvailable()) {
+      // Use Electron's safeStorage for OS-level encryption
+      const buffer = Buffer.from(value, 'utf8');
+      return safeStorage.encryptString(value);
+    } else {
+      // Fallback: simple base64 encoding (not secure, but better than plain text)
+      console.warn('[Security] OS-level encryption not available, using fallback');
+      return Buffer.from(value).toString('base64');
+    }
+  } catch (error) {
+    console.error('[Security] Failed to encrypt API key:', error);
+    return null;
+  }
+}
+
+/**
+ * Decrypt API key from storage
+ */
+function decryptApiKey(key, encryptedValue) {
+  try {
+    if (safeStorage.isEncryptionAvailable()) {
+      return safeStorage.decryptString(encryptedValue);
+    } else {
+      // Fallback decryption
+      return Buffer.from(encryptedValue, 'base64').toString('utf8');
+    }
+  } catch (error) {
+    console.error('[Security] Failed to decrypt API key:', error);
+    return null;
+  }
+}
+
+/**
+ * Load API keys from environment variables
+ */
+function loadApiKeysFromEnv() {
+  // Map environment variable names to service names
+  const envKeyMap = {
+    'OPENAI_API_KEY': 'openai',
+    'ANTHROPIC_API_KEY': 'anthropic',
+    'GOOGLE_API_KEY': 'google',
+    'GOOGLE_AI_API_KEY': 'google',
+    'SERGIK_API_KEY': 'sergik',
+    'NGROK_API_KEY': 'ngrok'
+  };
+  
+  let loadedCount = 0;
+  
+  // Check environment variables
+  for (const [envVar, service] of Object.entries(envKeyMap)) {
+    const value = process.env[envVar];
+    if (value && value.trim()) {
+      // Only set if not already in store (don't overwrite user-set keys)
+      if (!apiKeysStore[service]) {
+        apiKeysStore[service] = value.trim();
+        loadedCount++;
+        console.log(`[API Keys] Loaded ${service} key from environment variable ${envVar}`);
+      }
+    }
+  }
+  
+  // Also check for .env file in project root (if running from project directory)
+  try {
+    const projectRoot = path.resolve(__dirname, '..');
+    const envPath = path.join(projectRoot, '.env');
+    
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      const lines = envContent.split('\n');
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // Skip comments and empty lines
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        
+        // Parse KEY=VALUE format
+        const match = trimmed.match(/^([^=]+)=(.*)$/);
+        if (match) {
+          const key = match[1].trim();
+          let value = match[2].trim();
+          
+          // Remove quotes if present
+          if ((value.startsWith('"') && value.endsWith('"')) || 
+              (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+          }
+          
+          if (envKeyMap[key] && value) {
+            const service = envKeyMap[key];
+            // Only set if not already in store
+            if (!apiKeysStore[service]) {
+              apiKeysStore[service] = value;
+              loadedCount++;
+              console.log(`[API Keys] Loaded ${service} key from .env file`);
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    // .env file not found or couldn't be read - that's okay
+    console.log('[API Keys] No .env file found or couldn\'t read it');
+  }
+  
+  if (loadedCount > 0) {
+    // Save loaded keys to encrypted storage
+    saveApiKeys();
+    console.log(`[API Keys] Loaded ${loadedCount} API key(s) from environment`);
+  }
+}
+
+/**
+ * Load encrypted API keys from disk
+ */
+function loadApiKeys() {
+  try {
+    const userDataPath = app.getPath('userData');
+    const keysPath = path.join(userDataPath, 'api-keys.encrypted.json');
+    
+    if (fs.existsSync(keysPath)) {
+      const encryptedData = fs.readFileSync(keysPath, 'utf8');
+      const data = JSON.parse(encryptedData);
+      
+      // Decrypt all keys
+      for (const [service, encrypted] of Object.entries(data)) {
+        apiKeysStore[service] = decryptApiKey(service, encrypted);
+      }
+    }
+    
+    // After loading from disk, also check environment variables
+    // This allows env vars to be used as fallback or override
+    loadApiKeysFromEnv();
+  } catch (error) {
+    console.error('[Security] Failed to load API keys:', error);
+    // Still try to load from environment
+    loadApiKeysFromEnv();
+  }
+}
+
+/**
+ * Save encrypted API keys to disk
+ */
+function saveApiKeys() {
+  try {
+    const userDataPath = app.getPath('userData');
+    const keysPath = path.join(userDataPath, 'api-keys.encrypted.json');
+    
+    // Encrypt all keys
+    const encryptedData = {};
+    for (const [service, value] of Object.entries(apiKeysStore)) {
+      if (value) {
+        encryptedData[service] = encryptApiKey(service, value);
+      }
+    }
+    
+    fs.writeFileSync(keysPath, JSON.stringify(encryptedData, null, 2));
+    // Set restrictive permissions (Unix/Mac)
+    if (process.platform !== 'win32') {
+      fs.chmodSync(keysPath, 0o600);
+    }
+  } catch (error) {
+    console.error('[Security] Failed to save API keys:', error);
+  }
+}
+
+// IPC handlers for API key management
+ipcMain.handle('get-api-key', (event, service) => {
+  return apiKeysStore[service] || null;
+});
+
+ipcMain.handle('set-api-key', (event, service, key) => {
+  if (key) {
+    apiKeysStore[service] = key;
+    saveApiKeys();
+    return { success: true };
+  } else {
+    delete apiKeysStore[service];
+    saveApiKeys();
+    return { success: true };
+  }
+});
+
+ipcMain.handle('list-api-keys', () => {
+  // Return list of services with keys (but not the keys themselves)
+  return Object.keys(apiKeysStore).filter(key => apiKeysStore[key]);
+});
+
+ipcMain.handle('get-api-keys-info', () => {
+  // Return info about which keys are loaded and their sources
+  const info = {};
+  const envKeyMap = {
+    'OPENAI_API_KEY': 'openai',
+    'ANTHROPIC_API_KEY': 'anthropic',
+    'GOOGLE_API_KEY': 'google',
+    'GOOGLE_AI_API_KEY': 'google',
+    'SERGIK_API_KEY': 'sergik',
+    'NGROK_API_KEY': 'ngrok'
+  };
+  
+  // Check which keys exist in store
+  for (const [service, key] of Object.entries(apiKeysStore)) {
+    if (key) {
+      // Find which env var this might have come from
+      const envVar = Object.entries(envKeyMap).find(([_, s]) => s === service)?.[0];
+      info[service] = {
+        hasKey: true,
+        source: envVar && process.env[envVar] ? 'environment' : 'user',
+        envVar: envVar || null
+      };
+    }
+  }
+  
+  return info;
+});
+
+ipcMain.handle('delete-api-key', (event, service) => {
+  delete apiKeysStore[service];
+  saveApiKeys();
+  return { success: true };
+});
+
+// Load API keys on startup
+console.log('[Main Debug] ===== APP STARTING =====');
+console.log('[Main Debug] Loading API keys and settings on startup...');
+
+// Test log file write immediately
+try {
+  fs.appendFileSync(logPath, JSON.stringify({location:'main.js:790',message:'APP STARTUP',data:{apiBaseUrl,pid:process.pid,cwd:process.cwd(),__dirname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'STARTUP'})+'\n');
+  console.log('[Main Debug] Log file write test: SUCCESS');
+} catch (e) {
+  console.error('[Main Debug] Log file write test: FAILED', e.message, e.code);
+  // #region agent log
+  try {
+    process.stderr.write(`[Main Debug] Log write error: ${e.message}\n`);
+  } catch (e2) {
+    // Ignore
+  }
+  // #endregion
+}
+
+// #region agent log
+try {
+  fs.appendFileSync(logPath, JSON.stringify({location:'main.js:803',message:'Before loadApiKeys',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'STARTUP'})+'\n');
+} catch (e) {
+  console.error('[Main Debug] Log write failed before loadApiKeys:', e.message);
+}
+// #endregion
+
+loadApiKeys();
+
+// #region agent log
+try {
+  fs.appendFileSync(logPath, JSON.stringify({location:'main.js:810',message:'Before loadApiSettings',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'STARTUP'})+'\n');
+} catch (e) {
+  console.error('[Main Debug] Log write failed before loadApiSettings:', e.message);
+}
+// #endregion
+
+loadApiSettings();
+console.log('[Main Debug] API keys loaded, API base URL:', apiBaseUrl);
+console.log('[Main Debug] All IPC handlers should be registered now');
+
+// #region agent log
+try {
+  fs.appendFileSync(logPath, JSON.stringify({location:'main.js:820',message:'After loadApiSettings',data:{apiBaseUrl,hasApiSettings:!!apiSettings},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'STARTUP'})+'\n');
+} catch (e) {
+  console.error('[Main Debug] Log write failed after loadApiSettings:', e.message);
+}
+// #endregion
+
 function createWindow() {
   // Create the browser window
   mainWindow = new BrowserWindow({
@@ -382,14 +888,36 @@ function createWindow() {
 }
 
 // This method will be called when Electron has finished initialization
-// Load API settings on startup
-loadApiSettings();
-
 app.whenReady().then(() => {
+  // #region agent log
+  try {
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:838',message:'app.whenReady fired',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'APP_READY'})+'\n');
+  } catch (e) {
+    console.error('[Main Debug] Log write failed in app.whenReady:', e.message);
+  }
+  // #endregion
+  
+  console.log('[Main Debug] Electron app.whenReady() fired');
   // Initialize library structure
   initializeLibraryStructure();
   
+  // #region agent log
+  try {
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:849',message:'Before createWindow',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'APP_READY'})+'\n');
+  } catch (e) {
+    console.error('[Main Debug] Log write failed before createWindow:', e.message);
+  }
+  // #endregion
+  
   createWindow();
+  
+  // #region agent log
+  try {
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:857',message:'After createWindow',data:{hasMainWindow:!!mainWindow},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'APP_READY'})+'\n');
+  } catch (e) {
+    console.error('[Main Debug] Log write failed after createWindow:', e.message);
+  }
+  // #endregion
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -410,7 +938,10 @@ app.on('window-all-closed', () => {
 // ============================================================================
 
 // API Configuration
-ipcMain.handle('get-api-url', () => apiBaseUrl);
+ipcMain.handle('get-api-url', () => {
+  console.log('[Main Debug] get-api-url handler called, returning:', apiBaseUrl);
+  return apiBaseUrl;
+});
 
 ipcMain.handle('set-api-url', (event, url) => {
   apiBaseUrl = url;
@@ -437,17 +968,52 @@ ipcMain.handle('set-api-settings', (event, settings) => {
   return { success: true };
 });
 
-// Health Check
-ipcMain.handle('check-health', async () => {
-  const result = await apiRequest('GET', '/health', null, { endpointType: 'health' });
-  if (result.success) {
-    return {
-      success: true,
-      status: result.data?.status,
-      service: result.data?.service
-    };
+// Health Check - Register handler
+// Register BEFORE app.whenReady to ensure it's available
+console.log('[Main Debug] Registering check-health IPC handler at startup');
+ipcMain.handle('check-health', async (event) => {
+  const logPath = '/Users/machd/sergik_custom_gpt/.cursor/debug.log';
+  
+  console.log('[Main Debug] ===== check-health IPC handler CALLED =====', { 
+    apiBaseUrl, 
+    hasApiSettings: !!apiSettings,
+    timestamp: new Date().toISOString(),
+    processId: process.pid
+  });
+  
+  // #region agent log
+  try {
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:860',message:'check-health IPC entry',data:{apiBaseUrl,hasApiSettings:!!apiSettings,useNgrok:apiSettings?.useNgrok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n');
+    console.log('[Main Debug] Log written successfully to:', logPath);
+  } catch (e) {
+    console.error('[Main Debug] Failed to write log:', e.message, e.code, e.stack?.substring(0, 100));
   }
-  return result;
+  // #endregion
+  try {
+    console.log('[Main Debug] Calling apiRequest for /health');
+    // #region agent log
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:880',message:'calling apiRequest',data:{endpoint:'/health',endpointType:'health'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})+'\n');
+    // #endregion
+    const result = await apiRequest('GET', '/health', null, { endpointType: 'health' });
+    console.log('[Main Debug] apiRequest result', { success: result?.success, error: result?.error, hasData: !!result?.data });
+    // #region agent log
+    const logPath2 = '/Users/machd/sergik_custom_gpt/.cursor/debug.log';
+    fs.appendFileSync(logPath2, JSON.stringify({location:'main.js:888',message:'apiRequest result',data:{success:result?.success,status:result?.status,error:result?.error,hasData:!!result?.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})+'\n');
+    // #endregion
+    if (result.success) {
+      return {
+        success: true,
+        status: result.data?.status,
+        service: result.data?.service
+      };
+    }
+    return result;
+  } catch (error) {
+    // #region agent log
+    fs.appendFileSync(logPath, JSON.stringify({location:'main.js:803',message:'check-health error',data:{errorMessage:error?.message,errorStack:error?.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})+'\n');
+    // #endregion
+    return { success: false, error: error.message };
+  }
 });
 
 // GPT Health Check
@@ -1007,6 +1573,219 @@ ipcMain.handle('create-scene', async (event, params) => {
       success: false, 
       error: error.message 
     };
+  }
+});
+
+// ============================================================================
+// Organization Endpoints
+// ============================================================================
+
+// Auto-Organize
+ipcMain.handle('organize-auto-organize', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/organize/auto-organize', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+});
+
+// Preview Organization
+ipcMain.handle('organize-preview', async (event, params) => {
+  try {
+    const { source_dirs, target_base, organize_by } = params;
+    const query = `source_dirs=${encodeURIComponent(source_dirs)}&target_base=${encodeURIComponent(target_base)}&organize_by=${encodeURIComponent(organize_by)}`;
+    const result = await apiRequest('GET', `/organize/preview?${query}`, null, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+});
+
+// ============================================================================
+// Transform Endpoints
+// ============================================================================
+
+// Quantize
+ipcMain.handle('transform-quantize', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/quantize', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Transpose
+ipcMain.handle('transform-transpose', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/transpose', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Velocity
+ipcMain.handle('transform-velocity', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/velocity', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Legato
+ipcMain.handle('transform-legato', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/legato', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Remove Overlaps
+ipcMain.handle('transform-remove-overlaps', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/remove_overlaps', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Fade
+ipcMain.handle('transform-fade', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/fade', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Normalize
+ipcMain.handle('transform-normalize', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/normalize', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Time Stretch
+ipcMain.handle('transform-time-stretch', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/time_stretch', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Pitch Shift
+ipcMain.handle('transform-pitch-shift', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/pitch_shift', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Time Shift
+ipcMain.handle('transform-time-shift', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/transform/time_shift', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// ============================================================================
+// Export Endpoints
+// ============================================================================
+
+// Export Track
+ipcMain.handle('export-track', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/export/track', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Batch Export
+ipcMain.handle('export-batch', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/export/batch', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Export Stems
+ipcMain.handle('export-stems', async (event, params) => {
+  try {
+    const result = await apiRequest('POST', '/export/stems', params, { endpointType: 'live' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// ============================================================================
+// Additional Analysis Endpoints
+// ============================================================================
+
+// Batch Analyze
+ipcMain.handle('analyze-batch', async (event, params) => {
+  try {
+    const { source_dir, include_musicbrainz, generate_profiles } = params;
+    const query = `source_dir=${encodeURIComponent(source_dir)}&include_musicbrainz=${include_musicbrainz}&generate_profiles=${generate_profiles}`;
+    const result = await apiRequest('POST', `/analyze/batch?${query}`, null, { endpointType: 'analyze' });
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// GPT Analyze (DNA Match)
+ipcMain.handle('gpt-analyze', async (event, filePath) => {
+  try {
+    const fs = require('fs');
+    const FormData = require('form-data');
+    
+    if (!fs.existsSync(filePath)) {
+      return { success: false, error: 'File not found' };
+    }
+    
+    const form = new FormData();
+    form.append('file', fs.createReadStream(filePath), {
+      filename: path.basename(filePath),
+      contentType: 'audio/wav'
+    });
+    
+    const result = await apiRequest('POST', '/gpt/analyze', { form }, {
+      endpointType: 'gpt',
+      headers: form.getHeaders()
+    });
+    
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 });
 
