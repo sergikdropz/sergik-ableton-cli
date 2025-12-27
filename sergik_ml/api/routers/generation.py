@@ -4,8 +4,11 @@ Generation Router
 MIDI and drum generation endpoints.
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import FileResponse
 import logging
+import os
+from pathlib import Path
 
 from ...services.generation_service import GenerationService
 

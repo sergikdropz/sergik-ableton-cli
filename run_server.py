@@ -18,7 +18,10 @@ Environment variables:
 """
 
 import uvicorn
+import logging
 from sergik_ml.config import CFG
+from sergik_ml.core.dev_config import get_dev_config, track_build_start, track_build_end
+from sergik_ml.core.logging import setup_logging
 
 
 BANNER = """
@@ -36,6 +39,23 @@ BANNER = """
 
 
 def main():
+    # Initialize dev config and logging
+    dev_config = get_dev_config()
+    setup_logging(
+        level=dev_config.log_level.value,
+        use_json=dev_config.log_json,
+        stream=None
+    )
+    
+    logger = logging.getLogger(__name__)
+    
+    # Track startup
+    track_build_start()
+    logger.info("Starting SERGIK ML Server", extra={
+        "environment": dev_config.environment.value,
+        "log_level": dev_config.log_level.value
+    })
+    
     print(BANNER)
     print(f"  Host:          {CFG.host}")
     print(f"  Port:          {CFG.port}")
@@ -43,6 +63,8 @@ def main():
     print(f"  OSC Port:      {CFG.ableton_osc_port}")
     print(f"  Artifacts:     {CFG.artifact_dir}")
     print(f"  Data Dir:      {CFG.data_dir}")
+    print(f"  Environment:   {dev_config.environment.value}")
+    print(f"  Log Level:     {dev_config.log_level.value}")
     print()
     print("  SERGIK DNA Configuration:")
     print("    BPM Sweet Spot:  122-127 BPM")
@@ -67,12 +89,21 @@ def main():
     print("  Press Ctrl+C to stop")
     print()
 
+    # Determine log level for uvicorn
+    uvicorn_log_level = "info"
+    if dev_config.log_level.value == "DEBUG":
+        uvicorn_log_level = "debug"
+    elif dev_config.log_level.value == "WARNING":
+        uvicorn_log_level = "warning"
+    elif dev_config.log_level.value == "ERROR":
+        uvicorn_log_level = "error"
+
     uvicorn.run(
         "sergik_ml.api.main:app",
         host=CFG.host,
         port=CFG.port,
-        reload=True,
-        log_level="info"
+        reload=dev_config.enable_hot_reload,
+        log_level=uvicorn_log_level
     )
 
 

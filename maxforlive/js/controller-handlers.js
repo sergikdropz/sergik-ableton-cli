@@ -105,6 +105,12 @@ export class ControllerHandlers {
             
             // Wire generation buttons
             this.wireGenerationButtons();
+            
+            // Wire transport buttons
+            this.wireTransportButtons();
+            
+            // Wire track control buttons
+            this.wireTrackButtons();
 
             logger.info('All buttons wired up successfully');
         } catch (error) {
@@ -277,8 +283,94 @@ export class ControllerHandlers {
      */
     wireEditorButtons() {
         const editor = this.handlers.editor;
-        // Editor buttons will be wired in editor-handlers.js
-        // This is a placeholder for future integration
+        
+        // Wire editor toolbar buttons
+        const toolbarBtns = document.querySelectorAll('.toolbar-btn');
+        toolbarBtns.forEach(btn => {
+            const tool = btn.getAttribute('data-tool');
+            if (!tool) return;
+            
+            // Prevent duplicate listeners
+            if (btn.dataset.wired) return;
+            
+            btn.addEventListener('click', async () => {
+                try {
+                    // Update active button state
+                    toolbarBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    switch(tool) {
+                        case 'select':
+                            // UI state only - no API call needed
+                            logger.debug('Select tool activated');
+                            break;
+                            
+                        case 'cut':
+                            // Split clip at cursor/selection
+                            try {
+                                await editor.split();
+                                updateStatus('ready', 'Clip cut');
+                            } catch (error) {
+                                logger.error('Cut failed', error);
+                                updateStatus('error', 'Cut failed: ' + error.message);
+                            }
+                            break;
+                            
+                        case 'fade':
+                            // Apply fade - check if we have selection context
+                            // For now, apply fade in (could be enhanced to detect selection)
+                            try {
+                                await editor.fadeIn(0.1);
+                                updateStatus('ready', 'Fade applied');
+                            } catch (error) {
+                                logger.error('Fade failed', error);
+                                updateStatus('error', 'Fade failed: ' + error.message);
+                            }
+                            break;
+                            
+                        case 'waveform':
+                        case 'piano':
+                        case 'timeline':
+                            // Switch editor view (UI only)
+                            // These are handled by existing editor view switching code
+                            logger.debug(`Switching to ${tool} editor`);
+                            // Trigger existing editor view switch if available
+                            if (typeof window.switchEditorView === 'function') {
+                                window.switchEditorView(tool);
+                            }
+                            break;
+                            
+                        default:
+                            logger.warn(`Unknown tool: ${tool}`);
+                    }
+                } catch (error) {
+                    logger.error('Editor button action failed', error);
+                    updateStatus('error', 'Action failed: ' + error.message);
+                }
+            });
+            
+            btn.dataset.wired = 'true';
+        });
+        
+        // Wire zoom buttons
+        const zoomIn = document.getElementById('zoom-in');
+        const zoomOut = document.getElementById('zoom-out');
+        
+        if (zoomIn && !zoomIn.dataset.wired) {
+            zoomIn.addEventListener('click', () => {
+                editor.zoomIn();
+                logger.debug('Zoom in');
+            });
+            zoomIn.dataset.wired = 'true';
+        }
+        
+        if (zoomOut && !zoomOut.dataset.wired) {
+            zoomOut.addEventListener('click', () => {
+                editor.zoomOut();
+                logger.debug('Zoom out');
+            });
+            zoomOut.dataset.wired = 'true';
+        }
     }
 
     /**
@@ -454,6 +546,325 @@ export class ControllerHandlers {
                 }
             });
         });
+    }
+    
+    /**
+     * Wire transport buttons
+     */
+    wireTransportButtons() {
+        const transportBtns = document.querySelectorAll('.transport-btn');
+        
+        transportBtns.forEach(btn => {
+            // Prevent duplicate listeners
+            if (btn.dataset.wired) return;
+            
+            btn.addEventListener('click', async () => {
+                const action = this._getTransportAction(btn);
+                if (!action) {
+                    logger.warn('Could not determine transport action for button');
+                    return;
+                }
+                
+                try {
+                    updateStatus('processing', `${action}...`);
+                    
+                    // Handle special cases for rewind/forward (not in standard transport API)
+                    if (action === 'rewind' || action === 'forward') {
+                        // Use set locator or natural language command for these
+                        const response = await fetch(`${this.apiBaseUrl}/api/live/command`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                prompt: action === 'rewind' ? 'rewind transport' : 'fast forward transport'
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json().catch(() => ({ detail: response.statusText }));
+                            throw new Error(error.detail || `Transport ${action} failed`);
+                        }
+                        
+                        const result = await response.json();
+                        logger.info(`Transport ${action}`, result);
+                        updateStatus('ready', `${action} executed`);
+                    } else {
+                        // Standard transport actions: play, stop, record, continue
+                        const response = await fetch(`${this.apiBaseUrl}/api/live/transport/${action}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json().catch(() => ({ detail: response.statusText }));
+                            throw new Error(error.detail || `Transport ${action} failed`);
+                        }
+                        
+                        const result = await response.json();
+                        logger.info(`Transport ${action}`, result);
+                        updateStatus('ready', `${action} executed`);
+                    }
+                } catch (error) {
+                    logger.error(`Transport ${action} failed`, error);
+                    updateStatus('error', `Transport ${action} failed: ${error.message}`);
+                }
+            });
+            
+            btn.dataset.wired = 'true';
+        });
+    }
+    
+    /**
+     * Wire track control buttons
+     */
+    wireTrackButtons() {
+        const editor = this.handlers.editor;
+        
+        // Create Track button
+        const createBtn = document.querySelector('button[data-info-title="Create Track"]') || 
+                         document.getElementById('btn-create-track');
+        if (createBtn && !createBtn.dataset.wired) {
+            createBtn.addEventListener('click', async () => {
+                try {
+                    updateStatus('processing', 'Creating track...');
+                    
+                    const response = await fetch(`${this.apiBaseUrl}/api/live/tracks/create`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            track_type: 'midi', // Default to MIDI, could be made configurable
+                            name: null // Could prompt user for name
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json().catch(() => ({ detail: response.statusText }));
+                        throw new Error(error.detail || 'Create track failed');
+                    }
+                    
+                    const result = await response.json();
+                    logger.info('Track created', result);
+                    updateStatus('ready', 'Track created');
+                } catch (error) {
+                    logger.error('Create track failed', error);
+                    updateStatus('error', 'Create track failed: ' + error.message);
+                    alert('Failed to create track: ' + error.message);
+                }
+            });
+            createBtn.dataset.wired = 'true';
+        }
+        
+        // Delete Track button
+        const deleteBtn = document.querySelector('button[data-info-title="Delete Track"]') || 
+                         document.getElementById('btn-delete-track');
+        if (deleteBtn && !deleteBtn.dataset.wired) {
+            deleteBtn.addEventListener('click', async () => {
+                const trackIndex = this._getTrackIndex();
+                
+                if (trackIndex === null || trackIndex === undefined) {
+                    alert('Please select a track to delete');
+                    return;
+                }
+                
+                if (!confirm(`Delete track ${trackIndex + 1}?`)) {
+                    return;
+                }
+                
+                try {
+                    updateStatus('processing', 'Deleting track...');
+                    
+                    const response = await fetch(`${this.apiBaseUrl}/api/live/tracks/${trackIndex}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json().catch(() => ({ detail: response.statusText }));
+                        throw new Error(error.detail || 'Delete track failed');
+                    }
+                    
+                    const result = await response.json();
+                    logger.info('Track deleted', result);
+                    updateStatus('ready', 'Track deleted');
+                } catch (error) {
+                    logger.error('Delete track failed', error);
+                    updateStatus('error', 'Delete track failed: ' + error.message);
+                    alert('Failed to delete track: ' + error.message);
+                }
+            });
+            deleteBtn.dataset.wired = 'true';
+        }
+        
+        // Arm Track button
+        const armBtn = document.querySelector('button[data-info-title="Arm Track"]') || 
+                      document.getElementById('btn-arm-track');
+        if (armBtn && !armBtn.dataset.wired) {
+            armBtn.addEventListener('click', async () => {
+                const trackIndex = this._getTrackIndex();
+                if (trackIndex === null || trackIndex === undefined) {
+                    alert('Please select a track');
+                    return;
+                }
+                
+                try {
+                    const isArmed = armBtn.classList.contains('active');
+                    await editor.trackArm(trackIndex, !isArmed);
+                    armBtn.classList.toggle('active');
+                    updateStatus('ready', `Track ${!isArmed ? 'armed' : 'disarmed'}`);
+                } catch (error) {
+                    logger.error('Arm track failed', error);
+                    updateStatus('error', 'Arm track failed: ' + error.message);
+                }
+            });
+            armBtn.dataset.wired = 'true';
+        }
+        
+        // Mute Track button
+        const muteBtn = document.querySelector('button[data-info-title="Mute Track"]') || 
+                       document.getElementById('btn-mute-track');
+        if (muteBtn && !muteBtn.dataset.wired) {
+            muteBtn.addEventListener('click', async () => {
+                const trackIndex = this._getTrackIndex();
+                if (trackIndex === null || trackIndex === undefined) {
+                    alert('Please select a track');
+                    return;
+                }
+                
+                try {
+                    const isMuted = muteBtn.classList.contains('active');
+                    await editor.trackMute(trackIndex, !isMuted);
+                    muteBtn.classList.toggle('active');
+                    updateStatus('ready', `Track ${!isMuted ? 'muted' : 'unmuted'}`);
+                } catch (error) {
+                    logger.error('Mute track failed', error);
+                    updateStatus('error', 'Mute track failed: ' + error.message);
+                }
+            });
+            muteBtn.dataset.wired = 'true';
+        }
+        
+        // Solo Track button
+        const soloBtn = document.querySelector('button[data-info-title="Solo Track"]') || 
+                       document.getElementById('btn-solo-track');
+        if (soloBtn && !soloBtn.dataset.wired) {
+            soloBtn.addEventListener('click', async () => {
+                const trackIndex = this._getTrackIndex();
+                if (trackIndex === null || trackIndex === undefined) {
+                    alert('Please select a track');
+                    return;
+                }
+                
+                try {
+                    const isSoloed = soloBtn.classList.contains('active');
+                    await editor.trackSolo(trackIndex, !isSoloed);
+                    soloBtn.classList.toggle('active');
+                    updateStatus('ready', `Track ${!isSoloed ? 'soloed' : 'unsoloed'}`);
+                } catch (error) {
+                    logger.error('Solo track failed', error);
+                    updateStatus('error', 'Solo track failed: ' + error.message);
+                }
+            });
+            soloBtn.dataset.wired = 'true';
+        }
+        
+        // Rename Track button
+        const renameBtn = document.querySelector('button[data-info-title="Rename Track"]') || 
+                         document.getElementById('btn-rename-track');
+        if (renameBtn && !renameBtn.dataset.wired) {
+            renameBtn.addEventListener('click', async () => {
+                const trackIndex = this._getTrackIndex();
+                if (trackIndex === null || trackIndex === undefined) {
+                    alert('Please select a track');
+                    return;
+                }
+                
+                const newName = prompt('Enter new track name:');
+                if (!newName || !newName.trim()) {
+                    return;
+                }
+                
+                try {
+                    updateStatus('processing', 'Renaming track...');
+                    
+                    const response = await fetch(`${this.apiBaseUrl}/api/live/tracks/${trackIndex}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: newName.trim()
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json().catch(() => ({ detail: response.statusText }));
+                        throw new Error(error.detail || 'Rename track failed');
+                    }
+                    
+                    const result = await response.json();
+                    logger.info('Track renamed', result);
+                    updateStatus('ready', 'Track renamed');
+                } catch (error) {
+                    logger.error('Rename track failed', error);
+                    updateStatus('error', 'Rename track failed: ' + error.message);
+                    alert('Failed to rename track: ' + error.message);
+                }
+            });
+            renameBtn.dataset.wired = 'true';
+        }
+    }
+    
+    /**
+     * Get transport action from button
+     * @private
+     * @param {HTMLElement} button - Transport button element
+     * @returns {string|null} Transport action name
+     */
+    _getTransportAction(button) {
+        // Check data attribute first
+        const dataAction = button.getAttribute('data-action');
+        if (dataAction) return dataAction;
+        
+        // Check title attribute
+        const title = button.getAttribute('data-info-title') || button.getAttribute('title');
+        if (title) {
+            const titleLower = title.toLowerCase();
+            if (titleLower.includes('rewind')) return 'rewind';
+            if (titleLower.includes('stop')) return 'stop';
+            if (titleLower.includes('play')) return 'play';
+            if (titleLower.includes('record')) return 'record';
+            if (titleLower.includes('forward')) return 'forward';
+        }
+        
+        // Check class for record button
+        if (button.classList.contains('record')) return 'record';
+        
+        // Check text content as fallback
+        const text = button.textContent.trim().toLowerCase();
+        if (text.includes('⏪') || text.includes('rewind')) return 'rewind';
+        if (text.includes('⏹') || text.includes('stop')) return 'stop';
+        if (text.includes('▶') || text.includes('play')) return 'play';
+        if (text.includes('⏺') || text.includes('record')) return 'record';
+        if (text.includes('⏩') || text.includes('forward')) return 'forward';
+        
+        return null;
+    }
+    
+    /**
+     * Get current track index
+     * @private
+     * @returns {number} Current track index
+     */
+    _getTrackIndex() {
+        // Try to use state helper first
+        if (typeof getCurrentTrackIndex === 'function') {
+            return getCurrentTrackIndex();
+        }
+        
+        // Fallback to window state
+        if (window.currentTrackIndex !== undefined) {
+            return window.currentTrackIndex;
+        }
+        
+        // Default to 0 if nothing is set
+        return 0;
     }
 }
 

@@ -23,11 +23,13 @@ from .routers import (
     tracks_router,
     voice_router,
     compat_router,
+    files_router,
 )
 from .routers.organize import router as organize_router
 from .routers.transform import router as transform_router
 from .routers.export import router as export_router
 from .routers.pipeline import router as pipeline_router
+from .routers.dev_assistant import router as dev_assistant_router
 from ..serving.rate_limiter import RateLimitMiddleware
 from .middleware.logging_middleware import LoggingMiddleware
 from .middleware.auth import AuthenticationMiddleware, RequestSizeMiddleware
@@ -180,10 +182,12 @@ def create_app() -> FastAPI:
     app.include_router(tracks_router)
     app.include_router(voice_router)
     app.include_router(compat_router)  # Compatibility endpoints for frontend
+    app.include_router(files_router)  # File serving endpoints
     app.include_router(pipeline_router)  # ML pipeline management
     app.include_router(organize_router)  # File organization endpoints
     app.include_router(transform_router)  # MIDI/audio transformation endpoints
     app.include_router(export_router)  # Export endpoints
+    app.include_router(dev_assistant_router)  # Dev Assistant endpoints (SERGIK AI Team proxy)
     
     # Include dashboard router (lazy import)
     try:

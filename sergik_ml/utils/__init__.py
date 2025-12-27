@@ -42,6 +42,21 @@ from .validators import (
     validate_tempo_range,
 )
 
+# Dev helpers (optional - may not be available)
+try:
+    from .dev_helpers import (
+        get_dev_assistant,
+        ask_agent,
+        auto_help,
+        code_review,
+        get_best_practices,
+        develop_sync,
+        is_available as dev_helpers_available,
+    )
+    _DEV_HELPERS_AVAILABLE = True
+except ImportError:
+    _DEV_HELPERS_AVAILABLE = False
+
 __all__ = [
     # Text extraction
     "extract_style",
@@ -75,4 +90,16 @@ __all__ = [
     "validate_energy",
     "validate_tempo_range",
 ]
+
+# Add dev helpers to __all__ if available
+if _DEV_HELPERS_AVAILABLE:
+    __all__.extend([
+        "get_dev_assistant",
+        "ask_agent",
+        "auto_help",
+        "code_review",
+        "get_best_practices",
+        "develop_sync",
+        "dev_helpers_available",
+    ])
 

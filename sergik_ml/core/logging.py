@@ -10,6 +10,19 @@ import json
 from typing import Optional, Dict, Any
 from contextvars import ContextVar
 from datetime import datetime
+from pathlib import Path
+
+# Import dev config for environment-aware logging
+try:
+    from .dev_config import get_dev_config, log_performance, log_build_metric
+except ImportError:
+    # Fallback if dev_config not available
+    def get_dev_config():
+        return None
+    def log_performance(*args, **kwargs):
+        pass
+    def log_build_metric(*args, **kwargs):
+        pass
 
 # Context variable for correlation ID
 correlation_id: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
@@ -65,6 +78,14 @@ def setup_logging(
         use_json: Whether to use JSON formatting
         stream: Output stream (default: sys.stdout)
     """
+    # Try to get dev config for environment-aware settings
+    dev_config = get_dev_config()
+    if dev_config:
+        level = dev_config.log_level.value
+        use_json = dev_config.log_json
+        if dev_config.log_to_file and dev_config.log_file_path:
+            stream = open(dev_config.log_file_path, 'a')
+    
     if stream is None:
         stream = sys.stdout
     
@@ -92,10 +113,31 @@ def setup_logging(
     handler.setFormatter(formatter)
     root_logger.addHandler(handler)
     
-    # Set level for third-party loggers
+    # Add file handler if configured
+    if dev_config and dev_config.log_to_file and dev_config.log_file_path:
+        file_handler = logging.FileHandler(dev_config.log_file_path)
+        file_handler.setLevel(log_level)
+        file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
+    
+    # Set level for third-party loggers (reduce noise)
+    root_logger.setLevel(log_level)
     logging.getLogger("uvicorn").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    
+    # Log configuration
+    logger = logging.getLogger(__name__)
+    logger.info(
+        "Logging configured",
+        extra={
+            "log_level": level,
+            "use_json": use_json,
+            "log_to_file": dev_config.log_to_file if dev_config else False,
+            "environment": dev_config.environment.value if dev_config else "unknown"
+        }
+    )
 
 
 def set_correlation_id(corr_id: str) -> None:

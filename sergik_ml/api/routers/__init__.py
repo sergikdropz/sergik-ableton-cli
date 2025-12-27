@@ -11,6 +11,7 @@ from .gpt import router as gpt_router
 from .tracks import router as tracks_router
 from .voice import router as voice_router
 from .compat import router as compat_router
+from .files import router as files_router
 
 __all__ = [
     "generation_router",
@@ -20,5 +21,6 @@ __all__ = [
     "tracks_router",
     "voice_router",
     "compat_router",
+    "files_router",
 ]
 

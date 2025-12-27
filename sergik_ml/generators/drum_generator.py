@@ -28,12 +28,21 @@ import json
 import random
 import hashlib
 import logging
+import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple, Literal
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 import wave
 import struct
+
+# Import errors (with fallback for standalone usage)
+try:
+    from ...utils.errors import GenerationError
+except ImportError:
+    # Fallback for standalone usage
+    class GenerationError(Exception):
+        pass
 
 logger = logging.getLogger(__name__)
 
@@ -556,6 +565,112 @@ class DrumGenerator:
             }
             for hit in pattern.hits
         ]
+    
+    def render_to_audio(
+        self,
+        pattern: DrumPattern,
+        output_dir: Optional[str] = None
+    ) -> str:
+        """
+        Render drum pattern to audio file.
+        
+        Args:
+            pattern: DrumPattern to render
+            output_dir: Directory to save audio file (default: artifacts/generated_drums)
+            
+        Returns:
+            Path to generated audio file
+            
+        Raises:
+            GenerationError: If rendering fails or sample library not available
+        """
+        try:
+            # Initialize sample library if not available
+            if not self.sample_library:
+                # Try to load from default locations
+                scanner = SampleScanner()
+                default_sample_paths = [
+                    "artifacts/drum_racks",
+                    "data/raw/samples",
+                    os.path.expanduser("~/Music/Samples"),
+                    os.path.expanduser("~/Documents/Samples"),
+                ]
+                
+                sample_library = None
+                for sample_path in default_sample_paths:
+                    if os.path.exists(sample_path):
+                        try:
+                            sample_library = scanner.scan_directory(sample_path, recursive=True)
+                            if sample_library.total_count > 0:
+                                logger.info(f"Loaded {sample_library.total_count} samples from {sample_path}")
+                                break
+                        except Exception as e:
+                            logger.debug(f"Failed to scan {sample_path}: {e}")
+                            continue
+                
+                if not sample_library or sample_library.total_count == 0:
+                    # Try auto-scanning common locations
+                    try:
+                        scan_results = scanner.scan_common_locations()
+                        if scan_results["total_samples"] > 0 and scan_results["libraries_found"]:
+                            # Use the first library found
+                            best_library = scan_results["libraries_found"][0]
+                            sample_library = scanner.libraries.get(best_library["name"])
+                            if sample_library and sample_library.total_count > 0:
+                                logger.info(f"Auto-loaded {sample_library.total_count} samples from {best_library['path']}")
+                    except Exception as e:
+                        logger.debug(f"Auto-scan failed: {e}")
+                
+                if not sample_library or sample_library.total_count == 0:
+                    # Create a minimal fallback library
+                    # Audio will be silent but file will be generated
+                    logger.warning("No sample library found. Audio generation will produce silent output. Please scan a sample directory first.")
+                    sample_library = SampleLibrary(
+                        name="fallback",
+                        path="",
+                        samples={},
+                        total_count=0
+                    )
+                
+                self.sample_library = sample_library
+            
+            # Determine output directory
+            if not output_dir:
+                output_dir = os.path.join("artifacts", "generated_drums")
+            
+            os.makedirs(output_dir, exist_ok=True)
+            
+            # Generate filename
+            timestamp = int(time.time() * 1000)
+            filename = f"{pattern.genre}_{pattern.bars}bar_{timestamp}.wav"
+            output_path = os.path.join(output_dir, filename)
+            
+            # Use AudioDrumGenerator to render
+            audio_generator = AudioDrumGenerator(self.sample_library)
+            success = audio_generator.render_pattern(
+                pattern=pattern,
+                output_path=output_path,
+                normalize=True
+            )
+            
+            if not success:
+                raise GenerationError("Failed to render pattern to audio")
+            
+            # Return relative path for easier handling
+            abs_path = os.path.abspath(output_path)
+            # Try to make it relative to current working directory
+            try:
+                rel_path = os.path.relpath(abs_path, os.getcwd())
+                logger.info(f"Rendered audio to {abs_path} (returning {rel_path})")
+                return rel_path
+            except ValueError:
+                # If relative path fails (different drives on Windows), return absolute
+                logger.info(f"Rendered audio to {abs_path}")
+                return abs_path
+            
+        except Exception as e:
+            logger.error(f"Audio rendering failed: {e}", exc_info=True)
+            raise GenerationError(f"Audio rendering failed: {e}")
     
     def generate_fill(
         self,

@@ -119,6 +119,30 @@ class KeyboardShortcuts {
             this.showHelp();
         }, 'Show help');
         
+        // Update Save shortcut for Create Tab
+        const originalSave = this.shortcuts.get('Ctrl+S');
+        if (originalSave) {
+            this.register('Ctrl+S', (e) => {
+                if (this.isCreateTab() && window.createTabEnhancements) {
+                    e.preventDefault();
+                    window.createTabEnhancements.saveCurrentPreset();
+                } else {
+                    originalSave.callback(e);
+                }
+            }, 'Save current preset or default save');
+        }
+        
+        // Update Load shortcut for Create Tab
+        const originalLoad = this.shortcuts.get('Ctrl+L');
+        if (!originalLoad) {
+            this.register('Ctrl+L', (e) => {
+                if (this.isCreateTab()) {
+                    e.preventDefault();
+                    this.showPresetLoader();
+                }
+            }, 'Load preset dialog');
+        }
+        
         // Settings shortcut
         this.register('Ctrl+,', (e) => {
             e.preventDefault();
@@ -128,6 +152,38 @@ class KeyboardShortcuts {
             e.preventDefault();
             this.showSettings();
         }, 'Open settings');
+        
+        // Create Tab Enhancements shortcuts
+        this.register('Ctrl+1', (e) => {
+            if (this.isCreateTab()) {
+                e.preventDefault();
+                this.loadPreset('tech_house');
+            }
+        }, 'Load Tech House preset');
+        this.register('Ctrl+2', (e) => {
+            if (this.isCreateTab()) {
+                e.preventDefault();
+                this.loadPreset('hiphop');
+            }
+        }, 'Load Hip-Hop preset');
+        this.register('Ctrl+3', (e) => {
+            if (this.isCreateTab()) {
+                e.preventDefault();
+                this.loadPreset('techno');
+            }
+        }, 'Load Techno preset');
+        this.register('Ctrl+4', (e) => {
+            if (this.isCreateTab()) {
+                e.preventDefault();
+                this.loadPreset('ambient');
+            }
+        }, 'Load Ambient preset');
+        this.register('Ctrl+B', (e) => {
+            if (this.isCreateTab()) {
+                e.preventDefault();
+                this.toggleBatchMode();
+            }
+        }, 'Toggle batch mode');
     }
     
     setupEventListeners() {
@@ -371,6 +427,34 @@ class KeyboardShortcuts {
     showSettings() {
         if (window.showSettingsPanel) {
             window.showSettingsPanel();
+        }
+    }
+    
+    // Create Tab Enhancement methods
+    isCreateTab() {
+        const activeTab = document.querySelector('.main-tab-btn.active');
+        return activeTab && activeTab.dataset.mainTab === 'create';
+    }
+    
+    loadPreset(name) {
+        if (window.createTabEnhancements) {
+            window.createTabEnhancements.loadPreset(name);
+        }
+    }
+    
+    toggleBatchMode() {
+        const toggle = document.getElementById('batch-mode-toggle');
+        if (toggle) {
+            toggle.checked = !toggle.checked;
+            toggle.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    showPresetLoader() {
+        const dropdown = document.getElementById('preset-dropdown');
+        if (dropdown) {
+            dropdown.focus();
+            dropdown.click();
         }
     }
     
