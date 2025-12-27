@@ -39,5 +39,42 @@ contextBridge.exposeInMainWorld('sergikAPI', {
   
   // File Dialog
   showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
+  
+  // Analysis
+  analyzeUpload: (filePath) => ipcRenderer.invoke('analyze-upload', filePath),
+  analyzeUrl: (url) => ipcRenderer.invoke('analyze-url', url),
+  selectFileForAnalysis: () => ipcRenderer.invoke('select-file-for-analysis'),
+  
+  // Track Management
+  createTrack: (params) => ipcRenderer.invoke('create-track', params),
+  deleteTrack: (trackIndex) => ipcRenderer.invoke('delete-track', trackIndex),
+  getTracks: () => ipcRenderer.invoke('get-tracks'),
+  
+  // Clip Management
+  createClip: (params) => ipcRenderer.invoke('create-clip', params),
+  fireClip: (params) => ipcRenderer.invoke('fire-clip', params),
+  stopClip: (params) => ipcRenderer.invoke('stop-clip', params),
+  duplicateClip: (params) => ipcRenderer.invoke('duplicate-clip', params),
+  setClipNotes: (params) => ipcRenderer.invoke('set-clip-notes', params),
+  getClipNotes: (trackIndex, slotIndex) => ipcRenderer.invoke('get-clip-notes', trackIndex, slotIndex),
+  
+  // Browser/Library
+  browserSearch: (query) => ipcRenderer.invoke('browser-search', query),
+  browserLoad: (params) => ipcRenderer.invoke('browser-load', params),
+  
+  // Transport
+  transportAction: (action) => ipcRenderer.invoke('transport-action', action),
+  setTempo: (tempo) => ipcRenderer.invoke('set-tempo', tempo),
+  
+  // Scenes
+  fireScene: (sceneIndex) => ipcRenderer.invoke('fire-scene', sceneIndex),
+  createScene: (params) => ipcRenderer.invoke('create-scene', params),
+  
+  // Library Management
+  saveMidiToLibrary: (midiData, filename) => ipcRenderer.invoke('save-midi-to-library', midiData, filename),
+  saveAudioToLibrary: (audioData, filename) => ipcRenderer.invoke('save-audio-to-library', audioData, filename),
+  saveAnalysisToLibrary: (analysisData, filename) => ipcRenderer.invoke('save-analysis-to-library', analysisData, filename),
+  getLibraryPath: () => ipcRenderer.invoke('get-library-path'),
+  listLibraryFiles: (subdir) => ipcRenderer.invoke('list-library-files', subdir),
 });
 
